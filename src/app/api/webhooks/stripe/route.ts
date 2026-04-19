@@ -82,16 +82,11 @@ export async function POST(req: Request) {
         notes: "Funds locked into platform escrow.",
       });
 
-      // 4. Immediate sub-routing Payment Gateway mapping 
-      // Fire funds strictly into the individual seller's Connect bank
-      if (item.sellerStripeId && process.env.STRIPE_SECRET_KEY) {
-         await stripe.transfers.create({
-            amount: sellerPayoutCents,
-            currency: "usd",
-            destination: item.sellerStripeId,
-            transfer_group: transferGroupId,
-         });
-      }
+      // 4. Operational Escrow Enforcement
+      // We explicitly DO NOT trigger stripe.transfers.create here anymore.
+      // Funds are legally locked in the Connected Platform account.
+      // Payouts occur strictly inside `/api/webhooks/shipping` when the tracking APIs ping the DELIVERED status.
+      // The `transfer_group` generated inside `session` safely tags the liquidity.
     }
   }
 
