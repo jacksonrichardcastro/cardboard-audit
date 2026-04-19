@@ -3,17 +3,11 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, Filter, ShieldCheck } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { getTrendingListings } from "@/app/actions/listings";
 
-const MOCK_LISTINGS = [
-  { id: 1, title: "1999 Base Set Charizard Holo", grade: "PSA 9", price: 1550, seller: "Vanguard Vault", image: "https://placehold.co/400x550/111/444?text=Charizard" },
-  { id: 2, title: "2018 Luka Doncic Prizm Rookie", grade: "BGS 9.5", price: 800, seller: "Retro Breaks", image: "https://placehold.co/400x550/111/444?text=Luka+RC" },
-  { id: 3, title: "Black Lotus Unlimited", grade: "Raw - MP", price: 4200, seller: "MTG Kings", image: "https://placehold.co/400x550/111/444?text=Black+Lotus" },
-  { id: 4, title: "Shohei Ohtani Bowman Chrome", grade: "PSA 10", price: 600, seller: "Retro Breaks", image: "https://placehold.co/400x550/111/444?text=Ohtani" },
-  { id: 5, title: "1st Edition Blue-Eyes White Dragon", grade: "PSA 8", price: 2100, seller: "Vanguard Vault", image: "https://placehold.co/400x550/111/444?text=Blue+Eyes" },
-  { id: 6, title: "Tom Brady 2000 Bowman RC", grade: "PSA 8", price: 3400, seller: "Vanguard Vault", image: "https://placehold.co/400x550/111/444?text=Brady" },
-];
+export default async function Home() {
+  const trendingListings = await getTrendingListings();
 
-export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Banner */}
@@ -51,33 +45,38 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {MOCK_LISTINGS.map((listing) => (
+          {trendingListings.map((listing) => (
             <Link href={`/listing/${listing.id}`} key={listing.id}>
-              <Card className="group overflow-hidden bg-card/40 border-white/5 hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 block">
+              <Card className="group overflow-hidden bg-card/40 border-white/5 hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 block h-full">
                 <div className="aspect-[3/4] overflow-hidden relative">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={listing.image} alt={listing.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  <img src={listing.image?.[0] || 'https://placehold.co/400x550'} alt={listing.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   <Badge className="absolute top-3 right-3 bg-black/80 backdrop-blur text-white border-white/10">
-                    {listing.grade}
+                    {listing.grade || listing.condition}
                   </Badge>
                 </div>
-                <CardContent className="p-4 space-y-2">
+                <CardContent className="p-4 flex flex-col justify-between h-[120px]">
                   <div className="flex justify-between items-start gap-4">
                     <h3 className="font-semibold text-foreground line-clamp-2 leading-tight">{listing.title}</h3>
                   </div>
-                  <div className="flex justify-between items-end mt-4">
+                  <div className="flex justify-between items-end mt-auto">
                     <div>
                       <p className="text-xs text-muted-foreground">Seller</p>
-                      <p className="text-sm font-medium text-primary hover:underline">{listing.seller}</p>
+                      <p className="text-sm font-medium text-primary hover:underline">{listing.sellerName}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-lg">${listing.price}</p>
+                      <p className="font-bold text-lg">${(listing.priceCents / 100).toFixed(2)}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </Link>
           ))}
+          {trendingListings.length === 0 && (
+            <div className="col-span-full py-12 text-center text-muted-foreground border border-dashed border-white/10 rounded-xl bg-white/5">
+              No listings available yet.
+            </div>
+          )}
         </div>
       </div>
     </div>

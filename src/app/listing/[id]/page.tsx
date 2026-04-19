@@ -1,31 +1,21 @@
-"use client";
-
-import { use } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
-import { ShieldCheck, ShoppingCart, Link as LinkIcon, AlertCircle } from "lucide-react";
+import { ShieldCheck, ShoppingCart, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { getListingById } from "@/app/actions/listings";
+import { notFound } from "next/navigation";
 
-const MOCK_LISTING = {
-  id: "1",
-  title: "1999 Base Set Charizard Holo",
-  category: "TCG",
-  condition: "Near Mint",
-  gradingCompany: "PSA",
-  grade: "9",
-  priceCents: 155000,
-  sellerHandle: "Vanguard Vault",
-  sellerVerified: true,
-  description: "Freshly graded back from PSA. Beautiful swirl on the top right next to the wing. Minimal edge wear on the bottom back.",
-  images: ["https://placehold.co/800x1100/111/444?text=Charizard"]
-};
+export default async function ListingDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const listingId = parseInt(id, 10);
+  
+  if (isNaN(listingId)) return notFound();
 
-export default function ListingDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const unwrappedParams = use(params);
-  const listingId = unwrappedParams.id;
-  const item = MOCK_LISTING;
+  const item = await getListingById(listingId);
+  
+  if (!item) return notFound();
 
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-8 animate-in fade-in duration-700">
@@ -34,11 +24,13 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
         <div className="space-y-4">
           <div className="rounded-2xl overflow-hidden border border-white/10 bg-black shadow-2xl relative aspect-[3/4]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={item.images[0]} alt={item.title} className="w-full h-full object-cover" />
+            <img src={item.photos?.[0] || 'https://placehold.co/800x1100'} alt={item.title} className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
-            <Badge className="absolute bottom-4 left-4 bg-white/10 backdrop-blur-md text-white border-white/20 px-3 py-1.5 text-base">
-              {item.gradingCompany} {item.grade}
-            </Badge>
+            {(item.gradingCompany || item.grade) && (
+              <Badge className="absolute bottom-4 left-4 bg-white/10 backdrop-blur-md text-white border-white/20 px-3 py-1.5 text-base">
+                {item.gradingCompany} {item.grade}
+              </Badge>
+            )}
           </div>
         </div>
 
@@ -52,8 +44,8 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
             <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-tight">{item.title}</h1>
             <div className="mt-4 flex items-center gap-3">
               <span className="text-muted-foreground">Sold by</span>
-              <span className="font-semibold text-primary">{item.sellerHandle}</span>
-              {item.sellerVerified && <ShieldCheck className="w-4 h-4 text-emerald-500" />}
+              <span className="font-semibold text-primary">{item.sellerName}</span>
+              {item.sellerVerified && <div title="Identity Verified"><ShieldCheck className="w-4 h-4 text-emerald-500" /></div>}
             </div>
           </div>
 
@@ -80,12 +72,15 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
             </Card>
           </div>
 
-          <Separator className="bg-white/10" />
-
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold">Description</h3>
-            <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">{item.description}</p>
-          </div>
+          {item.description && (
+            <>
+              <Separator className="bg-white/10" />
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold">Description</h3>
+                <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">{item.description}</p>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
