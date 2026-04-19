@@ -3,9 +3,9 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { ShieldCheck, ShoppingCart, AlertCircle } from "lucide-react";
-import Link from "next/link";
 import { getListingById } from "@/app/actions/listings";
 import { notFound } from "next/navigation";
+import { AddToCartButton } from "@/components/cart/add-to-cart-button";
 
 export default async function ListingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -59,11 +59,14 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
             <Card className="bg-card/40 border-white/5 backdrop-blur-md">
               <CardContent className="p-6">
-                <Link href="/cart">
-                  <Button className="w-full h-14 text-lg shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform">
-                    <ShoppingCart className="w-5 h-5 mr-2" /> Buy Now
-                  </Button>
-                </Link>
+                <AddToCartButton item={{
+                  id: listingId,
+                  title: item.title,
+                  priceCents: item.priceCents,
+                  sellerId: item.sellerId,
+                  sellerName: item.sellerName,
+                  image: item.photos?.[0] || 'https://placehold.co/400x550'
+                }} />
                 <div className="mt-4 flex items-start gap-3 text-sm text-muted-foreground bg-black/20 p-3 rounded-lg border border-white/5">
                   <AlertCircle className="w-5 h-5 text-primary shrink-0" />
                   <p>Your payment is held securely in escrow until this item is delivered and confirmed, powering our Transparency Ledger.</p>

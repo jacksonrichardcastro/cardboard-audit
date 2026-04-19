@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ImagePlus, PackageSearch } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 const listingSchema = z.object({
   title: z.string().min(5),
@@ -23,7 +23,9 @@ const listingSchema = z.object({
 });
 
 export default function NewListingPage() {
-  const [photoCount, setPhotoCount] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadedUrl, setUploadedUrl] = useState("");
 
   const form = useForm<z.infer<typeof listingSchema>>({
     resolver: zodResolver(listingSchema),
@@ -37,9 +39,33 @@ export default function NewListingPage() {
   });
 
   const onSubmit = (values: z.infer<typeof listingSchema>) => {
-    // Math.round(Number(values.priceDisplay) * 100) -> converts float string to cents
     const priceCents = Math.round(Number(values.priceDisplay) * 100);
-    console.log("Submitting listing payload:", { ...values, priceCents });
+    console.log("Submitting listing payload:", { ...values, priceCents, photos: [uploadedUrl] });
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files?.[0]) return;
+    const file = e.target.files[0];
+    setUploading(true);
+    
+    try {
+      const res = await fetch("/api/storage/upload", {
+        method: "POST", body: JSON.stringify({ filename: file.name })
+      });
+      const { signedUrl, publicUrl } = await res.json();
+      
+      await fetch(signedUrl, {
+        method: "PUT",
+        body: file,
+        headers: { "Content-Type": file.type }
+      });
+      
+      setUploadedUrl(publicUrl);
+    } catch {
+      alert("Failed to securely upload via Signed URL");
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -125,16 +151,19 @@ export default function NewListingPage() {
           </CardContent>
         </Card>
 
-        {/* Media Mock Placeholder */}
         <div className="space-y-4">
           <Card className="bg-card/40 border-dashed border-white/10 hover:border-primary/50 transition-colors">
-            <CardContent className="p-6 flex flex-col items-center justify-center text-center h-48 gap-4 cursor-pointer">
+            <CardContent className="p-6 flex flex-col items-center justify-center text-center h-48 gap-4 cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+              <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={handleFileUpload} />
               <div className="p-3 bg-primary/10 rounded-full text-primary">
                 <ImagePlus className="w-6 h-6" />
               </div>
               <div>
-                <p className="font-medium text-sm">Upload Photos</p>
-                <p className="text-xs text-muted-foreground mt-1">Minimum 3 required</p>
+                <p className="font-medium text-sm">
+                  {uploading ? "Securing connection..." : uploadedUrl ? "Photo Safely Vaulted!" : "Upload Photo"}
+                </p>
+                {uploadedUrl && <p className="text-xs text-emerald-500 mt-1">Uploaded securely to Supabase Bucket</p>}
+                {!uploadedUrl && !uploading && <p className="text-xs text-muted-foreground mt-1">Minimum 3 required</p>}
               </div>
             </CardContent>
           </Card>
