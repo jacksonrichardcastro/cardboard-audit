@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { orders, stateTransitions, sellers } from "@/lib/db/schema";
+import { orders, stateTransitions, sellers, users } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
+import { sendOrderDeliveryNotification } from "@/lib/email";
 import Stripe from "stripe";
 
 // Requires STRIPE_SECRET_KEY to fire eventual payouts
@@ -42,7 +43,19 @@ export async function POST(req: Request) {
 
     // 3. Immutability Sequence
     // Prevent duplicated states if carrier sends redundant pings
-    const [currentOrder] = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
+    const [currentOrder] = await db.select({
+      id: orders.id,
+      currentState: orders.currentState,
+      sellerId: orders.sellerId,
+      priceCentsAtSale: orders.priceCentsAtSale,
+      feeCents: orders.feeCents,
+      stripePaymentIntentId: orders.stripePaymentIntentId,
+      buyerEmail: users.email
+    })
+    .from(orders)
+    .innerJoin(users, eq(orders.buyerId, users.userId))
+    .where(eq(orders.id, orderId)).limit(1);
+
     if (!currentOrder || currentOrder.currentState === finalState) {
         return new NextResponse("Sequence bypassed (already mapped)", { status: 200 });
     }
@@ -82,9 +95,11 @@ export async function POST(req: Request) {
                 console.log(`[ESCROW CLEARED] Successfully triggered payout for Order ${orderId}`);
             } catch (err) {
                 console.error("[CRITICAL STRIPE TRANSFER ERR]", err);
-                // In production, we would log this to a "Failed Payouts" DB table for manual admin override
             }
         }
+        
+        // Push the active delivery email specifically to the Buyer so they know to check the door
+        await sendOrderDeliveryNotification(currentOrder.buyerEmail, orderId, trackingNo);
     }
 
     return new NextResponse("Operation Success", { status: 200 });

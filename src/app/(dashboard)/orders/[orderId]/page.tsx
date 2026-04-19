@@ -1,10 +1,16 @@
-import { TransparencyLedger } from "@/components/shared/transparency-ledger";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { getOrderWithLedger } from "@/app/actions/orders";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import dynamic from "next/dynamic";
+
+const TransparencyLedger = dynamic(() => import("@/components/shared/transparency-ledger").then(mod => mod.TransparencyLedger), { 
+  ssr: true,
+  loading: () => <div className="h-64 animate-pulse bg-white/5 rounded-xl w-full" />
+});
 
 export default async function OrderPage({ params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = await params;

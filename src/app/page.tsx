@@ -4,7 +4,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ShieldCheck } from "lucide-react";
 import { getTrendingListings } from "@/app/actions/listings";
 import { SearchBar } from "@/components/storefront/search-bar";
-import { FilterSidebar } from "@/components/storefront/filter-sidebar";
+import dynamic from "next/dynamic";
+
+const FilterSidebar = dynamic(() => import("@/components/storefront/filter-sidebar").then(mod => mod.FilterSidebar), { 
+  ssr: true,
+  loading: () => <div className="h-10 animate-pulse bg-white/5 rounded-full w-48 mb-8" />
+});
 
 export default async function Home(
   props: {

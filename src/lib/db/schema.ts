@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, timestamp, json, varchar, boolean } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, timestamp, json, varchar, boolean, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 export const users = pgTable("users", {
@@ -32,7 +32,10 @@ export const listings = pgTable("listings", {
   quantity: integer("quantity").notNull().default(1),
   photos: json("photos").$type<string[]>(), // Array of image URLs
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => ({
+  sellerIdx: index("seller_idx").on(table.sellerId),
+  categoryIdx: index("category_idx").on(table.category, table.subcategory),
+}));
 
 export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),
@@ -47,7 +50,10 @@ export const orders = pgTable("orders", {
   feeCents: integer("fee_cents").notNull().default(0),
   stripePaymentIntentId: varchar("stripe_payment_intent_id", { length: 255 }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => ({
+  buyerOrderIdx: index("buyer_order_idx").on(table.buyerId),
+  sellerOrderIdx: index("seller_order_idx").on(table.sellerId),
+}));
 
 // Append-only audit trail
 export const stateTransitions = pgTable("state_transitions", {
@@ -60,7 +66,9 @@ export const stateTransitions = pgTable("state_transitions", {
   carrier: varchar("carrier", { length: 100 }),
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => ({
+  trackingIdx: index("tracking_idx").on(table.trackingNumber),
+}));
 
 // Relations definitions (optional but highly recommended for Drizzle Query API)
 export const usersRelations = relations(users, ({ one, many }) => ({

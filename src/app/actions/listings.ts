@@ -3,6 +3,7 @@
 import { eq, desc, ilike, and, gte, lte } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { listings, sellers } from "@/lib/db/schema";
+import { unstable_cache } from "next/cache";
 
 export async function getTrendingListings(params?: {
   q?: string;
@@ -11,29 +12,35 @@ export async function getTrendingListings(params?: {
   maxPrice?: string;
 }) {
   try {
-    const filters = [];
+    const filters: any[] = [];
     
     if (params?.q) filters.push(ilike(listings.title, `%${params.q}%`));
     if (params?.category) filters.push(eq(listings.category, params.category));
     if (params?.minPrice) filters.push(gte(listings.priceCents, Number(params.minPrice) * 100));
     if (params?.maxPrice) filters.push(lte(listings.priceCents, Number(params.maxPrice) * 100));
 
-    const data = await db.select({
-      id: listings.id,
-      title: listings.title,
-      priceCents: listings.priceCents,
-      grade: listings.grade,
-      condition: listings.condition,
-      image: listings.photos,
-      sellerName: sellers.businessName,
-    })
-    .from(listings)
-    .innerJoin(sellers, eq(listings.sellerId, sellers.userId))
-    .where(and(...filters))
-    .orderBy(desc(listings.createdAt))
-    .limit(24);
+    const getCachedData = unstable_cache(
+      async () => {
+        return await db.select({
+          id: listings.id,
+          title: listings.title,
+          priceCents: listings.priceCents,
+          grade: listings.grade,
+          condition: listings.condition,
+          image: listings.photos,
+          sellerName: sellers.businessName,
+        })
+        .from(listings)
+        .innerJoin(sellers, eq(listings.sellerId, sellers.userId))
+        .where(filters.length > 0 ? and(...filters) : undefined)
+        .orderBy(desc(listings.createdAt))
+        .limit(24);
+      },
+      ['trending-listings', JSON.stringify(params || {})],
+      { revalidate: 60, tags: ['listings'] }
+    );
 
-    return data;
+    return await getCachedData();
   } catch (error) {
     console.error("Error fetching listings search:", error);
     return [];
