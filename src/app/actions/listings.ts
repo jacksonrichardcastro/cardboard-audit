@@ -1,11 +1,23 @@
 "use server";
 
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, ilike, and, gte, lte } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { listings, sellers } from "@/lib/db/schema";
 
-export async function getTrendingListings() {
+export async function getTrendingListings(params?: {
+  q?: string;
+  category?: string;
+  minPrice?: string;
+  maxPrice?: string;
+}) {
   try {
+    const filters = [];
+    
+    if (params?.q) filters.push(ilike(listings.title, `%${params.q}%`));
+    if (params?.category) filters.push(eq(listings.category, params.category));
+    if (params?.minPrice) filters.push(gte(listings.priceCents, Number(params.minPrice) * 100));
+    if (params?.maxPrice) filters.push(lte(listings.priceCents, Number(params.maxPrice) * 100));
+
     const data = await db.select({
       id: listings.id,
       title: listings.title,
@@ -17,12 +29,13 @@ export async function getTrendingListings() {
     })
     .from(listings)
     .innerJoin(sellers, eq(listings.sellerId, sellers.userId))
+    .where(and(...filters))
     .orderBy(desc(listings.createdAt))
     .limit(24);
 
     return data;
   } catch (error) {
-    console.error("Error fetching trending listings:", error);
+    console.error("Error fetching listings search:", error);
     return [];
   }
 }
@@ -39,6 +52,7 @@ export async function getListingById(id: number) {
       description: listings.description,
       priceCents: listings.priceCents,
       photos: listings.photos,
+      sellerId: listings.sellerId,
       sellerName: sellers.businessName,
       sellerVerified: sellers.identityVerified,
     })

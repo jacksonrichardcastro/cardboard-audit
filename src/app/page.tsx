@@ -1,12 +1,23 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, Filter, ShieldCheck } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { ShieldCheck } from "lucide-react";
 import { getTrendingListings } from "@/app/actions/listings";
+import { SearchBar } from "@/components/storefront/search-bar";
+import { FilterSidebar } from "@/components/storefront/filter-sidebar";
 
-export default async function Home() {
-  const trendingListings = await getTrendingListings();
+export default async function Home(
+  props: {
+    searchParams?: Promise<{
+      q?: string;
+      category?: string;
+      minPrice?: string;
+      maxPrice?: string;
+    }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const trendingListings = await getTrendingListings(searchParams);
 
   return (
     <div className="min-h-screen bg-background">
@@ -25,25 +36,14 @@ export default async function Home() {
             Shop highly vetted sellers with full 100% supply chain transparency, standard payout logic, and the fairest fees in the hobby.
           </p>
           
-          <div className="max-w-xl mx-auto mt-8 relative">
-            <Search className="absolute left-4 top-3.5 text-muted-foreground w-5 h-5" />
-            <Input 
-              placeholder="Search by player, set, grade..." 
-              className="w-full pl-12 h-12 bg-white/5 border-white/10 text-lg rounded-full focus-visible:ring-primary/50"
-            />
-          </div>
+          <SearchBar />
         </div>
       </div>
 
       {/* Grid Layout */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-16">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-bold tracking-tight">Trending Slabs</h2>
-          <Badge variant="outline" className="border-white/10 hover:bg-white/5 cursor-pointer py-1.5">
-            <Filter className="w-4 h-4 mr-2" /> Filters
-          </Badge>
-        </div>
-
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-12">
+        <FilterSidebar />
+        
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {trendingListings.map((listing) => (
             <Link href={`/listing/${listing.id}`} key={listing.id}>
