@@ -12,12 +12,12 @@ export default function CheckoutPage() {
           <Lock className="w-8 h-8 text-primary mx-auto mb-2" />
           <CardTitle className="text-2xl">Stripe Checkout Simulation</CardTitle>
           <p className="text-sm text-muted-foreground mt-2">
-            In production, this routes to a secure Stripe Elements payload or Stripe Checkout session. For now, it concludes the MVP front-end flow.
+            In production, this routes to a secure Stripe Elements payload generating separate sub-transfers for all vendors in your cart via distinct PaymentIntents or destination charges.
           </p>
         </CardHeader>
         <CardContent className="space-y-6 mt-4">
           <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg text-sm text-primary/90 text-center">
-            Total to pay: <strong>$1,555.00</strong>
+            Total to pay: <strong>$2,160.00</strong>
           </div>
           
           <div className="space-y-4 opacity-50 pointer-events-none">
@@ -38,7 +38,7 @@ export default function CheckoutPage() {
           </div>
 
           <Button className="w-full h-12 text-lg cursor-not-allowed">
-            Pay $1,555.00
+            Pay $2,160.00
           </Button>
         </CardContent>
       </Card>
