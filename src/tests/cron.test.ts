@@ -26,7 +26,10 @@ describe("P0-7: Cron Payout Sweeper Integration", () => {
         await db.insert(orders).values([
             { id: orderEarlyId, buyerId: "user_buyer", sellerId: "user_seller", listingId: 1, currentState: "PENDING_BUYER_CONFIRM", priceCentsAtSale: 100, totalCents: 100, deliveredAt: new Date(Date.now() - (71 * 60 * 60 * 1000)) },
             { id: orderLateId, buyerId: "user_buyer", sellerId: "user_seller", listingId: 1, currentState: "PENDING_BUYER_CONFIRM", priceCentsAtSale: 100, totalCents: 100, deliveredAt: new Date(Date.now() - (73 * 60 * 60 * 1000)) }
-        ]);
+        ]).onConflictDoUpdate({
+           target: orders.id,
+           set: { currentState: "PENDING_BUYER_CONFIRM", deliveredAt: new Date(Date.now() - (73 * 60 * 60 * 1000)) }
+        });
 
         // 2. Trigger the autonomous endpoint natively injecting required Secrets
         const request = new Request("http://localhost/api/cron/payout-sweeper", {

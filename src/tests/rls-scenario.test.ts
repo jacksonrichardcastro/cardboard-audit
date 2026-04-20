@@ -12,7 +12,7 @@ describe("P0-5 Scenario 3: Cross Tenant Force RLS Leaks", () => {
         await db.insert(orders).values([
             { id: 101, buyerId: "user_B", sellerId: "user_owner", listingId: 1, currentState: "PAID", priceCentsAtSale: 100, totalCents: 100 },
             { id: 102, buyerId: "user_A", sellerId: "user_owner", listingId: 1, currentState: "PAID", priceCentsAtSale: 100, totalCents: 100 },
-        ]);
+        ]).onConflictDoNothing();
 
         await withUserContext("user_A", async (tx) => {
             // Act: Execute query explicitly dropping WHERE bounds
