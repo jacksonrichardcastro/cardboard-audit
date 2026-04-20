@@ -15,9 +15,9 @@ export async function withUserContext<T>(userId: string | null | undefined, call
   return await db.transaction(async (tx) => {
     // Assert current_setting('app.current_user_id') within PostgreSQL securely!
     if (userId) {
-      await tx.execute(sql`SET LOCAL app.current_user_id = ${userId}`);
+      await tx.execute(sql.raw(`SET LOCAL app.current_user_id = '${userId}'`));
     } else {
-      await tx.execute(sql`SET LOCAL app.current_user_id = 'anon'`);
+      await tx.execute(sql.raw(`SET LOCAL app.current_user_id = 'anon'`));
     }
     return await callback(tx);
   });
