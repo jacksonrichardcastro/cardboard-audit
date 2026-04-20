@@ -41,13 +41,13 @@ export async function getSellerOrders() {
       shippingCents: orders.shippingCents,
       currentState: orders.currentState,
       createdAt: orders.createdAt,
-      buyerName: users.fullName,
+      buyerName: users.email,
       buyerEmail: users.email,
       listingTitle: listings.title,
     })
     .from(orders)
     .innerJoin(listings, eq(orders.listingId, listings.id))
-    .innerJoin(users, eq(orders.buyerId, users.userId))
+    .innerJoin(users, eq(orders.buyerId, users.id))
     .where(eq(orders.sellerId, userId))
     .orderBy(desc(orders.createdAt));
 

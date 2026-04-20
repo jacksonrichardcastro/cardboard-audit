@@ -1,10 +1,23 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
+import { NextResponse } from "next/server";
+
 const isProtectedRoute = createRouteMatcher(["/dashboard(.*)", "/seller(.*)", "/admin(.*)"]);
+const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) {
     await auth.protect();
+  }
+
+  if (isAdminRoute(req)) {
+    // Explicit Role Check constraint mandated by P0-4
+    const resolvedAuth = await auth();
+    const role = resolvedAuth?.sessionClaims?.public_metadata?.role;
+    if (role !== "admin") {
+      const homeUrl = new URL('/', req.url);
+      return NextResponse.redirect(homeUrl);
+    }
   }
 });
 

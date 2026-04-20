@@ -3,9 +3,10 @@ import Stripe from "stripe";
 import { db } from "@/lib/db";
 import { orders, stateTransitions, listings, sellers } from "@/lib/db/schema";
 import { inArray, eq } from "drizzle-orm";
+import { env } from "@/env";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_mock", {
-  apiVersion: "2026-03-25.dahlia",
+const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
+  apiVersion: "2024-04-10",
 });
 
 export async function POST(req: Request) {

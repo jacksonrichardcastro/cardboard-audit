@@ -3,11 +3,12 @@ import { db } from "@/lib/db";
 import { orders, stateTransitions, sellers, users } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { sendOrderDeliveryNotification } from "@/lib/email";
+import { env } from "@/env";
 import Stripe from "stripe";
 
 // Requires STRIPE_SECRET_KEY to fire eventual payouts
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_mock", {
-  apiVersion: "2026-03-25.dahlia",
+const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
+  apiVersion: "2024-04-10",
 });
 
 export async function POST(req: Request) {
@@ -53,7 +54,7 @@ export async function POST(req: Request) {
       buyerEmail: users.email
     })
     .from(orders)
-    .innerJoin(users, eq(orders.buyerId, users.userId))
+    .innerJoin(users, eq(orders.buyerId, users.id))
     .where(eq(orders.id, orderId)).limit(1);
 
     if (!currentOrder || currentOrder.currentState === finalState) {
@@ -79,7 +80,7 @@ export async function POST(req: Request) {
         // Find seller payout mechanics securely via Database parameters
         const [sellerRecord] = await db.select().from(sellers).where(eq(sellers.userId, currentOrder.sellerId)).limit(1);
         
-        if (sellerRecord?.stripeConnectAccountId && process.env.STRIPE_SECRET_KEY) {
+        if (sellerRecord?.stripeConnectAccountId && env.STRIPE_SECRET_KEY) {
             // Re-calculate the specific net payout logic (Base value - 10% platform fee MVP)
             const netPayoutCents = currentOrder.priceCentsAtSale - currentOrder.feeCents;
 

@@ -1,8 +1,9 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { env } from "@/env";
 import * as schema from "./schema";
 
-const connectionString = process.env.DATABASE_URL || "postgres://postgres:postgres@localhost:5432/cardbound";
+const connectionString = env.DATABASE_URL;
 
 // Disable prepare for PgBouncer / standard Serverless Postgres
 const client = postgres(connectionString, { prepare: false });

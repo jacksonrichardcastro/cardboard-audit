@@ -4,10 +4,10 @@ import Stripe from "stripe";
 import { db } from "@/lib/db";
 import { sellers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { env } from "@/env";
 
-// Requires STRIPE_SECRET_KEY in production .env
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_mock", {
-  apiVersion: "2026-03-25.dahlia",
+const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
+  apiVersion: "2024-04-10",
 });
 
 export async function POST(req: Request) {
@@ -46,8 +46,8 @@ export async function POST(req: Request) {
     }
 
     // 3. Generate the magic connect link allowing the user to KYC
-    // (We mock the host URL since we don't have exactly where they are making this request yet)
-    const host = req.headers.get("origin") || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    // Generate the onboarding link
+    const host = req.headers.get("origin") || env.NEXT_PUBLIC_APP_URL;
 
     const accountLink = await stripe.accountLinks.create({
       account: accountId,

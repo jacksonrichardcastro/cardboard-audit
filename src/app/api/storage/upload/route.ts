@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@supabase/supabase-js";
+import { env } from "@/env";
 
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "https://mock.supabase.co",
-  process.env.SUPABASE_SERVICE_ROLE_KEY || "mock-service-key"
+  env.NEXT_PUBLIC_SUPABASE_URL,
+  env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 export async function POST(req: Request) {
@@ -12,7 +13,7 @@ export async function POST(req: Request) {
     const { userId } = await auth();
     
     // Enforced Seller Auth explicitly required to generate blob space
-    // if (!userId) return new NextResponse("Unauthorized", { status: 401 });
+    if (!userId) return new NextResponse("Unauthorized", { status: 401 });
 
     const body = await req.json();
     const { filename } = body;
@@ -22,7 +23,7 @@ export async function POST(req: Request) {
     }
 
     // Cryptographic isolation enforcing multitenancy file ownership inside the bucket
-    const filePath = `listings/${userId || 'mock'}/${Date.now()}_${filename}`;
+    const filePath = `listings/${userId}/${Date.now()}_${filename}`;
 
     const { data, error } = await supabase.storage
       .from("cardbound-media")
@@ -34,7 +35,7 @@ export async function POST(req: Request) {
     }
 
     // Predicting the final static URL path so the client can map it directly to the Database JSON array
-    const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/cardbound-media/${filePath}`;
+    const publicUrl = `${env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/cardbound-media/${filePath}`;
 
     return NextResponse.json({
       signedUrl: data.signedUrl,

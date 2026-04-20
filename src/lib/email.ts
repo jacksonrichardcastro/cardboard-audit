@@ -1,12 +1,13 @@
 import { Resend } from "resend";
 
-// Fallback to avoid crashes if API key isn't provided locally
-const resend = new Resend(process.env.RESEND_API_KEY || "re_mock_key");
+import { env } from "@/env";
+
+// Will explicitly crash via env schema if missing (unless optional depending on exact environment logic)
+const resend = new Resend(env.RESEND_API_KEY);
 
 export async function sendOrderDeliveryNotification(buyerEmail: string, orderId: number, trackingNo: string) {
   try {
-    // If no real API key is present, we log standard operational mocks rather than failing the Webhook
-    if (!process.env.RESEND_API_KEY) {
+    if (!env.RESEND_API_KEY) {
       console.log(`[MOCK EMAIL SENT] Alerted ${buyerEmail} that Order #${orderId} was safely delivered!`);
       return { success: true, mocked: true };
     }
@@ -22,7 +23,7 @@ export async function sendOrderDeliveryNotification(buyerEmail: string, orderId:
           <p><strong>Tracking Number:</strong> ${trackingNo}</p>
           <br/>
           <p>The CardBound Escrow lock has successfully cleared. We hope you enjoy the newest addition to your collection!</p>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL}/orders/${orderId}" style="display:inline-block; padding: 12px 24px; background: #6D28D9; color: white; border-radius: 6px; text-decoration: none;">View Transparency Ledger</a>
+          <a href="${env.NEXT_PUBLIC_APP_URL}/orders/${orderId}" style="display:inline-block; padding: 12px 24px; background: #6D28D9; color: white; border-radius: 6px; text-decoration: none;">View Transparency Ledger</a>
         </div>
       `,
     });
