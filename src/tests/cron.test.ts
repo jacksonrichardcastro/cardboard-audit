@@ -10,14 +10,14 @@ import { eq } from "drizzle-orm";
 
 vi.mock("stripe", () => {
     return {
-        default: vi.fn().mockImplementation(() => ({
-            transfers: {
+        default: class StripeMock {
+            transfers = {
                 create: vi.fn().mockResolvedValue({ id: "tr_mock123" })
-            },
-            webhooks: {
+            };
+            webhooks = {
                 constructEvent: vi.fn().mockReturnValue({ id: "evt_duplicate_test", type: "charge.succeeded", data: { object: {} } })
-            }
-        }))
+            };
+        }
     }
 });
 

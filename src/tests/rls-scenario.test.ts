@@ -6,6 +6,7 @@ import { orders, users, listings } from "@/lib/db/schema";
 beforeAll(async () => {
     // Manually enforce PostgreSQL RLS limits on the mock table
     await db.execute(sql.raw(`ALTER TABLE orders ENABLE ROW LEVEL SECURITY;`));
+    await db.execute(sql.raw(`ALTER TABLE orders FORCE ROW LEVEL SECURITY;`));
     await db.execute(sql.raw(`DROP POLICY IF EXISTS "orders_strict_access" ON orders;`));
     await db.execute(sql.raw(`CREATE POLICY "orders_strict_access" ON orders FOR SELECT USING (buyer_id = current_setting('app.current_user_id', true) OR seller_id = current_setting('app.current_user_id', true) OR current_setting('app.current_user_id', true) = 'system');`));
 });

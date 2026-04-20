@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from "vitest";
 
 vi.mock("stripe", () => ({
-  default: vi.fn().mockImplementation(() => ({
-    webhooks: { constructEvent: vi.fn().mockReturnValue({ id: "evt_duplicate_test", type: "charge.succeeded", data: { object: {} } }) }
-  }))
+  default: class StripeMock {
+    webhooks = { constructEvent: vi.fn().mockReturnValue({ id: "evt_duplicate_test", type: "charge.succeeded", data: { object: {} } }) }
+  }
 }));
 
 import { POST } from "../app/api/webhooks/stripe/route";
