@@ -168,36 +168,39 @@ export async function confirmBuyerReceipt(orderId: number, triggerActor: "buyer"
 }
 
 // P1-5: Seller State Execution boundaries
-export async function updateOrderState(orderId: number, newState: string) {
+export async function updateOrderState(orderId: number, newState: string, trackingNumber?: string) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const [currentOrder] = await db.select({
-    id: orders.id,
-    currentState: orders.currentState,
-    sellerId: orders.sellerId,
-  })
-  .from(orders)
-  .where(eq(orders.id, orderId)).limit(1);
+  const currentOrder = await withUserContext(userId, async (tx) => {
+    const [record] = await tx.select({
+      id: orders.id,
+      currentState: orders.currentState,
+      sellerId: orders.sellerId
+    })
+    .from(orders)
+    .where(eq(orders.id, orderId)).limit(1);
+    return record;
+  });
 
-  if (!currentOrder || currentOrder.sellerId !== userId) {
-    throw new Error("Unauthorized to mutate this order");
-  }
-
-  // Restrict to explicitly allowed seller transitions mapping Escrow invariants
-  const allowedTransitions = ["PACKAGED", "SHIPPED"];
-  if (!allowedTransitions.includes(newState)) {
-    throw new Error("Sellers cannot force this explicit transition boundary.");
-  }
-
-  await db.update(orders).set({ currentState: newState }).where(eq(orders.id, orderId));
+  if (!currentOrder) throw new Error("Order not found");
+  if (currentOrder.sellerId !== userId) throw new Error("Unauthorized restriction bounds");
   
-  await db.insert(stateTransitions).values({
-    orderId,
-    newState,
-    previousState: currentOrder.currentState,
-    actorId: userId,
-    notes: `Vendor manually verified status: ${newState}`,
+  if (currentOrder.currentState !== "PAID" && Object.values(OrderStateLimits).indexOf(newState) > 0) {
+     throw new Error("Invalid state progression tracking");
+  }
+
+  await withUserContext(userId, async (tx) => {
+    await tx.update(orders).set({ currentState: newState }).where(eq(orders.id, orderId));
+  
+    await tx.insert(stateTransitions).values({
+      orderId: orderId,
+      newState: newState,
+      previousState: currentOrder.currentState,
+      actorId: userId,
+      trackingNumber,
+      notes: trackingNumber ? `Updated tracking metadata: ${trackingNumber}` : undefined
+    });
   });
 
   return { success: true };
