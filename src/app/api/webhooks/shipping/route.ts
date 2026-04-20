@@ -1,20 +1,53 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { orders, stateTransitions, sellers, users } from "@/lib/db/schema";
+import { orders, stateTransitions, sellers, users, webhookEvents } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { sendOrderDeliveryNotification } from "@/lib/email";
 import { env } from "@/env";
 import Stripe from "stripe";
+import crypto from "crypto";
 
 // Requires STRIPE_SECRET_KEY to fire eventual payouts
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-  apiVersion: "2024-04-10",
+  apiVersion: "2026-03-25.dahlia" as any,
 });
 
 export async function POST(req: Request) {
   try {
-    // 1. Signature check omitted for MVP (Shippo/EasyPost HMAC validation would go here)
-    const payload = await req.json();
+    const copyBody = await req.text();
+    const signature = req.headers.get("x-carrier-signature");
+
+    // P0-1: HMAC signature validation blocking hostile injections
+    if (env.CARRIER_WEBHOOK_SECRET && signature) {
+      const expectedSignature = crypto.createHmac("sha256", env.CARRIER_WEBHOOK_SECRET)
+        .update(copyBody)
+        .digest("hex");
+        
+      if (signature !== expectedSignature) {
+        console.error("[CRITICAL] HOSTILE WEBHOOK INTERCEPTION ATTEMPT");
+        return new NextResponse("Invalid Signature", { status: 401 });
+      }
+    } else if (env.CARRIER_WEBHOOK_SECRET && !signature) {
+      return new NextResponse("Missing Signature", { status: 401 });
+    }
+
+    const payload = JSON.parse(copyBody);
+    
+    // P0-2: Idempotent Lock preventing duplicate webhook execution
+    const eventId = payload.id || `evt_${Date.now()}_${Math.random()}`; // Fallback if carrier lacks native IDs
+    const existingLock = await db.select().from(webhookEvents).where(eq(webhookEvents.id, eventId)).limit(1);
+    
+    if (existingLock.length > 0) {
+      return NextResponse.json({ message: "Duplicate carrier event safely blocked" });
+    }
+
+    // Secure the log
+    await db.insert(webhookEvents).values({
+      id: eventId,
+      source: "shipping",
+      eventType: payload.event,
+      payloadJson: payload,
+    });
     
     // Example Carrier Payload expectation: { tracking_number: "1Z999", status: "delivered" }
     const trackingNo = payload?.tracking_number;

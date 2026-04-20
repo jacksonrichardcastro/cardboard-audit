@@ -70,6 +70,28 @@ export const stateTransitions = pgTable("state_transitions", {
   trackingIdx: index("tracking_idx").on(table.trackingNumber),
 }));
 
+// P0-2: Idempotency dedupe table preventing catastrophic double-payouts
+export const webhookEvents = pgTable("webhook_events", {
+  id: varchar("id", { length: 255 }).primaryKey(), // The explicit Stripe / Shippo event ID
+  source: varchar("source", { length: 50 }).notNull(), // "stripe" | "shipping"
+  eventType: varchar("event_type", { length: 255 }),
+  payloadJson: json("payload_json").notNull(),
+  processedAt: timestamp("processed_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// P0-6: Complete centralized Audit Ledger
+export const auditEvents = pgTable("audit_events", {
+  id: serial("id").primaryKey(),
+  eventType: text("event_type").notNull(),
+  actorId: varchar("actor_id", { length: 255 }).notNull(),
+  actorType: varchar("actor_type", { length: 50 }).notNull(), // 'seller' | 'buyer' | 'system' | 'admin'
+  subjectType: varchar("subject_type", { length: 100 }), // 'order' | 'listing' | 'transfer'
+  subjectId: varchar("subject_id", { length: 255 }),
+  payloadJson: json("payload_json"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Relations definitions (optional but highly recommended for Drizzle Query API)
 export const usersRelations = relations(users, ({ one, many }) => ({
   sellerProfile: one(sellers, {

@@ -7,7 +7,7 @@ import { inArray, eq } from "drizzle-orm";
 import { env } from "@/env";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-  apiVersion: "2024-04-10",
+  apiVersion: "2026-03-25.dahlia" as any,
 });
 
 export async function POST(req: Request) {

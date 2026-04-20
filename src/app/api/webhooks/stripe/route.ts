@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { db } from "@/lib/db";
-import { orders, stateTransitions, listings, sellers } from "@/lib/db/schema";
+import { orders, stateTransitions, listings, sellers, webhookEvents } from "@/lib/db/schema";
 import { inArray, eq } from "drizzle-orm";
 import { env } from "@/env";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-  apiVersion: "2024-04-10",
+  apiVersion: "2026-03-25.dahlia" as any,
 });
 
 export async function POST(req: Request) {
@@ -29,6 +29,19 @@ export async function POST(req: Request) {
       return new NextResponse(`Webhook Error: ${error.message}`, { status: 400 });
     }
   }
+
+  // P0-2: Idempotent Lock preventing catastrophic duplicate order executions
+  const existingLock = await db.select().from(webhookEvents).where(eq(webhookEvents.id, event.id)).limit(1);
+  if (existingLock.length > 0) {
+    return NextResponse.json({ message: "Event already processed securely." });
+  }
+
+  await db.insert(webhookEvents).values({
+    id: event.id,
+    source: "stripe",
+    eventType: event.type,
+    payloadJson: event as any,
+  });
 
   const session = event.data.object as Stripe.Checkout.Session;
 
