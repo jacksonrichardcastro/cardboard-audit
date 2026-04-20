@@ -14,6 +14,7 @@ export const sellers = pgTable("sellers", {
   description: text("description"),
   identityVerified: boolean("identity_verified").notNull().default(false),
   applicationStatus: varchar("application_status", { length: 50 }).notNull().default("pending"), // pending, approved, rejected
+  feeTier: varchar("fee_tier", { length: 50 }).notNull().default("standard"), // standard=5%, founding=3%
   stripeConnectAccountId: varchar("stripe_connect_account_id", { length: 255 }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -108,6 +109,18 @@ export const disputes = pgTable("disputes", {
   resolutionNote: text("resolution_note"),
   resolvedBy: varchar("resolved_by", { length: 255 }), // Admin user ID
   resolvedAt: timestamp("resolved_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// P1-8: Dedicated Payouts Sub-Ledger mapping explicitly to Stripe API IDs
+export const payouts = pgTable("payouts", {
+  id: serial("id").primaryKey(),
+  sellerId: varchar("seller_id", { length: 255 }).notNull().references(() => users.id),
+  orderId: integer("order_id").notNull().references(() => orders.id),
+  stripeTransferId: varchar("stripe_transfer_id", { length: 255 }).notNull(),
+  grossCents: integer("gross_cents").notNull(),
+  feeCents: integer("fee_cents").notNull(),
+  netCents: integer("net_cents").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

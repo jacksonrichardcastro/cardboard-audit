@@ -74,6 +74,7 @@ export async function POST(req: Request) {
         priceCents: listings.priceCents,
         sellerId: listings.sellerId,
         sellerStripeId: sellers.stripeConnectAccountId,
+        feeTier: sellers.feeTier,
       })
       .from(listings)
       .innerJoin(sellers, eq(listings.sellerId, sellers.userId))
@@ -82,8 +83,9 @@ export async function POST(req: Request) {
     // 3. Ledger Automation Engine
     // Iterate securely executing each payload inside raw PostgreSQL
     for (const item of dbItems) {
-      // Calculate Platform Fee (10% flat for MVP)
-      const feeCents = Math.round(item.priceCents * 0.10);
+      // P1-7: Calculate Advanced Platform Fee limits based directly upon Vendor Tier Constraints (3% limit vs 5%)
+      const dynamicMultipler = item.feeTier === "founding" ? 0.03 : 0.05;
+      const feeCents = Math.round(item.priceCents * dynamicMultipler);
       const sellerPayoutCents = item.priceCents - feeCents;
 
       // Create Order Instance natively

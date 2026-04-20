@@ -2,7 +2,7 @@
 
 import { eq, desc, asc } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { orders, stateTransitions, sellers, users, listings } from "@/lib/db/schema";
+import { orders, stateTransitions, sellers, users, listings, payouts } from "@/lib/db/schema";
 import { OrderState } from "@/components/shared/transparency-ledger";
 import { auth } from "@clerk/nextjs/server";
 import Stripe from "stripe";
@@ -124,15 +124,62 @@ export async function confirmBuyerReceipt(orderId: number, triggerActor: "buyer"
 
   try {
      // Final Execute Math routing the Seller's payout explicitly
-     await stripe.transfers.create({
+     const transfer = await stripe.transfers.create({
         amount: netPayoutCents,
         currency: "usd",
         destination: sellerRecord.stripeConnectAccountId,
         transfer_group: currentOrder.stripePaymentIntentId || undefined,
      });
+
+     // P1-8: Immutable Payout Ledger protecting Seller transfer traces natively
+     await db.insert(payouts).values({
+        orderId,
+        sellerId: currentOrder.sellerId,
+        stripeTransferId: transfer.id,
+        grossCents: currentOrder.priceCentsAtSale,
+        feeCents: currentOrder.feeCents,
+        netCents: netPayoutCents,
+     });
+
      return { success: true };
   } catch (err) {
      console.error("[CRITICAL STRIPE ESCROW ERROR]", err);
      throw err;
   }
+}
+
+// P1-5: Seller State Execution boundaries
+export async function updateOrderState(orderId: number, newState: string) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const [currentOrder] = await db.select({
+    id: orders.id,
+    currentState: orders.currentState,
+    sellerId: orders.sellerId,
+  })
+  .from(orders)
+  .where(eq(orders.id, orderId)).limit(1);
+
+  if (!currentOrder || currentOrder.sellerId !== userId) {
+    throw new Error("Unauthorized to mutate this order");
+  }
+
+  // Restrict to explicitly allowed seller transitions mapping Escrow invariants
+  const allowedTransitions = ["PACKAGED", "SHIPPED"];
+  if (!allowedTransitions.includes(newState)) {
+    throw new Error("Sellers cannot force this explicit transition boundary.");
+  }
+
+  await db.update(orders).set({ currentState: newState }).where(eq(orders.id, orderId));
+  
+  await db.insert(stateTransitions).values({
+    orderId,
+    newState,
+    previousState: currentOrder.currentState,
+    actorId: userId,
+    notes: `Vendor manually verified status: ${newState}`,
+  });
+
+  return { success: true };
 }

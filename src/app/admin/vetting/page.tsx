@@ -1,40 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CheckCircle2, XCircle, AlertCircle } from "lucide-react";
-
-// Mock data representing database pending sellers
-const INITIAL_APPLICATIONS = [
-  {
-    id: "user_new_1",
-    businessName: "Holo Hits",
-    description: "I've been selling Pokemon and Lorcana primarily on Whatnot for 2 years.",
-    identityVerified: true,
-    status: "pending",
-    date: "A few minutes ago"
-  },
-  {
-    id: "user_new_2",
-    businessName: "Deep Run Collectibles",
-    description: "Selling rare NBA and NFL slabs.",
-    identityVerified: true,
-    status: "pending",
-    date: "1 hour ago"
-  }
-];
+import { CheckCircle2, XCircle, AlertCircle, Loader2 } from "lucide-react";
+import { getPendingSellers, approveSeller } from "@/app/actions/admin";
 
 export default function AdminVettingDashboard() {
-  const [applications, setApplications] = useState(INITIAL_APPLICATIONS);
+  const [applications, setApplications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleAction = (id: string, action: "approved" | "rejected") => {
-    setApplications(prev => prev.filter(app => app.id !== id));
-    // Here we would call a server action updating `sellers.applicationStatus` 
-    // and trigger an email to the user.
-    console.log(`Application ${id} ${action}`);
+  useEffect(() => {
+    getPendingSellers()
+       .then(data => { setApplications(data); setLoading(false); })
+       .catch(err => { console.error(err); setLoading(false); });
+  }, []);
+
+  const handleAction = async (id: string, action: "approved" | "rejected") => {
+    try {
+        if (action === "approved") {
+            await approveSeller(id);
+        }
+        setApplications(prev => prev.filter(app => app.userId !== id));
+    } catch (err: any) {
+        alert(err.message);
+    }
   };
 
   return (
@@ -59,7 +51,9 @@ export default function AdminVettingDashboard() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {applications.length === 0 ? (
+            {loading ? (
+                <div className="flex justify-center p-12"><Loader2 className="animate-spin text-primary w-8 h-8" /></div>
+            ) : applications.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <CheckCircle2 className="w-12 h-12 mx-auto mb-4 text-emerald-500/50" />
                 <p>Inbox zero. All applications reviewed.</p>
@@ -76,10 +70,10 @@ export default function AdminVettingDashboard() {
                 </TableHeader>
                 <TableBody>
                   {applications.map((app) => (
-                    <TableRow key={app.id} className="border-white/5 hover:bg-white/5 transition-colors">
+                    <TableRow key={app.userId} className="border-white/5 hover:bg-white/5 transition-colors">
                       <TableCell className="font-medium align-top">
                         <p className="text-foreground text-base">{app.businessName}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{app.date}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{app.email}</p>
                       </TableCell>
                       <TableCell className="align-top max-w-sm">
                         <p className="text-sm text-muted-foreground line-clamp-2">{app.description}</p>
@@ -93,10 +87,10 @@ export default function AdminVettingDashboard() {
                       </TableCell>
                       <TableCell className="text-right align-top">
                         <div className="flex justify-end gap-2">
-                          <Button variant="outline" size="sm" onClick={() => handleAction(app.id, "rejected")} className="border-white/10 hover:bg-destructive/20 hover:text-destructive">
+                          <Button variant="outline" size="sm" onClick={() => handleAction(app.userId, "rejected")} className="border-white/10 hover:bg-destructive/20 hover:text-destructive">
                             <XCircle className="w-4 h-4 mr-1" /> Reject
                           </Button>
-                          <Button size="sm" onClick={() => handleAction(app.id, "approved")} className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20">
+                          <Button size="sm" onClick={() => handleAction(app.userId, "approved")} className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20">
                             <CheckCircle2 className="w-4 h-4 mr-1" /> Approve
                           </Button>
                         </div>
