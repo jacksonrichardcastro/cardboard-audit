@@ -13,7 +13,7 @@ export default clerkMiddleware(async (auth, req) => {
   if (isAdminRoute(req)) {
     // Explicit Role Check constraint mandated by P0-4
     const resolvedAuth = await auth();
-    const role = resolvedAuth?.sessionClaims?.public_metadata?.role;
+    const role = (resolvedAuth?.sessionClaims?.public_metadata as { role?: string })?.role;
     if (role !== "admin") {
       const homeUrl = new URL('/', req.url);
       return NextResponse.redirect(homeUrl);

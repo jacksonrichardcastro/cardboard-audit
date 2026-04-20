@@ -73,7 +73,12 @@ export async function POST(req: Request) {
 
     // Normalize Carrier Strings into CardBound Standard Types
     let finalState = "IN_TRANSIT";
-    if (statusToken === "DELIVERED" || statusToken === "COMPLETED") finalState = "DELIVERED";
+    let isDelivered = false;
+    
+    if (statusToken === "DELIVERED" || statusToken === "COMPLETED") {
+        finalState = "PENDING_BUYER_CONFIRM"; // P0-7 Escrow Delay Requirement
+        isDelivered = true;
+    }
 
     // 3. Immutability Sequence
     // Prevent duplicated states if carrier sends redundant pings
@@ -105,33 +110,16 @@ export async function POST(req: Request) {
     });
 
     await db.update(orders)
-      .set({ currentState: finalState })
+      .set({ 
+        currentState: finalState,
+        ...(isDelivered ? { deliveredAt: new Date() } : {})
+      })
       .where(eq(orders.id, orderId));
 
-    // 4. True Escrow Auto-Release Logic
-    if (finalState === "DELIVERED") {
-        // Find seller payout mechanics securely via Database parameters
-        const [sellerRecord] = await db.select().from(sellers).where(eq(sellers.userId, currentOrder.sellerId)).limit(1);
-        
-        if (sellerRecord?.stripeConnectAccountId && env.STRIPE_SECRET_KEY) {
-            // Re-calculate the specific net payout logic (Base value - 10% platform fee MVP)
-            const netPayoutCents = currentOrder.priceCentsAtSale - currentOrder.feeCents;
-
-            try {
-                // Issue the dynamic cross-account ledger transfer!
-                // Using the strict PaymentIntent to group it successfully
-                await stripe.transfers.create({
-                    amount: netPayoutCents,
-                    currency: "usd",
-                    destination: sellerRecord.stripeConnectAccountId,
-                    transfer_group: currentOrder.stripePaymentIntentId || "guest_transfer", 
-                });
-                console.log(`[ESCROW CLEARED] Successfully triggered payout for Order ${orderId}`);
-            } catch (err) {
-                console.error("[CRITICAL STRIPE TRANSFER ERR]", err);
-            }
-        }
-        
+    // 4. True Escrow Auto-Release Logic Has Been Blocked (P0-7)
+    // Funding logic is now executed asynchronously in action.confirmBuyerReceipt
+    
+    if (isDelivered) {
         // Push the active delivery email specifically to the Buyer so they know to check the door
         await sendOrderDeliveryNotification(currentOrder.buyerEmail, orderId, trackingNo);
     }
