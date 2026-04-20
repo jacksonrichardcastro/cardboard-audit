@@ -1,9 +1,55 @@
 name: CI Validation Bounds
 on: [push, pull_request]
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    
+    # 1. Boot up a Postgres 16 container natively linked to this job
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password123
+          POSTGRES_DB: cardbound
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-    - run: npm install && npx vitest run
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    # 2. Setup pnpm explicitly
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 9
+
+    # 3. Setup Node v20 with pnpm caching
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      run: pnpm install
+
+    # 4. Push local schemas into the DB Service Container
+    - name: Run Schema Migrations
+      run: pnpm run db:push
+      env:
+        DATABASE_URL: postgres://postgres:password123@localhost:5432/cardbound
+
+    # 5. Execute Tests dynamically evaluating Drizzle logic inside Postgres Service
+    - name: Run Integration Tests
+      run: pnpm run test
+      env:
+        DATABASE_URL: postgres://postgres:password123@localhost:5432/cardbound
+        CRON_SECRET: super_secret_cron_key_mock_123
