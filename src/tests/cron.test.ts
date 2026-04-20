@@ -1,4 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
+vi.mock("@clerk/nextjs", () => ({
+    auth: vi.fn().mockResolvedValue({ userId: "user_owner" }),
+    currentUser: vi.fn().mockResolvedValue({ id: "user_owner" })
+}));
 import { db } from "@/lib/db";
 import { orders, users, listings, sellers } from "@/lib/db/schema";
 import { POST } from "@/app/api/cron/payout-sweeper/route";
@@ -9,6 +13,9 @@ vi.mock("stripe", () => {
         default: vi.fn().mockImplementation(() => ({
             transfers: {
                 create: vi.fn().mockResolvedValue({ id: "tr_mock123" })
+            },
+            webhooks: {
+                constructEvent: vi.fn().mockReturnValue({ id: "evt_duplicate_test", type: "charge.succeeded", data: { object: {} } })
             }
         }))
     }
