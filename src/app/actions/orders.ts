@@ -19,6 +19,8 @@ export async function getOrderWithLedger(orderId: number) {
       taxCents: orders.taxCents,
       sellerHandle: sellers.businessName,
       buyerEmail: users.email,
+      buyerId: orders.buyerId,
+      sellerId: orders.sellerId,
     })
     .from(orders)
     .innerJoin(sellers, eq(orders.sellerId, sellers.userId))

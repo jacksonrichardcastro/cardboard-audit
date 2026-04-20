@@ -45,6 +45,18 @@ export async function POST(req: Request) {
 
   const session = event.data.object as Stripe.Checkout.Session;
 
+  if (event.type === "identity.verification_session.verified") {
+    const sessionPayload = event.data.object as Stripe.Identity.VerificationSession;
+    const identityUserId = sessionPayload.metadata?.userId;
+    
+    if (identityUserId) {
+        await db.update(sellers)
+          .set({ identityVerified: true })
+          .where(eq(sellers.userId, identityUserId));
+        console.log(`[KYC CLEARED] Successfully resolved Identity for Vendor: ${identityUserId}`);
+    }
+  }
+
   if (event.type === "checkout.session.completed") {
     // 1. Unpack Metadata Payload
     const listingIds: number[] = JSON.parse(session.metadata?.listingIds || "[]");

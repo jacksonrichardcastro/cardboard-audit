@@ -6,6 +6,9 @@ import { getOrderWithLedger } from "@/app/actions/orders";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
+import { auth } from "@clerk/nextjs/server";
+import { BuyerActions } from "@/components/orders/buyer-actions";
+import { SellerActions } from "@/components/orders/seller-actions";
 
 const TransparencyLedger = dynamic(() => import("@/components/shared/transparency-ledger").then(mod => mod.TransparencyLedger), { 
   ssr: true,
@@ -20,6 +23,10 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
 
   const order = await getOrderWithLedger(parsedId);
   if (!order) return notFound();
+
+  const { userId } = await auth();
+  const isBuyer = userId === order.buyerId;
+  const isSeller = userId === order.sellerId;
 
   return (
     <div className="max-w-5xl mx-auto p-4 md:p-8 font-sans space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -70,15 +77,8 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
             </CardContent>
           </Card>
 
-          <Card className="bg-primary/5 border-primary/20 backdrop-blur-xl">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-primary">Seller Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              <Button disabled variant="secondary" className="w-full opacity-50 cursor-not-allowed">Mark as Packaged</Button>
-              <Button variant="outline" className="w-full border-primary/50 text-white hover:bg-primary/20">Update Tracking Data</Button>
-            </CardContent>
-          </Card>
+          {isBuyer && <BuyerActions orderId={parsedId} currentState={order.currentState} />}
+          {isSeller && <SellerActions orderId={parsedId} currentState={order.currentState} />}
         </div>
       </div>
     </div>

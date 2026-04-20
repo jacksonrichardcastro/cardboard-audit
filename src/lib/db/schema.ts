@@ -31,6 +31,8 @@ export const listings = pgTable("listings", {
   priceCents: integer("price_cents").notNull(), // Stored in cents
   quantity: integer("quantity").notNull().default(1),
   photos: json("photos").$type<string[]>(), // Array of image URLs
+  status: varchar("status", { length: 50 }).notNull().default("ACTIVE"), // ACTIVE, SOLD, DRAFT
+  deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => ({
   sellerIdx: index("seller_idx").on(table.sellerId),
@@ -93,6 +95,22 @@ export const auditEvents = pgTable("audit_events", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// P1-1: Core Product Differentiator - Escrow Disputes
+export const disputes = pgTable("disputes", {
+  id: serial("id").primaryKey(),
+  orderId: integer("order_id").notNull().references(() => orders.id),
+  openedBy: varchar("opened_by", { length: 255 }).notNull().references(() => users.id),
+  reason: varchar("reason", { length: 50 }).notNull(), // NOT_RECEIVED, NOT_AS_DESCRIBED, DAMAGED
+  reasonText: text("reason_text"),
+  buyerEvidenceUrls: json("buyer_evidence_urls").default([]),
+  sellerEvidenceUrls: json("seller_evidence_urls").default([]),
+  status: varchar("status", { length: 50 }).notNull().default("OPEN"), // OPEN, SELLER_RESPONDED, ADMIN_REVIEW, RESOLVED_FOR_BUYER, RESOLVED_FOR_SELLER, RESOLVED_SPLIT
+  resolutionNote: text("resolution_note"),
+  resolvedBy: varchar("resolved_by", { length: 255 }), // Admin user ID
+  resolvedAt: timestamp("resolved_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Relations definitions (optional but highly recommended for Drizzle Query API)
 export const usersRelations = relations(users, ({ one, many }) => ({
   sellerProfile: one(sellers, {
@@ -126,5 +144,16 @@ export const stateTransitionsRelations = relations(stateTransitions, ({ one }) =
   order: one(orders, {
     fields: [stateTransitions.orderId],
     references: [orders.id],
+  }),
+}));
+
+export const disputesRelations = relations(disputes, ({ one }) => ({
+  order: one(orders, {
+    fields: [disputes.orderId],
+    references: [orders.id],
+  }),
+  opener: one(users, {
+    fields: [disputes.openedBy],
+    references: [users.id],
   }),
 }));

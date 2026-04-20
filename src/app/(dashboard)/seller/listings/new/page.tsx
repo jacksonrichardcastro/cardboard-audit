@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ImagePlus, PackageSearch } from "lucide-react";
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { createListing } from "@/app/actions/listings";
 
 const listingSchema = z.object({
   title: z.string().min(5),
@@ -23,6 +25,7 @@ const listingSchema = z.object({
 });
 
 export default function NewListingPage() {
+  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadedUrl, setUploadedUrl] = useState("");
@@ -38,9 +41,21 @@ export default function NewListingPage() {
     }
   });
 
-  const onSubmit = (values: z.infer<typeof listingSchema>) => {
-    const priceCents = Math.round(Number(values.priceDisplay) * 100);
-    console.log("Submitting listing payload:", { ...values, priceCents, photos: [uploadedUrl] });
+  const onSubmit = async (values: z.infer<typeof listingSchema>) => {
+    try {
+      const priceCents = Math.round(Number(values.priceDisplay) * 100);
+      const newId = await createListing({
+        title: values.title,
+        category: values.category,
+        condition: values.condition,
+        priceCents,
+        description: values.description,
+        photos: uploadedUrl ? [uploadedUrl] : []
+      });
+      router.push(`/listing/${newId}`); // Redirect dynamically to the newly initialized listing page
+    } catch (err: any) {
+      alert("Verification Error: " + err.message);
+    }
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

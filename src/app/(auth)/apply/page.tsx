@@ -18,6 +18,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
+import { createSellerApplication } from "@/app/actions/sellers";
+import { Loader2 } from "lucide-react";
 
 const formSchema = z.object({
   businessName: z.string().min(2, {
@@ -29,8 +31,7 @@ const formSchema = z.object({
 });
 
 export default function ApplyPage() {
-  const [identityVerified, setIdentityVerified] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -40,25 +41,19 @@ export default function ApplyPage() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!identityVerified) return;
-    console.log("Submitting seller application:", values);
-    setSubmitted(true);
-  }
-
-  if (submitted) {
-    return (
-      <div className="flex h-screen items-center justify-center p-4">
-        <Card className="max-w-md w-full bg-card/60 backdrop-blur-xl border-white/10 shadow-2xl">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">Application Received</CardTitle>
-            <CardDescription className="text-lg mt-2">
-              Your request to become a seller is under review. Our team will verify your application and get back to you within 24 hours.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-    );
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      setSubmitting(true);
+      const { applicationUrl } = await createSellerApplication({
+        businessName: values.businessName,
+        description: values.description
+      });
+      // P1-3: Hardware redirect directly onto Stripe Hosted KYC
+      window.location.href = applicationUrl;
+    } catch(err: any) {
+      alert("Application Error: " + err.message);
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -117,24 +112,14 @@ export default function ApplyPage() {
                 <div className="flex items-center justify-between relative z-10">
                   <div>
                     <p className="font-semibold text-sm text-foreground">Identity Verification</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Stripe Identity requires Government ID</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">You will be redirected securely to Stripe KYC upon submit</p>
                   </div>
-                  <Button 
-                    type="button" 
-                    variant={identityVerified ? "secondary" : "default"}
-                    onClick={() => setIdentityVerified(true)}
-                    className="transition-all active:scale-95 shadow-lg"
-                  >
-                    {identityVerified ? "✓ Verified" : "Verify Now"}
-                  </Button>
                 </div>
-                {!identityVerified && (
-                  <p className="text-xs text-rose-400 relative z-10">Mandatory verification is required before submission.</p>
-                )}
               </div>
 
-              <Button type="submit" className="w-full h-11 text-base shadow-xl shadow-primary/20 transition-all hover:shadow-primary/40 hover:-translate-y-0.5" disabled={!identityVerified}>
-                Submit Application
+              <Button type="submit" disabled={submitting} className="w-full h-11 text-base shadow-xl shadow-primary/20 transition-all hover:shadow-primary/40 hover:-translate-y-0.5">
+                {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Proceed to Secure Verification
               </Button>
             </form>
           </Form>
