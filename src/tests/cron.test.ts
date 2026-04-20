@@ -1,8 +1,18 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 import { db } from "@/lib/db";
 import { orders } from "@/lib/db/schema";
 import { POST } from "@/app/api/cron/payout-sweeper/route";
 import { eq } from "drizzle-orm";
+
+vi.mock("stripe", () => {
+    return {
+        default: vi.fn().mockImplementation(() => ({
+            transfers: {
+                create: vi.fn().mockResolvedValue({ id: "tr_mock123" })
+            }
+        }))
+    }
+});
 
 describe("P0-7: Cron Payout Sweeper Integration", () => {
     it("Verifies confirmBuyerReceipt is called exclusively for orders exceeding the 72H Escrow threshold", async () => {

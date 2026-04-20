@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 
     // Iteratively process
     for (const order of staleOrders) {
-      await confirmBuyerReceipt(order.id);
+      await confirmBuyerReceipt(order.id, "system");
     }
 
     return NextResponse.json({ processed: staleOrders.length });

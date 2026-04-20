@@ -8,6 +8,12 @@ describe("P0-5 Scenario 3: Cross Tenant Force RLS Leaks", () => {
         // Test explicitly requires active Postgres configuration to natively evaluate RLS bounds
         
         // Setup mock environment directly against `withUserContext` 
+        // Seed alternative identities mapping cleanly!
+        await db.insert(orders).values([
+            { id: 101, buyerId: "user_B", sellerId: "user_owner", listingId: 1, currentState: "PAID", priceCentsAtSale: 100, totalCents: 100 },
+            { id: 102, buyerId: "user_A", sellerId: "user_owner", listingId: 1, currentState: "PAID", priceCentsAtSale: 100, totalCents: 100 },
+        ]);
+
         await withUserContext("user_A", async (tx) => {
             // Act: Execute query explicitly dropping WHERE bounds
             const retrievedOrders = await tx.select().from(orders); // SELECT * FROM orders;
