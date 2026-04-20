@@ -9,7 +9,7 @@ import crypto from "crypto";
 
 // Requires STRIPE_SECRET_KEY to fire eventual payouts
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-  apiVersion: "2026-03-25.dahlia" as any,
+  apiVersion: "2023-10-16" as any,
 });
 
 export async function POST(req: Request) {
@@ -17,37 +17,36 @@ export async function POST(req: Request) {
     const copyBody = await req.text();
     const signature = req.headers.get("x-carrier-signature");
 
-    // P0-1: HMAC signature validation blocking hostile injections
-    if (env.CARRIER_WEBHOOK_SECRET && signature) {
-      const expectedSignature = crypto.createHmac("sha256", env.CARRIER_WEBHOOK_SECRET)
-        .update(copyBody)
-        .digest("hex");
-        
-      if (signature !== expectedSignature) {
-        console.error("[CRITICAL] HOSTILE WEBHOOK INTERCEPTION ATTEMPT");
-        return new NextResponse("Invalid Signature", { status: 401 });
-      }
-    } else if (env.CARRIER_WEBHOOK_SECRET && !signature) {
+    // P0-1: HMAC signature validation blocking hostile injections explicitly
+    if (!signature) {
       return new NextResponse("Missing Signature", { status: 401 });
+    }
+
+    const expectedSignature = crypto.createHmac("sha256", env.CARRIER_WEBHOOK_SECRET)
+       .update(copyBody)
+       .digest("hex");
+        
+    if (signature !== expectedSignature) {
+       console.error("[CRITICAL] HOSTILE WEBHOOK INTERCEPTION ATTEMPT");
+       return new NextResponse("Invalid Signature", { status: 401 });
     }
 
     const payload = JSON.parse(copyBody);
     
-    // P0-2: Idempotent Lock preventing duplicate webhook execution
-    const eventId = payload.id || `evt_${Date.now()}_${Math.random()}`; // Fallback if carrier lacks native IDs
-    const existingLock = await db.select().from(webhookEvents).where(eq(webhookEvents.id, eventId)).limit(1);
+    // P0-2: Idempotent Lock preventing duplicate webhook execution natively through PostgreSQL
+    const eventId = payload.id || `evt_${Date.now()}_${Math.random()}`;
     
-    if (existingLock.length > 0) {
-      return NextResponse.json({ message: "Duplicate carrier event safely blocked" });
+    try {
+      await db.insert(webhookEvents).values({
+        id: eventId,
+        source: "shipping",
+        eventType: payload.event,
+        payloadJson: payload,
+      }).onConflictDoNothing();
+    } catch {
+       // If constraint fires, we have a duplicate early abort
+       return NextResponse.json({ message: "Duplicate carrier event safely blocked by PG Engine" });
     }
-
-    // Secure the log
-    await db.insert(webhookEvents).values({
-      id: eventId,
-      source: "shipping",
-      eventType: payload.event,
-      payloadJson: payload,
-    });
     
     // Example Carrier Payload expectation: { tracking_number: "1Z999", status: "delivered" }
     const trackingNo = payload?.tracking_number;

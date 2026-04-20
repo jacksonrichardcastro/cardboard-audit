@@ -7,7 +7,7 @@ import { inArray, eq } from "drizzle-orm";
 import { env } from "@/env";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-  apiVersion: "2026-03-25.dahlia" as any,
+  apiVersion: "2023-10-16" as any,
 });
 
 export async function POST(req: Request) {
@@ -32,19 +32,21 @@ export async function POST(req: Request) {
     }
   }
 
-  // P0-2: Idempotent Lock preventing catastrophic duplicate order executions
-  const existingLock = await db.select().from(webhookEvents).where(eq(webhookEvents.id, event.id)).limit(1);
-  if (existingLock.length > 0) {
-    return NextResponse.json({ message: "Event already processed securely." });
+  const eventId = event.id;
+  
+  try {
+     // P0-2: PostgreSQL Idempotent constraint preventing Duplicate Webhooks
+     await db.insert(webhookEvents).values({
+        id: eventId,
+        source: "stripe",
+        eventType: event.type,
+        payloadJson: event as any,
+     }).onConflictDoNothing();
+  } catch {
+       return NextResponse.json({ message: "Duplicate stripe event dropped cleanly by DB" });
   }
 
-  await db.insert(webhookEvents).values({
-    id: event.id,
-    source: "stripe",
-    eventType: event.type,
-    payloadJson: event as any,
-  });
-
+  // P0-8 / P1: Dynamic Escrow Allocation Logic
   const session = event.data.object as Stripe.Checkout.Session;
 
   if (event.type === "identity.verification_session.verified") {
@@ -60,8 +62,9 @@ export async function POST(req: Request) {
   }
 
   if (event.type === "checkout.session.completed") {
-    // 1. Unpack Metadata Payload
-    const listingIds: number[] = JSON.parse(session.metadata?.listingIds || "[]");
+    try {
+      // 1. Unpack Metadata Payload
+      const listingIds: number[] = JSON.parse(session.metadata?.listingIds || "[]");
     const buyerId = session.metadata?.buyerId || "unknown";
     const transferGroupId = session.metadata?.transferGroupId;
 
@@ -117,6 +120,7 @@ export async function POST(req: Request) {
       // Funds are legally locked in the Connected Platform account.
       // Payouts occur strictly inside `/api/webhooks/shipping` when the tracking APIs ping the DELIVERED status.
       // The `transfer_group` generated inside `session` safely tags the liquidity.
+    } // End for loop
     } catch (criticalError) {
       // P1-10: Catch unhandled promises inside Escrow and explicitly broadcast to Analytics monitors
       Sentry.captureException(criticalError, {

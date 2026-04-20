@@ -110,7 +110,7 @@ export async function confirmBuyerReceipt(orderId: number, triggerActor: "buyer"
   // P0-8: Enforce mathematical strict calculation logic
   const netPayoutCents = calculateNetPayout(currentOrder.priceCentsAtSale, currentOrder.shippingCents, currentOrder.feeCents);
 
-  const stripe = new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: "2026-03-25.dahlia" as any });
+  const stripe = new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: "2023-10-16" as any });
   
   // Transition DB prior to external Stripe Request definitively mapping immutability
   await db.update(orders).set({ currentState: "BUYER_CONFIRMED" }).where(eq(orders.id, orderId));

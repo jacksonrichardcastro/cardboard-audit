@@ -11,7 +11,7 @@ export async function createSellerApplication(payload: { businessName: string; d
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const stripe = new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: "2026-03-25.dahlia" as any });
+  const stripe = new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: "2023-10-16" as any });
 
   // 1. Drizzle DB Upsert Application State
   await db.insert(sellers).values({
