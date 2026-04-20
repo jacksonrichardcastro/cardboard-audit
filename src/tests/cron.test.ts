@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 import { db } from "@/lib/db";
-import { orders, users, listings } from "@/lib/db/schema";
+import { orders, users, listings, sellers } from "@/lib/db/schema";
 import { POST } from "@/app/api/cron/payout-sweeper/route";
 import { eq } from "drizzle-orm";
 
@@ -28,6 +28,11 @@ describe("P0-7: Cron Payout Sweeper Integration", () => {
             { id: "user_buyer", email: "b@test.com" },
             { id: "user_seller", email: "s@test.com" }
         ]).onConflictDoNothing();
+        
+        // P1-8: Mock the Seller required for the Stripe Connect Escrow release!
+        await db.insert(sellers).values({
+            userId: "user_seller", businessName: "Test Shop", stripeConnectAccountId: "acct_mock123"
+        }).onConflictDoNothing();
         
         await db.insert(listings).values({
             id: 1, sellerId: "user_seller", title: "Test", category: "TCG", condition: "Mint", priceCents: 100
