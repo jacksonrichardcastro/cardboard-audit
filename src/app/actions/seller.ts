@@ -1,7 +1,7 @@
 "use server";
 
 import { eq, desc } from "drizzle-orm";
-import { db } from "@/lib/db";
+import { db, withUserContext } from "@/lib/db";
 import { orders, listings, users, sellers } from "@/lib/db/schema";
 import { auth } from "@clerk/nextjs/server";
 
@@ -34,22 +34,25 @@ export async function getSellerOrders() {
     const { userId } = await auth();
     if (!userId) return [];
 
-    const data = await db.select({
-      id: orders.id,
-      totalCents: orders.totalCents,
-      feeCents: orders.feeCents,
-      shippingCents: orders.shippingCents,
-      currentState: orders.currentState,
-      createdAt: orders.createdAt,
-      buyerName: users.email,
-      buyerEmail: users.email,
-      listingTitle: listings.title,
-    })
-    .from(orders)
-    .innerJoin(listings, eq(orders.listingId, listings.id))
-    .innerJoin(users, eq(orders.buyerId, users.id))
-    .where(eq(orders.sellerId, userId))
-    .orderBy(desc(orders.createdAt));
+    // P0-5: Execute natively inside Request-scoped memory mappings
+    const data = await withUserContext(userId, async (tx) => {
+       return await tx.select({
+         id: orders.id,
+         totalCents: orders.totalCents,
+         feeCents: orders.feeCents,
+         shippingCents: orders.shippingCents,
+         currentState: orders.currentState,
+         createdAt: orders.createdAt,
+         buyerName: users.email,
+         buyerEmail: users.email,
+         listingTitle: listings.title,
+       })
+       .from(orders)
+       .innerJoin(listings, eq(orders.listingId, listings.id))
+       .innerJoin(users, eq(orders.buyerId, users.id))
+       .where(eq(orders.sellerId, userId))
+       .orderBy(desc(orders.createdAt));
+    });
 
     return data;
   } catch (error) {

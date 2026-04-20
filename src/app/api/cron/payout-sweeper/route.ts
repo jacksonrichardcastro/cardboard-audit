@@ -16,8 +16,8 @@ export async function POST(req: Request) {
       .from(orders)
       .where(
         and(
-          eq(orders.currentState, "DELIVERED"),
-          sql`${orders.updatedAt} < NOW() - INTERVAL '72 hours'` // P0-7 Escrow Boundary
+          eq(orders.currentState, "PENDING_BUYER_CONFIRM"),
+          sql`${orders.deliveredAt} < NOW() - INTERVAL '72 hours'` // P0-7 Escrow Boundary definitively set
         )
       );
 
