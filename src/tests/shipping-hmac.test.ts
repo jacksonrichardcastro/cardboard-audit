@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 
 vi.mock("@/env", () => ({
-  env: { CARRIER_WEBHOOK_SECRET: "mock_secret" }
+  env: { CARRIER_WEBHOOK_SECRET: "mock_secret", STRIPE_SECRET_KEY: "sk_test_mock" }
 }));
 
 import { POST } from "../app/api/webhooks/shipping/route";
