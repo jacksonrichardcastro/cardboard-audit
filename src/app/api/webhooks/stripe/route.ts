@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { db } from "@/lib/db";
+import * as Sentry from "@sentry/nextjs";
 import { orders, stateTransitions, listings, sellers, webhookEvents } from "@/lib/db/schema";
 import { inArray, eq } from "drizzle-orm";
 import { env } from "@/env";
@@ -26,6 +27,7 @@ export async function POST(req: Request) {
     if (process.env.NODE_ENV !== "production" && !process.env.STRIPE_WEBHOOK_SECRET) {
       event = JSON.parse(body);
     } else {
+      Sentry.captureException(new Error(`Failed to construct Stripe Webhook securely: ${error.message}`));
       return new NextResponse(`Webhook Error: ${error.message}`, { status: 400 });
     }
   }
@@ -115,6 +117,12 @@ export async function POST(req: Request) {
       // Funds are legally locked in the Connected Platform account.
       // Payouts occur strictly inside `/api/webhooks/shipping` when the tracking APIs ping the DELIVERED status.
       // The `transfer_group` generated inside `session` safely tags the liquidity.
+    } catch (criticalError) {
+      // P1-10: Catch unhandled promises inside Escrow and explicitly broadcast to Analytics monitors
+      Sentry.captureException(criticalError, {
+          extra: { eventId: event.id, transferGroup: transferGroupId }
+      });
+      return new NextResponse("Escrow Error Logged", { status: 500 });
     }
   }
 
