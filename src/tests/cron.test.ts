@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 import { db } from "@/lib/db";
-import { orders } from "@/lib/db/schema";
+import { orders, users, listings } from "@/lib/db/schema";
 import { POST } from "@/app/api/cron/payout-sweeper/route";
 import { eq } from "drizzle-orm";
 
@@ -23,6 +23,16 @@ describe("P0-7: Cron Payout Sweeper Integration", () => {
         const orderEarlyId = 9001; // T = 71H
         const orderLateId = 9002; // T = 73H
         
+        // Seed Database Dependencies for empty CI state dynamically
+        await db.insert(users).values([
+            { id: "user_buyer", email: "b@test.com" },
+            { id: "user_seller", email: "s@test.com" }
+        ]).onConflictDoNothing();
+        
+        await db.insert(listings).values({
+            id: 1, sellerId: "user_seller", title: "Test", category: "TCG", condition: "Mint", priceCents: 100
+        }).onConflictDoNothing();
+
         await db.insert(orders).values([
             { id: orderEarlyId, buyerId: "user_buyer", sellerId: "user_seller", listingId: 1, currentState: "PENDING_BUYER_CONFIRM", priceCentsAtSale: 100, totalCents: 100, deliveredAt: new Date(Date.now() - (71 * 60 * 60 * 1000)) },
             { id: orderLateId, buyerId: "user_buyer", sellerId: "user_seller", listingId: 1, currentState: "PENDING_BUYER_CONFIRM", priceCentsAtSale: 100, totalCents: 100, deliveredAt: new Date(Date.now() - (73 * 60 * 60 * 1000)) }
