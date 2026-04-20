@@ -5,7 +5,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     
-    # 1. Boot up a Postgres 16 container natively linked to this job
     services:
       postgres:
         image: postgres:16
@@ -25,13 +24,11 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    # 2. Setup pnpm explicitly
     - name: Setup pnpm
       uses: pnpm/action-setup@v4
       with:
         version: 9
 
-    # 3. Setup Node v20
     - name: Setup Node
       uses: actions/setup-node@v4
       with:
@@ -40,15 +37,20 @@ jobs:
     - name: Install dependencies
       run: pnpm install
 
-    # 4. Push local schemas into the DB Service Container
     - name: Run Schema Migrations
       run: pnpm run db:push
       env:
         DATABASE_URL: postgres://postgres:password123@localhost:5432/cardbound
 
-    # 5. Execute Tests dynamically evaluating Drizzle logic inside Postgres Service
     - name: Run Integration Tests
       run: pnpm run test
       env:
         DATABASE_URL: postgres://postgres:password123@localhost:5432/cardbound
         CRON_SECRET: super_secret_cron_key_mock_123
+        STRIPE_SECRET_KEY: sk_test_mock123
+        STRIPE_WEBHOOK_SECRET: whsec_mock123
+        CARRIER_WEBHOOK_SECRET: carrier_mock123
+        SUPABASE_SERVICE_ROLE_KEY: supabase_mock123
+        RESEND_API_KEY: re_123
+        CLERK_SECRET_KEY: clerk_mock123
+        NEXT_PUBLIC_SUPABASE_URL: http://localhost:8000
