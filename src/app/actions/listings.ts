@@ -1,7 +1,7 @@
 "use server";
 
 import { eq, desc, ilike, and, gte, lte } from "drizzle-orm";
-import { db } from "@/lib/db";
+import { db, withUserContext } from "@/lib/db";
 import { listings, sellers } from "@/lib/db/schema";
 import { unstable_cache, revalidateTag } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
@@ -22,20 +22,22 @@ export async function getTrendingListings(params?: {
 
     const getCachedData = unstable_cache(
       async () => {
-        return await db.select({
-          id: listings.id,
-          title: listings.title,
-          priceCents: listings.priceCents,
-          grade: listings.grade,
-          condition: listings.condition,
-          image: listings.photos,
-          sellerName: sellers.businessName,
-        })
-        .from(listings)
-        .innerJoin(sellers, eq(listings.sellerId, sellers.userId))
-        .where(filters.length > 0 ? and(...filters) : undefined)
-        .orderBy(desc(listings.createdAt))
-        .limit(24);
+        return await withUserContext(null, async (tx) => {
+          return await tx.select({
+            id: listings.id,
+            title: listings.title,
+            priceCents: listings.priceCents,
+            grade: listings.grade,
+            condition: listings.condition,
+            image: listings.photos,
+            sellerName: sellers.businessName,
+          })
+          .from(listings)
+          .innerJoin(sellers, eq(listings.sellerId, sellers.userId))
+          .where(filters.length > 0 ? and(...filters) : undefined)
+          .orderBy(desc(listings.createdAt))
+          .limit(24);
+        });
       },
       ['trending-listings', JSON.stringify(params || {})],
       { revalidate: 60, tags: ['listings'] }
@@ -50,24 +52,27 @@ export async function getTrendingListings(params?: {
 
 export async function getListingById(id: number) {
   try {
-    const [data] = await db.select({
-      id: listings.id,
-      title: listings.title,
-      category: listings.category,
-      condition: listings.condition,
-      gradingCompany: listings.gradingCompany,
-      grade: listings.grade,
-      description: listings.description,
-      priceCents: listings.priceCents,
-      photos: listings.photos,
-      sellerId: listings.sellerId,
-      sellerName: sellers.businessName,
-      sellerVerified: sellers.identityVerified,
-    })
-    .from(listings)
-    .innerJoin(sellers, eq(listings.sellerId, sellers.userId))
-    .where(eq(listings.id, id))
-    .limit(1);
+    const data = await withUserContext(null, async (tx) => {
+      const [record] = await tx.select({
+        id: listings.id,
+        title: listings.title,
+        category: listings.category,
+        condition: listings.condition,
+        gradingCompany: listings.gradingCompany,
+        grade: listings.grade,
+        description: listings.description,
+        priceCents: listings.priceCents,
+        photos: listings.photos,
+        sellerId: listings.sellerId,
+        sellerName: sellers.businessName,
+        sellerVerified: sellers.identityVerified,
+      })
+      .from(listings)
+      .innerJoin(sellers, eq(listings.sellerId, sellers.userId))
+      .where(eq(listings.id, id))
+      .limit(1);
+      return record;
+    });
 
     return data || null;
   } catch (error) {
@@ -87,18 +92,21 @@ export async function createListing(payload: {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const [sellerRecord] = await db.select({ status: sellers.applicationStatus })
-    .from(sellers).where(eq(sellers.userId, userId)).limit(1);
+  const [sellerRecord] = await withUserContext(userId, async (tx) => {
+      return await tx.select({ status: sellers.applicationStatus })
+        .from(sellers).where(eq(sellers.userId, userId)).limit(1);
+  });
 
   if (!sellerRecord || sellerRecord.status !== "APPROVED") {
     throw new Error("Must be an approved vendor to list items");
   }
 
-  const [newListing] = await db.insert(listings).values({
-    sellerId: userId,
-    title: payload.title,
-    category: payload.category, // Enum correctly mapped in Zod
-    condition: payload.condition,
+  const [newListing] = await withUserContext(userId, async (tx) => {
+    return await tx.insert(listings).values({
+      sellerId: userId,
+      title: payload.title,
+      category: payload.category, // Enum correctly mapped in Zod
+      condition: payload.condition,
     priceCents: payload.priceCents,
     description: payload.description,
     photos: payload.photos,

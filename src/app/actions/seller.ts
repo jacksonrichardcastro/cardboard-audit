@@ -10,17 +10,19 @@ export async function getSellerInventory() {
     const { userId } = await auth();
     if (!userId) return [];
 
-    const data = await db.select({
-      id: listings.id,
-      title: listings.title,
-      priceCents: listings.priceCents,
-      category: listings.category,
-      condition: listings.condition,
-      createdAt: listings.createdAt,
-    })
-    .from(listings)
-    .where(eq(listings.sellerId, userId))
-    .orderBy(desc(listings.createdAt));
+    const data = await withUserContext(userId, async (tx) => {
+      return await tx.select({
+        id: listings.id,
+        title: listings.title,
+        priceCents: listings.priceCents,
+        category: listings.category,
+        condition: listings.condition,
+        createdAt: listings.createdAt,
+      })
+      .from(listings)
+      .where(eq(listings.sellerId, userId))
+      .orderBy(desc(listings.createdAt));
+    });
 
     return data;
   } catch (error) {

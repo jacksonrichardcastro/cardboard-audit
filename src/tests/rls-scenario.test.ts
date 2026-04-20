@@ -1,16 +1,22 @@
 import { describe, it, expect } from "vitest";
+import { db, withUserContext } from "@/lib/db";
+import { sql } from "drizzle-orm";
+import { orders } from "@/lib/db/schema";
 
 describe("P0-5 Scenario 3: Cross Tenant Force RLS Leaks", () => {
-    it("Prove PostgreSQL completely nullifies queries against external scopes cleanly without WHERE boundaries", () => {
-        // App-Level without boundaries
-        const rawSqlExecutionQuery = `
-          -- Execute inside withUserContext("user_A")
-          SET LOCAL app.current_user_id = 'user_A';
-          SELECT * FROM orders; -- NO WHERE CLAUSES
-        `;
-
-        // Native PG interpretation after RLS evaluation cleanly blocks unauthenticated/unscoped rows
-        const output = "0 rows returned for User B records.";
-        expect(output).toContain("0 rows");
+    it("Prove PostgreSQL unconditionally drops unauthenticated limits bypassing App-layer logic", async () => {
+        // Test explicitly requires active Postgres configuration to natively evaluate RLS bounds
+        
+        // Setup mock environment directly against `withUserContext` 
+        await withUserContext("user_A", async (tx) => {
+            // Act: Execute query explicitly dropping WHERE bounds
+            const retrievedOrders = await tx.select().from(orders); // SELECT * FROM orders;
+            
+            // Assert: Execution MUST only return arrays explicitly matching 'user_A' dynamically 
+            // verifying `FORCE ROW LEVEL SECURITY` isolates rows across transactions locally
+            for (const order of retrievedOrders) {
+                expect(order.buyerId === "user_A" || order.sellerId === "user_A").toBe(true);
+            }
+        });
     });
 });

@@ -1,7 +1,7 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { db } from "@/lib/db";
+import { db, withUserContext } from "@/lib/db";
 import { sellers } from "@/lib/db/schema";
 import { auth } from "@clerk/nextjs/server";
 import Stripe from "stripe";
@@ -14,17 +14,20 @@ export async function createSellerApplication(payload: { businessName: string; d
   const stripe = new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: "2023-10-16" as any });
 
   // 1. Drizzle DB Upsert Application State
-  await db.insert(sellers).values({
-    userId,
-    businessName: payload.businessName,
-    description: payload.description,
-    applicationStatus: "PENDING",
-  }).onConflictDoUpdate({
-    target: sellers.userId,
-    set: {
-       businessName: payload.businessName,
-       description: payload.description,
-    }
+  // 1. Drizzle DB Upsert Application State
+  await withUserContext(userId, async (tx) => {
+    await tx.insert(sellers).values({
+      userId,
+      businessName: payload.businessName,
+      description: payload.description,
+      applicationStatus: "PENDING",
+    }).onConflictDoUpdate({
+      target: sellers.userId,
+      set: {
+         businessName: payload.businessName,
+         description: payload.description,
+      }
+    });
   });
 
   // 2. Map Stripe Identity KYC Flow natively preventing mock approvals P1-3
