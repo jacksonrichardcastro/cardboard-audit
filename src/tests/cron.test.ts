@@ -1,72 +1,99 @@
-import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
-vi.mock("@clerk/nextjs", () => ({
-    auth: vi.fn().mockResolvedValue({ userId: "user_owner" }),
-    currentUser: vi.fn().mockResolvedValue({ id: "user_owner" })
-}));
-import { db } from "@/lib/db";
+import { describe, it, expect, beforeAll, vi } from "vitest";
+import { db, withUserContext } from "@/lib/db";
 import { orders, users, listings, sellers } from "@/lib/db/schema";
 import { POST } from "@/app/api/cron/payout-sweeper/route";
 import { eq } from "drizzle-orm";
 
+// Mock Stripe so transfers.create does not hit the network in CI.
 vi.mock("stripe", () => {
-    return {
-        default: class StripeMock {
-            transfers = {
-                create: vi.fn().mockResolvedValue({ id: "tr_mock123" })
-            };
-            webhooks = {
-                constructEvent: vi.fn().mockReturnValue({ id: "evt_duplicate_test", type: "charge.succeeded", data: { object: {} } })
-            };
-        }
-    }
+  return {
+    default: vi.fn().mockImplementation(() => ({
+      transfers: {
+        create: vi.fn().mockResolvedValue({ id: "tr_mock123" })
+      }
+    }))
+  };
 });
 
 describe("P0-7: Cron Payout Sweeper Integration", () => {
-    it("Verifies confirmBuyerReceipt is called exclusively for orders exceeding the 72H Escrow threshold", async () => {
-        // This test requires an active Postgres instance to execute.
-        // It connects natively asserting records at T=71h and T=73h.
-        
-        // 1. Seed Orders natively
-        const orderEarlyId = 9001; // T = 71H
-        const orderLateId = 9002; // T = 73H
-        
-        // Seed Database Dependencies for empty CI state dynamically
-        await db.insert(users).values([
-            { id: "user_buyer", email: "b@test.com" },
-            { id: "user_seller", email: "s@test.com" }
-        ]).onConflictDoNothing();
-        
-        // P1-8: Mock the Seller required for the Stripe Connect Escrow release!
-        await db.insert(sellers).values({
-            userId: "user_seller", businessName: "Test Shop", stripeConnectAccountId: "acct_mock123"
-        }).onConflictDoNothing();
-        
-        await db.insert(listings).values({
-            id: 1, sellerId: "user_seller", title: "Test", category: "TCG", condition: "Mint", priceCents: 100
-        }).onConflictDoNothing();
+  beforeAll(async () => {
+    // Seed fixtures under system context so RLS policies allow the inserts.
+    // Uses onConflictDoNothing so reruns against a dirty DB do not blow up.
+    await withUserContext("system", async (tx) => {
+      await tx.insert(users).values([
+        { id: "user_buyer", email: "buyer@test.local", role: "buyer" },
+        { id: "user_seller", email: "seller@test.local", role: "seller" },
+      ]).onConflictDoNothing();
 
-        await db.insert(orders).values([
-            { id: orderEarlyId, buyerId: "user_buyer", sellerId: "user_seller", listingId: 1, currentState: "PENDING_BUYER_CONFIRM", priceCentsAtSale: 100, totalCents: 100, deliveredAt: new Date(Date.now() - (71 * 60 * 60 * 1000)) },
-            { id: orderLateId, buyerId: "user_buyer", sellerId: "user_seller", listingId: 1, currentState: "PENDING_BUYER_CONFIRM", priceCentsAtSale: 100, totalCents: 100, deliveredAt: new Date(Date.now() - (73 * 60 * 60 * 1000)) }
-        ]).onConflictDoUpdate({
-           target: orders.id,
-           set: { currentState: "PENDING_BUYER_CONFIRM", deliveredAt: new Date(Date.now() - (73 * 60 * 60 * 1000)) }
-        });
+      await tx.insert(sellers).values([
+        {
+          userId: "user_seller",
+          businessName: "Test Seller Shop",
+          stripeConnectAccountId: "acct_test_seller",
+          applicationStatus: "approved",
+        },
+      ]).onConflictDoNothing();
 
-        // 2. Trigger the autonomous endpoint natively injecting required Secrets
-        const request = new Request("http://localhost/api/cron/payout-sweeper", {
-            method: "POST",
-            headers: { "Authorization": `Bearer ${process.env.CRON_SECRET}` }
-        });
-        
-        const response = await POST(request);
-        expect(response.status).toBe(200);
-
-        // 3. Verify exactly one order remained, and one executed mapping stripe bounds cleanly
-        const [earlyOrder] = await db.select().from(orders).where(eq(orders.id, orderEarlyId));
-        const [lateOrder] = await db.select().from(orders).where(eq(orders.id, orderLateId));
-
-        expect(earlyOrder.currentState).toBe("PENDING_BUYER_CONFIRM"); // Escrow lock maintained dynamically
-        expect(lateOrder.currentState).toBe("BUYER_CONFIRMED"); // Fund constraints autonomously dismissed!
+      await tx.insert(listings).values([
+        {
+          id: 1,
+          sellerId: "user_seller",
+          title: "Test Listing",
+          category: "TCG",
+          condition: "Mint",
+          priceCents: 100,
+        },
+      ]).onConflictDoNothing();
     });
+  });
+
+  it("auto-confirms orders past the 72h delivery threshold and leaves newer orders untouched", async () => {
+    const orderEarlyId = 9001; // T = 71h  (inside the escrow window; must stay PENDING)
+    const orderLateId = 9002;  // T = 73h  (past the window; must flip to BUYER_CONFIRMED)
+
+    await withUserContext("system", async (tx) => {
+      await tx.insert(orders).values([
+        {
+          id: orderEarlyId,
+          buyerId: "user_buyer",
+          sellerId: "user_seller",
+          listingId: 1,
+          currentState: "PENDING_BUYER_CONFIRM",
+          priceCentsAtSale: 100,
+          totalCents: 100,
+          deliveredAt: new Date(Date.now() - (71 * 60 * 60 * 1000)),
+        },
+        {
+          id: orderLateId,
+          buyerId: "user_buyer",
+          sellerId: "user_seller",
+          listingId: 1,
+          currentState: "PENDING_BUYER_CONFIRM",
+          priceCentsAtSale: 100,
+          totalCents: 100,
+          deliveredAt: new Date(Date.now() - (73 * 60 * 60 * 1000)),
+        },
+      ]).onConflictDoNothing();
+    });
+
+    // Invoke the real cron route handler with a valid bearer token.
+    const request = new Request("http://localhost/api/cron/payout-sweeper", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` },
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(200);
+
+    // Verify the early order stayed locked and the late order got released.
+    const [earlyOrder] = await withUserContext("system", async (tx) =>
+      tx.select().from(orders).where(eq(orders.id, orderEarlyId))
+    );
+    const [lateOrder] = await withUserContext("system", async (tx) =>
+      tx.select().from(orders).where(eq(orders.id, orderLateId))
+    );
+
+    expect(earlyOrder.currentState).toBe("PENDING_BUYER_CONFIRM");
+    expect(lateOrder.currentState).toBe("BUYER_CONFIRMED");
+  });
 });
