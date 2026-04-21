@@ -1,5 +1,5 @@
 -- P1-7: Add fee tier variable tracking overriding static MVP models
-ALTER TABLE seller_profiles ADD COLUMN fee_tier varchar(50) NOT NULL DEFAULT 'standard';
+ALTER TABLE sellers ADD COLUMN fee_tier varchar(50) NOT NULL DEFAULT 'standard';
 
 -- P1-8: Implement payouts sub-ledger blocking lost payments entirely
 CREATE TABLE payouts (
