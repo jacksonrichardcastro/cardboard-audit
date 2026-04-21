@@ -4,14 +4,14 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgres:16
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password123
-          POSTGRES_DB: cardbound
+          POSTGRES_PASSWORD: postgres_admin_pw
+          POSTGRES_DB: cardbound_test
         ports:
           - 5432:5432
         options: >-
@@ -20,37 +20,60 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+    env:
+      # Tests connect as a NON-superuser role so FORCE ROW LEVEL SECURITY actually
+      # enforces. Postgres superusers bypass RLS regardless of FORCE, so tests that
+      # run as `postgres` give false-positive passes. app_user is a plain LOGIN role.
+      DATABASE_URL: postgres://app_user:app_user_pw@localhost:5432/cardbound_test
+      CRON_SECRET: test_cron_secret
+      STRIPE_SECRET_KEY: sk_test_mock
+      STRIPE_WEBHOOK_SECRET: whsec_test_mock
+      CARRIER_WEBHOOK_SECRET: carrier_test_mock
+      SUPABASE_SERVICE_ROLE_KEY: supabase_test_mock
+      RESEND_API_KEY: re_test_mock
+      CLERK_SECRET_KEY: clerk_test_mock
+      NEXT_PUBLIC_SUPABASE_URL: http://localhost:8000
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_clerk_mock
+
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Setup pnpm
-      uses: pnpm/action-setup@v4
-      with:
-        version: 9
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
 
-    - name: Setup Node
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
 
-    - name: Install dependencies
-      run: pnpm install
+      - name: Create non-superuser role and grant schema ownership
+        env:
+          PGPASSWORD: postgres_admin_pw
+        run: |
+          psql -h localhost -U postgres -d cardbound_test <<'EOF'
+          CREATE ROLE app_user WITH LOGIN PASSWORD 'app_user_pw';
+          GRANT ALL ON SCHEMA public TO app_user;
+          ALTER SCHEMA public OWNER TO app_user;
+          EOF
 
-    - name: Run Schema Migrations
-      run: pnpm exec drizzle-kit push --force
-      env:
-        DATABASE_URL: postgres://postgres:password123@localhost:5432/cardbound
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-    - name: Run Integration Tests
-      run: pnpm run test
-      env:
-        DATABASE_URL: postgres://postgres:password123@localhost:5432/cardbound
-        CRON_SECRET: super_secret_cron_key_mock_123
-        STRIPE_SECRET_KEY: sk_test_mock123
-        STRIPE_WEBHOOK_SECRET: whsec_mock123
-        CARRIER_WEBHOOK_SECRET: carrier_mock123
-        SUPABASE_SERVICE_ROLE_KEY: supabase_mock123
-        RESEND_API_KEY: re_123
-        CLERK_SECRET_KEY: clerk_mock123
-        NEXT_PUBLIC_SUPABASE_URL: http://localhost:8000
+      - name: Push base schema (Drizzle tables, as app_user so it owns them)
+        run: pnpm exec drizzle-kit push --force
+
+      - name: Apply RLS + policy SQL migrations in order
+        env:
+          PGPASSWORD: app_user_pw
+        run: |
+          for file in $(ls src/lib/db/migrations/*.sql | sort); do
+            echo ">>> Applying $file"
+            psql -h localhost -U app_user -d cardbound_test -v ON_ERROR_STOP=1 -f "$file"
+          done
+
+      - name: Run Integration Tests
+        run: pnpm run test
