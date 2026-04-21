@@ -1,46 +1,85 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { db, withUserContext } from "@/lib/db";
-import { sql } from "drizzle-orm";
-import { orders, users, listings } from "@/lib/db/schema";
+import { orders, users, listings, sellers } from "@/lib/db/schema";
 
-beforeAll(async () => {
-    // Manually enforce PostgreSQL RLS limits on the mock table
-    await db.execute(sql.raw(`ALTER TABLE orders ENABLE ROW LEVEL SECURITY;`));
-    await db.execute(sql.raw(`ALTER TABLE orders FORCE ROW LEVEL SECURITY;`));
-    await db.execute(sql.raw(`DROP POLICY IF EXISTS "orders_strict_access" ON orders;`));
-    await db.execute(sql.raw(`CREATE POLICY "orders_strict_access" ON orders FOR SELECT USING (buyer_id = current_setting('app.current_user_id', true) OR seller_id = current_setting('app.current_user_id', true) OR current_setting('app.current_user_id', true) = 'system');`));
-});
+describe("P0-5 Scenario 3: Cross-Tenant RLS Isolation", () => {
+  beforeAll(async () => {
+    // Seed users, seller, listing, and two orders (one for user_A, one for user_B)
+    // under system context so the inserts bypass per-user RLS policies.
+    await withUserContext("system", async (tx) => {
+      await tx.insert(users).values([
+        { id: "user_A", email: "a@test.local", role: "buyer" },
+        { id: "user_B", email: "b@test.local", role: "buyer" },
+        { id: "user_owner", email: "owner@test.local", role: "seller" },
+      ]).onConflictDoNothing();
 
-describe("P0-5 Scenario 3: Cross Tenant Force RLS Leaks", () => {
-    it("Prove PostgreSQL unconditionally drops unauthenticated limits bypassing App-layer logic", async () => {
-        // Test explicitly requires active Postgres configuration to natively evaluate RLS bounds
-        
-        // Setup mock environment directly against `withUserContext` 
-        // Seed core dependencies mapping cleanly!
-        await db.insert(users).values([
-            { id: "user_owner", email: "owner@test.com" },
-            { id: "user_A", email: "a@test.com" },
-            { id: "user_B", email: "b@test.com" }
-        ]).onConflictDoNothing();
+      await tx.insert(sellers).values([
+        {
+          userId: "user_owner",
+          businessName: "Owner Shop",
+          stripeConnectAccountId: "acct_owner_test",
+          applicationStatus: "approved",
+        },
+      ]).onConflictDoNothing();
 
-        await db.insert(listings).values({
-            id: 1, sellerId: "user_owner", title: "Test", category: "TCG", condition: "Mint", priceCents: 100
-        }).onConflictDoNothing();
+      await tx.insert(listings).values([
+        {
+          id: 500,
+          sellerId: "user_owner",
+          title: "Shared Listing",
+          category: "TCG",
+          condition: "Mint",
+          priceCents: 100,
+        },
+      ]).onConflictDoNothing();
 
-        await db.insert(orders).values([
-            { id: 101, buyerId: "user_B", sellerId: "user_owner", listingId: 1, currentState: "PAID", priceCentsAtSale: 100, totalCents: 100 },
-            { id: 102, buyerId: "user_A", sellerId: "user_owner", listingId: 1, currentState: "PAID", priceCentsAtSale: 100, totalCents: 100 },
-        ]).onConflictDoNothing();
-
-        await withUserContext("user_A", async (tx) => {
-            // Act: Execute query explicitly dropping WHERE bounds
-            const retrievedOrders = await tx.select().from(orders); // SELECT * FROM orders;
-            
-            // Assert: Execution MUST only return arrays explicitly matching 'user_A' dynamically 
-            // verifying `FORCE ROW LEVEL SECURITY` isolates rows across transactions locally
-            for (const order of retrievedOrders) {
-                expect(order.buyerId === "user_A" || order.sellerId === "user_A").toBe(true);
-            }
-        });
+      await tx.insert(orders).values([
+        {
+          id: 501,
+          buyerId: "user_B",
+          sellerId: "user_owner",
+          listingId: 500,
+          currentState: "PAID",
+          priceCentsAtSale: 100,
+          totalCents: 100,
+        },
+        {
+          id: 502,
+          buyerId: "user_A",
+          sellerId: "user_owner",
+          listingId: 500,
+          currentState: "PAID",
+          priceCentsAtSale: 100,
+          totalCents: 100,
+        },
+      ]).onConflictDoNothing();
     });
+  });
+
+  it("under user_A context, SELECT orders returns only user_A's rows — user_B is invisible even without app-layer filter", async () => {
+    // Run as user_A and deliberately omit any WHERE filter on buyer_id.
+    // If RLS is doing its job, Postgres itself should filter out user_B's order.
+    const retrieved = await withUserContext("user_A", async (tx) => {
+      return await tx.select({
+        id: orders.id,
+        buyerId: orders.buyerId,
+        sellerId: orders.sellerId,
+      }).from(orders);
+    });
+
+    // Must be non-empty (user_A's own order should be visible)
+    expect(retrieved.length).toBeGreaterThan(0);
+
+    // Every returned row must belong to user_A — as buyer or seller.
+    // If user_B's row appears here, RLS is NOT enforcing.
+    for (const row of retrieved) {
+      expect(
+        row.buyerId === "user_A" || row.sellerId === "user_A"
+      ).toBe(true);
+    }
+
+    // Explicitly confirm user_B's seeded order is NOT in the result set.
+    const leakedRow = retrieved.find((r) => r.id === 501);
+    expect(leakedRow).toBeUndefined();
+  });
 });
