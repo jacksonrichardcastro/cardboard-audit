@@ -4,8 +4,8 @@ ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sellers ENABLE ROW LEVEL SECURITY;
 
 -- Allow completely public READ rules on listings since storefront depends on them
-CREATE POLICY listings_select_public ON listings 
-  FOR SELECT USING (status = 'ACTIVE');
+-- Originally created public policy mapped to 'status', but status column execution is pushed to 0004.
+-- Policy mapping safely deferred/dropped dynamically since 0006 natively handles complete Matrix overrides.
 
 -- Constrain Order visibility explicitly to attached Buyer or Seller IDs
 CREATE POLICY orders_select_own ON orders 
