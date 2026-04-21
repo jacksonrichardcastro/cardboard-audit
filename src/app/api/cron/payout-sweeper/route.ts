@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db, withUserContext } from "@/lib/db";
 import { orders } from "@/lib/db/schema";
 import { eq, and, sql } from "drizzle-orm";
-import { confirmBuyerReceipt } from "@/app/actions/orders";
+import { processBuyerReceipt } from "@/lib/orders/confirm";
 
 export async function POST(req: Request) {
   // CRON endpoint execution natively routed via Vercel Cron
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
 
     // Iteratively process
     for (const order of staleOrders) {
-      await confirmBuyerReceipt(order.id, "system");
+      await processBuyerReceipt(order.id, { id: "system", role: "system" });
     }
 
     return NextResponse.json({ processed: staleOrders.length });
