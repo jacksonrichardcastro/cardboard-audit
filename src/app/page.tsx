@@ -34,7 +34,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 md:px-8 pt-12">
+      <div className="px-4 md:px-8 pt-12">
         <FilterSidebar />
       </div>
 

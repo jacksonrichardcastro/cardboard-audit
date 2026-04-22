@@ -13,7 +13,7 @@ interface CardRailProps {
 export function CardRail({ title, listings, seeAllHref }: CardRailProps) {
   return (
     <div className="w-full space-y-4 my-8">
-      <div className="flex items-center justify-between px-4 md:px-6 max-w-7xl mx-auto">
+      <div className="flex items-center justify-between px-4 md:px-8">
         <h2 className="text-2xl font-bold tracking-tight text-foreground">{title}</h2>
         <Link 
           href={seeAllHref || "#"} 
@@ -25,8 +25,8 @@ export function CardRail({ title, listings, seeAllHref }: CardRailProps) {
       </div>
 
       {/* Horizontal scrolling strip locking Fanatics collect swiping grids */}
-      <div className="w-full overflow-x-auto pb-4 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden px-4 md:px-6">
-        <div className="flex gap-3 max-w-7xl mx-auto w-max">
+      <div className="w-full overflow-x-auto pb-4 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden px-4 md:px-8">
+        <div className="flex gap-3 w-max">
           {listings.map((listing) => (
             <Link 
               key={listing.id} 
