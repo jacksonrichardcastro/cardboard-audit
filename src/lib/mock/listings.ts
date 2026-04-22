@@ -22,7 +22,7 @@ export const mockListings: MockListing[] = [
     gradingCompany: "PSA",
     grade: "10",
     priceCents: 1250000,
-    photoUrl: "https://images.pokemontcg.io/base1/4_hires.png",
+    photoUrl: "/mock-cards/pokemon-base-1999.png",
     sellerBusinessName: "VaultCard Collectibles",
     createdAt: "2026-04-20T10:00:00Z"
   },
@@ -153,7 +153,7 @@ export const mockListings: MockListing[] = [
     subcategory: "Pokemon",
     condition: "Moderately Played",
     priceCents: 9500,
-    photoUrl: "https://images.pokemontcg.io/jungle/1_hires.png",
+    photoUrl: "/mock-cards/mewtwo-base-set.png",
     sellerBusinessName: "Rocket Collectibles",
     createdAt: "2026-04-22T07:15:00Z"
   },
@@ -249,7 +249,7 @@ export const mockListings: MockListing[] = [
     subcategory: "Pokemon",
     condition: "Lightly Played",
     priceCents: 11000,
-    photoUrl: "https://images.pokemontcg.io/pl1/1_hires.png",
+    photoUrl: "/mock-cards/typhlosion-neo.png",
     sellerBusinessName: "Fire Box",
     createdAt: "2026-04-21T11:15:00Z"
   },
