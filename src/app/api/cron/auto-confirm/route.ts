@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { orders, stateTransitions } from "@/lib/db/schema";
 import { lt, and, eq } from "drizzle-orm";
-import { confirmBuyerReceipt } from "@/app/actions/orders";
+import { processBuyerReceipt } from "@/lib/orders/confirm";
 
 export async function GET(req: Request) {
   try {
@@ -24,7 +24,7 @@ export async function GET(req: Request) {
     for (const border of expiredOrders) {
       try {
         // We run the same strict architectural action a manual Buyer click triggers, preserving Audit immutability
-        await confirmBuyerReceipt(border.id, "system");
+        await processBuyerReceipt(border.id, { id: "system", role: "system" });
         results.push({ orderId: border.id, status: "Transferred" });
       } catch (err: any) {
         results.push({ orderId: border.id, status: "Failed", error: err.message });

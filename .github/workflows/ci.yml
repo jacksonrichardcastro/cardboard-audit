@@ -50,6 +50,9 @@ jobs:
           PGPASSWORD: postgres_admin_pw
         run: |
           psql -h localhost -U postgres -d cardbound_test <<'EOF'
+          CREATE ROLE authenticated NOLOGIN;
+          CREATE ROLE anon NOLOGIN;
+          CREATE ROLE service_role NOLOGIN;
           CREATE ROLE app_user WITH LOGIN PASSWORD 'app_user_pw';
           GRANT ALL ON SCHEMA public TO app_user;
           ALTER SCHEMA public OWNER TO app_user;
