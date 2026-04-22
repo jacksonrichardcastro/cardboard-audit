@@ -8,10 +8,6 @@ interface CardRailProps {
   title: string;
   listings: MockListing[];
   seeAllHref?: string;
-}
-
-import { FilterSidebar } from "@/components/storefront/filter-sidebar";
-
 export function CardRail({ title, listings, seeAllHref }: CardRailProps) {
   return (
     <div className="w-full space-y-4 my-8">
@@ -24,10 +20,6 @@ export function CardRail({ title, listings, seeAllHref }: CardRailProps) {
           See all
           <ChevronRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
         </Link>
-      </div>
-      
-      <div className="px-4 md:px-6 max-w-7xl mx-auto">
-        <FilterSidebar />
       </div>
 
       {/* Horizontal scrolling strip locking Fanatics collect swiping grids */}
