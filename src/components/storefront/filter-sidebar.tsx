@@ -29,7 +29,7 @@ export function FilterSidebar() {
   const categories = ["TCG", "Sports", "Other"];
 
   return (
-    <div className="flex flex-col md:flex-row items-center gap-4 mb-8">
+    <div className="flex flex-col md:flex-row items-center gap-4">
       <div className="flex items-center gap-2">
          <Filter className="w-5 h-5 text-muted-foreground" />
          <span className="font-semibold text-lg">Filters:</span>

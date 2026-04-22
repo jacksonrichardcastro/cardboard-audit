@@ -34,12 +34,12 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="px-4 md:px-8 pt-12">
-        <FilterSidebar />
-      </div>
+      <div className="space-y-8 py-8">
+        <div className="px-4 md:px-8">
+          <FilterSidebar />
+        </div>
 
-      {/* Horizontal Dashboard Rails */}
-      <div className="pt-4">
+        {/* Horizontal Dashboard Rails */}
         <CardRail 
           title="Recommended for you" 
           listings={recommendedListings} 
