@@ -6,6 +6,11 @@ import { orders, stateTransitions, listings, sellers, webhookEvents } from "@/li
 import { inArray, eq } from "drizzle-orm";
 import { env } from "@/env";
 import { stripe } from "@/lib/stripe";
+import {
+  rateLimit,
+  identifierFromRequest,
+  tooManyRequests,
+} from "@/lib/rate-limit";
 
 /**
  * Stripe webhook receiver.
@@ -22,6 +27,16 @@ import { stripe } from "@/lib/stripe";
  * events were being processed twice — a potential double-order bug.)
  */
 export async function POST(req: Request) {
+  // Pre-signature anti-flood. Stripe's own production IP pool is narrow
+  // and well-behaved, but this endpoint is publicly reachable and spoofed
+  // unsigned payloads still cost us a constructEvent+HMAC compare. 200/sec
+  // per source IP is well above Stripe's real delivery rate.
+  const rl = await rateLimit(`webhook:stripe:${identifierFromRequest(req)}`, {
+    limit: 200,
+    windowSec: 1,
+  });
+  if (!rl.ok) return tooManyRequests(rl);
+
   const body = await req.text();
   const signature = req.headers.get("stripe-signature") as string;
 

@@ -7,6 +7,11 @@ import { env } from "@/env";
 import * as Sentry from "@sentry/nextjs";
 import crypto from "crypto";
 import { canTransition, parseOrderState, type OrderState } from "@/lib/orders/state-machine";
+import {
+  rateLimit,
+  identifierFromRequest,
+  tooManyRequests,
+} from "@/lib/rate-limit";
 
 /**
  * Shippo webhook receiver.
@@ -107,6 +112,15 @@ function mapShippoStatus(
 }
 
 export async function POST(req: Request) {
+  // Pre-signature anti-flood: same rationale as the Stripe endpoint.
+  // Shippo's real delivery rate is bounded by how fast carriers emit
+  // tracking updates; 200/sec per IP leaves a wide margin.
+  const rl = await rateLimit(`webhook:shipping:${identifierFromRequest(req)}`, {
+    limit: 200,
+    windowSec: 1,
+  });
+  if (!rl.ok) return tooManyRequests(rl);
+
   const rawBody = await req.text();
 
   // Shippo delivers the signature in X-Shippo-Signature. We also accept the
