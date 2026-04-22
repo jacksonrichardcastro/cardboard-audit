@@ -89,9 +89,8 @@ export async function getBuyerOrders() {
   }
 }
 
-export async function confirmBuyerReceipt(orderId: number, triggerActor?: string) {
+export async function confirmBuyerReceipt(orderId: number) {
   const { userId } = await auth();
-  
   if (!userId) throw new Error("Unauthorized");
   return processBuyerReceipt(orderId, { id: userId, role: "buyer" });
 }

@@ -1,14 +1,10 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import Stripe from "stripe";
 import { db } from "@/lib/db";
 import { sellers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { env } from "@/env";
-
-const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-  apiVersion: "2026-03-25.dahlia" as any,
-});
+import { stripe } from "@/lib/stripe";
 
 export async function POST(req: Request) {
   try {

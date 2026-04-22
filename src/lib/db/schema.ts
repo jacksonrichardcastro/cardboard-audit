@@ -52,6 +52,7 @@ export const orders = pgTable("orders", {
   totalCents: integer("total_cents").notNull(),
   feeCents: integer("fee_cents").notNull().default(0),
   stripePaymentIntentId: varchar("stripe_payment_intent_id", { length: 255 }),
+  transferGroupId: varchar("transfer_group_id", { length: 255 }),
   deliveredAt: timestamp("delivered_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => ({
