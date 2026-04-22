@@ -112,6 +112,7 @@ export async function createListing(payload: {
     photos: payload.photos,
     status: "ACTIVE",
   }).returning({ id: listings.id });
+  });
 
   // P1-2: Caching engine handles ISR naturally on navigation
   return newListing.id;
