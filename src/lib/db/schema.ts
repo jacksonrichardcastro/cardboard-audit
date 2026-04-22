@@ -1,5 +1,5 @@
 import { pgTable, serial, text, integer, timestamp, json, varchar, boolean, index } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 
 export const users = pgTable("users", {
   id: varchar("id", { length: 255 }).primaryKey(), // Clerk user ID
@@ -52,11 +52,24 @@ export const orders = pgTable("orders", {
   totalCents: integer("total_cents").notNull(),
   feeCents: integer("fee_cents").notNull().default(0),
   stripePaymentIntentId: varchar("stripe_payment_intent_id", { length: 255 }),
+  transferGroupId: varchar("transfer_group_id", { length: 255 }),
   deliveredAt: timestamp("delivered_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => ({
   buyerOrderIdx: index("buyer_order_idx").on(table.buyerId),
   sellerOrderIdx: index("seller_order_idx").on(table.sellerId),
+  // Added in 0011_hot_path_indexes.sql — buyer dashboard (newest first).
+  buyerCreatedIdx: index("orders_buyer_created_idx").on(
+    table.buyerId,
+    sql`${table.createdAt} DESC`,
+  ),
+  // Added in 0011_hot_path_indexes.sql — partial index for payout sweeper.
+  // Drizzle doesn't fully model partial indexes in pg-core yet; this
+  // declaration keeps the name registered so drizzle-kit introspection
+  // doesn't try to drop it, even if the WHERE clause lives only in SQL.
+  pendingConfirmDeliveredIdx: index("orders_pending_confirm_delivered_idx").on(
+    table.deliveredAt,
+  ),
 }));
 
 // Append-only audit trail
@@ -72,6 +85,11 @@ export const stateTransitions = pgTable("state_transitions", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => ({
   trackingIdx: index("tracking_idx").on(table.trackingNumber),
+  // Added in 0011_hot_path_indexes.sql — Shippo webhook reverse lookup.
+  trackingRecentIdx: index("state_transitions_tracking_recent_idx").on(
+    table.trackingNumber,
+    sql`${table.createdAt} DESC`,
+  ),
 }));
 
 // P0-2: Idempotency dedupe table preventing catastrophic double-payouts

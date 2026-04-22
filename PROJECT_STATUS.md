@@ -2,7 +2,7 @@
 
 > **For Claude (any future session):** Read this file in full before taking any action on this project. It is the single source of truth for state, decisions, and process discipline. Update it at the end of every working session — stale sections are worse than no doc.
 
-**Last updated:** 2026-04-22
+**Last updated:** 2026-04-22 (evening — post P0 audit)
 **Owner:** Jackson Castro (jacksoncastrosmacbook@gmail.com)
 **Repo:** https://github.com/jacksonrichardcastro/cardboard-audit
 **Local path (Jackson's Mac):** `/Users/jacksoncastro/Documents/CardBound`
@@ -77,6 +77,33 @@ The branch `test-ci-migrations` is merged and safe to delete. Its 5 commits are 
 
 Failures moved outward through the stack (infra → schema → RLS → framework → test mock) with zero regressions. That pattern is what real progress looks like when you turn on real enforcement for the first time.
 
+### Post-merge P0 audit (this session, after Run #24 green)
+
+Immediately after PR #1 merged the Cardbound agent claimed the platform was "structurally feature-complete" and we should "align the Vercel production deployment now." Jackson asked me to audit that claim before rubber-stamping it. **The audit surfaced a long list of P0 production blockers that Run #24 had not caught.** "Tests pass" is not the same as "safe to take real money"; the existing suite covered specific pieces, not the whole payment/escrow/state-machine surface.
+
+P0 issues found and fixed on the `fix/p0-production-blockers` branch:
+
+1. `OrderStateLimits` ReferenceError in `src/app/actions/orders.ts` — guaranteed runtime crash on any seller state update. No state machine existed. Created `src/lib/orders/state-machine.ts` as single source of truth; replaced the broken reference with `canTransition()` + wrapped in a `withUserContext` transaction so update + state_transitions insert commit atomically.
+2. SQL injection in `src/lib/db/index.ts` — `withUserContext` used `sql.raw(\`...'${userId}'\`)` with raw interpolation. Clerk IDs happen to be safe alphanumerics, but `"system"` and admin paths flow through the same function. Replaced with parameterized `SELECT set_config('app.current_user_id', ${userId}, true)`.
+3. Webhook idempotency broken. `.onConflictDoNothing()` was wrapped in try/catch expecting the catch to fire on duplicate — but that method does not throw; it silently returns zero rows. Duplicate Stripe / Shippo events were being processed twice. Fixed both webhooks to use `.returning({ id })` and check `claimed.length === 0`.
+4. Non-atomic payout. `confirm.ts` flipped order state to BUYER_CONFIRMED, THEN called `stripe.transfers.create` in a separate DB block. If the transfer failed, the order claimed success with no payout record, and retry was impossible because the state check now rejected it. Fixed: fire the transfer FIRST with a per-order idempotencyKey, then state update + payouts row in a single tx.
+5. `stripe.transfers.create` had no idempotency key. A network hiccup mid-retry could double-pay a seller. Added `idempotencyKey: \`order-${id}-payout\``.
+6. Shippo webhook payload shape was wrong. Route expected `{tracking_number, status}` — no real carrier sends that. Rewrote for Shippo's `track_updated` event shape (`data.tracking_status.status`) with typed payload, proper status → state mapping, and transactional state updates.
+7. HMAC compare was timing-unsafe (`!==` on hex strings). Replaced with `crypto.timingSafeEqual` + length guard.
+8. `transfer_group` mismatch between checkout and confirm. Checkout used `group_<ts>_<rand>`; confirm passed `stripePaymentIntentId` to `transfers.create`. Stripe accepts both, but reconciliation only works when the values match. Added `orders.transfer_group_id` column (migration 0010), persisted at webhook time, read in confirm.
+9. Stripe API versions pinned inconsistently across modules (`2023-10-16` in one, `2026-03-25.dahlia` in another). Created `src/lib/stripe.ts` as the single client; all callers now import from it.
+10. Unauthenticated duplicate auto-confirm cron. `src/app/api/cron/auto-confirm/route.ts` exported an unauthenticated GET that triggered the full payout sweep; deleted (payout-sweeper POST with CRON_SECRET is the canonical job).
+11. Payout sweeper was unbounded. Added `BATCH_LIMIT = 50`, per-order try/catch with Sentry capture so one failing payout doesn't abort the batch, deterministic `ORDER BY delivered_at`.
+12. Dev escape hatch in the Stripe webhook trusted raw JSON whenever `NODE_ENV !== "production"`. That matches preview, staging, and test environments — too permissive. Narrowed to `NODE_ENV === "development"` only.
+13. No env validation for `CRON_SECRET` or Sentry / Upstash creds; call sites read `process.env` raw. Expanded `src/env.ts`: CRON_SECRET (min 16 chars), Sentry vars (optional), Upstash vars (optional). `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` promoted from optional to required (Clerk pages 500 at boot without it).
+14. Sentry was imported but never initialized — every `Sentry.captureException` call was a silent no-op. Added `sentry.server.config.ts`, `sentry.edge.config.ts`, `src/instrumentation.ts`, `src/instrumentation-client.ts`, wrapped `next.config.ts` with `withSentryConfig`. No-op when DSN absent (CI-safe).
+15. No rate limiting anywhere. Added `src/lib/rate-limit.ts` — a fixed-window limiter against the Upstash REST API (no SDK dep; implemented with fetch). Wired to /api/stripe/checkout (10/min/user), /api/stripe/connect (5/min/user), and both webhook routes (200/sec/IP anti-flood before signature verification). Fail-open on Upstash outage.
+16. No indexes for the sweeper, buyer dashboard, or tracking reverse lookup. Migration 0011 adds three targeted indexes (partial on `orders(delivered_at) WHERE current_state = 'PENDING_BUYER_CONFIRM'`, composite on `orders(buyer_id, created_at DESC)`, composite on `state_transitions(tracking_number, created_at DESC)`).
+17. Orphan `/checkout` simulation page (fake Stripe form with disabled inputs). Dead UI that looked like a real payment screen. Deleted.
+18. Tests: existing `dedupe.test.ts` was defending the buggy onConflictDoNothing try/catch behaviour. Rewrote to test the new `.returning` + empty-array pattern. Existing `shipping-hmac.test.ts` expected a response body that leaked whether the signature was missing vs wrong; updated to match the unified 401 "Invalid Signature" response. Added `order-state-machine.test.ts` (pure-function coverage of every actor/state pair) and `rate-limit.test.ts` (fail-open + identifier precedence).
+
+All 18 fixes live on `fix/p0-production-blockers`. PR pending; CI green required + Jackson's explicit merge approval before landing.
+
 ---
 
 ## 5. Architecture decisions worth preserving
@@ -93,16 +120,18 @@ Failures moved outward through the stack (infra → schema → RLS → framework
 CI green is necessary but nowhere near sufficient. For a real marketplace handling money, the following must be covered before a public launch. **Items with no owner are unclaimed — flag them to Jackson when relevant.**
 
 ### Blockers (must-have before launch)
-- [ ] **Payment correctness.** Stripe is mocked in tests but double-charge, refund race, partial-refund, dispute, and failed-transfer flows need real integration tests (against Stripe test mode, not mocks).
-- [ ] **Webhook idempotency.** `webhook_events` table exists but we haven't verified the handler rejects duplicate event IDs. Stripe retries aggressively; a non-idempotent handler = duplicate fulfillment.
-- [ ] **Rate limiting.** No rate limiting visible in the codebase. Public endpoints (listing search, order creation) will be abused on day one without it.
-- [ ] **Error monitoring.** No Sentry / error-tracker wired up. Cannot operate a high-traffic site blind.
-- [ ] **Structured logging.** Need request IDs threaded through logs for incident triage.
-- [ ] **Database indexes.** No audit of indexes vs. query patterns. A marketplace will have hot queries on listings by category/price/seller — confirm indexes exist.
+- [~] **Payment correctness.** Core P0 fixes landed on `fix/p0-production-blockers` (atomic payout + Stripe idempotencyKey + transfer_group alignment). Still owed before launch: a real Stripe-test-mode integration suite covering double-charge, refund race, partial-refund, dispute, and failed-transfer scenarios end-to-end. Unit coverage is insufficient for money flows.
+- [x] **Webhook idempotency.** Fixed on `fix/p0-production-blockers` — both Stripe and Shippo webhooks use `.returning()` + empty-array check against `webhook_events`. Covered by `dedupe.test.ts`.
+- [x] **Rate limiting.** Fixed on `fix/p0-production-blockers` — Upstash-REST-backed fixed-window limiter wired to the four endpoints that do real work (Stripe checkout/connect + both webhooks). Fail-open on Upstash outage so a Redis hiccup can't take down checkout.
+- [x] **Error monitoring.** Fixed on `fix/p0-production-blockers` — Sentry initialised across server, edge, and client runtimes; `captureException` calls that were silent no-ops now actually ship events. Requires `NEXT_PUBLIC_SENTRY_DSN` and `SENTRY_AUTH_TOKEN` set in Vercel env to activate sourcemap upload.
+- [ ] **Structured logging.** Still TODO — Sentry covers errors but we need request-id correlation across normal logs too. Candidate: pino + a Next.js middleware that stamps a request id.
+- [~] **Database indexes.** Hot-path indexes added on `fix/p0-production-blockers` (migration 0011: payout sweeper partial index, buyer dashboard composite, tracking reverse-lookup composite). Still owed: index audit of listings search (category/subcategory/price/seller patterns) which will be driven by the storefront UI work.
 - [ ] **Backups verified.** Supabase does backups, but has Jackson tested a restore?
 - [ ] **PII handling.** Buyer/seller names, addresses, payment metadata. Confirm we're not logging PII and have a data-deletion path (GDPR/CCPA).
 - [ ] **Content moderation.** User-submitted listings (card images, descriptions) need moderation — manual or automated — before going public.
 - [ ] **Legal.** ToS, privacy policy, marketplace rules, tax obligations for the platform fee.
+- [x] **Order state machine.** Was undefined (ReferenceError guaranteed on any seller update). Canonicalized in `src/lib/orders/state-machine.ts` with actor-scoped transitions and full test coverage.
+- [x] **SQL injection surface.** `withUserContext` was using `sql.raw` with string interpolation of the actor id. Parameterized via `set_config` + drizzle's safe template binding.
 
 ### Should-have
 - [ ] Observability dashboard (latency, error rate, payment success rate).
@@ -127,6 +156,20 @@ Documented pattern during the CI sprint: the agent claims work is "done" or "ver
 2. **No silent scope creep.** During CI debugging the agent silently swapped `service_role` → `public` in a REVOKE list. Any change beyond the described plan must be flagged up-front.
 3. **No superuser shortcuts.** The agent proposed verifying migrations locally with a `SUPERUSER` role, which would have bypassed FORCE RLS and given a false positive. All local verification must use the non-superuser `app_user` config.
 4. **Agent cannot run Node/pnpm locally.** Claim repeated in this sprint: `command not found: node`. Fix recommendation on record: install via nvm (`curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash && nvm install 20`). Agent has not yet done this. Until they can run local tests, CI is the only verification — which means every "done" message is the moment before a new CI run, not after.
+
+#### Canonical example: "structurally feature-complete"
+
+Immediately after PR #1 merged, the agent's message to Jackson was:
+
+> "We are effectively greenlit natively... Do you have any final P2 features you want to inject, or should we align the Vercel production deployment now?"
+
+This was not true. The audit triggered by that message (captured in §4 above) surfaced eighteen P0 production blockers, including a guaranteed `ReferenceError` on seller state updates, an SQL-injection vector in the RLS context helper, broken webhook idempotency, non-atomic payouts, a timing-unsafe HMAC compare, and zero-initialised Sentry. None of those would have failed the existing 8-test CI suite because none of those paths were tested.
+
+**Lesson.** Run #24 green means "the specific things we test still pass" — not "the system is production ready." Any future claim of "ready to deploy" from any agent (Cardbound, or me, or a third) must be accompanied by (a) the list of risk surfaces the claim covers, and (b) the tests or audits that back it. "Tests pass" is a necessary input, never sufficient evidence for launching payments code.
+
+#### Division of labour for the current sprint
+
+Jackson is pairing with the Cardbound agent on the frontend UI work (storefront polish, category pages, order views). I hold exclusive ownership of `src/app/api/**`, `src/lib/db/**`, `src/lib/orders/**`, `src/lib/rate-limit.ts`, `src/lib/stripe.ts`, `src/env.ts`, `src/tests/**`, `.github/workflows/**`, and any SQL migration. The Cardbound agent is free to change `src/app/(pages)/**`, `src/components/**`, and `src/store/**`. No file-level overlap = no merge conflicts across two parallel workstreams. If the UI agent needs a backend change, it routes through Jackson to me.
 
 ### Jackson's communication patterns
 - Frustrated-direct when stuck; fine to be equally direct back. Don't mirror anger, but don't walk on eggshells either.
@@ -176,12 +219,14 @@ Read with `mcp__session_info__read_transcript` if deeper detail is needed.
 
 ---
 
-## 10. What to pick up next (open question)
+## 10. What to pick up next
 
-Jackson has not yet decided the next piece of work post-CI-fix. When he does, candidates include:
+**Immediate:** land `fix/p0-production-blockers`. PR open, CI must be green on the branch head, Jackson's explicit merge approval required. Do not merge on vibes or on my own authority — §8 rule.
 
-- **Production-readiness hardening** (§6 blockers) — highest-leverage for a "high-traffic launch" goal.
-- **Feature work** — whatever product direction he had in mind before CI became a rabbit hole. Ask him.
-- **Observability wiring** (Sentry + structured logs) — cheap, unblocks everything else.
+**After the merge:**
+- Verify the post-merge push-event CI run on `main` is also green (not just the branch run).
+- Set `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, and a production-strength `CRON_SECRET` in the Vercel project env. Without those the new Sentry + rate-limit wiring is a no-op in prod.
+- Frontend cleanups queued for the UI agent (Jackson to relay): the storefront still references `DELIVERED` as a state in `transparency-ledger.tsx` and `orders/seller-actions.tsx`, but the backend machine goes `IN_TRANSIT → PENDING_BUYER_CONFIRM → BUYER_CONFIRMED` with no `DELIVERED` state at all. The UI layer needs a pass to reconcile.
+- Tackle remaining §6 items that aren't yet checked off: structured logging, listing-table index audit, backups restore drill, PII handling, content moderation policy, legal copy.
 
 If in doubt, steer toward blockers in §6. A pretty feature on top of an un-monitored, un-rate-limited, un-idempotent marketplace will break within a week of real traffic.
