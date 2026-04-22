@@ -10,6 +10,10 @@ export type MockListing = {
   photoUrl: string;
   sellerBusinessName: string;
   createdAt: string;
+  set?: string;
+  year?: string;
+  cardNumber?: string;
+  description?: string;
 };
 
 export const mockListings: MockListing[] = [
