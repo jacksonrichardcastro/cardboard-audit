@@ -12,7 +12,7 @@ interface CardRailProps {
 
 export function CardRail({ title, listings, seeAllHref }: CardRailProps) {
   return (
-    <div className="w-full space-y-4 my-8">
+    <div className="w-full space-y-4">
       <div className="flex items-center justify-between px-4 md:px-8">
         <h2 className="text-2xl font-bold tracking-tight text-foreground">{title}</h2>
         <Link 
