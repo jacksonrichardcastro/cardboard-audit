@@ -46,7 +46,7 @@ export const mockListings: MockListing[] = [
     gradingCompany: "BGS",
     grade: "9.5",
     priceCents: 520000,
-    photoUrl: "https://images.pokemontcg.io/base1/15_hires.png", // Representing sports using canonical wiki domain
+    photoUrl: "https://upload.wikimedia.org/wikipedia/en/thumb/3/30/1952_Topps_Mickey_Mantle.jpg/220px-1952_Topps_Mickey_Mantle.jpg",
     sellerBusinessName: "RookieHype NBA",
     createdAt: "2026-04-22T08:30:00Z"
   },
@@ -72,7 +72,7 @@ export const mockListings: MockListing[] = [
     gradingCompany: "PSA",
     grade: "5",
     priceCents: 1850000,
-    photoUrl: "https://images.pokemontcg.io/neo1/9_hires.png",
+    photoUrl: "https://upload.wikimedia.org/wikipedia/en/thumb/3/30/1952_Topps_Mickey_Mantle.jpg/220px-1952_Topps_Mickey_Mantle.jpg",
     sellerBusinessName: "Vintage Sluggers",
     createdAt: "2026-04-15T09:20:00Z"
   },
@@ -105,7 +105,7 @@ export const mockListings: MockListing[] = [
     subcategory: "Basketball",
     condition: "Near Mint",
     priceCents: 800000,
-    photoUrl: "https://images.pokemontcg.io/swsh1/50_hires.png",
+    photoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/T206_Honus_Wagner.jpg/220px-T206_Honus_Wagner.jpg",
     sellerBusinessName: "CourtKings",
     createdAt: "2026-04-17T16:15:00Z"
   },
@@ -142,7 +142,7 @@ export const mockListings: MockListing[] = [
     gradingCompany: "PSA",
     grade: "10",
     priceCents: 1150000,
-    photoUrl: "https://images.pokemontcg.io/base1/5_hires.png",
+    photoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/T206_Honus_Wagner.jpg/220px-T206_Honus_Wagner.jpg",
     sellerBusinessName: "Gridiron Grades",
     createdAt: "2026-04-16T18:40:00Z"
   },
@@ -190,7 +190,7 @@ export const mockListings: MockListing[] = [
     subcategory: "Baseball",
     condition: "Near Mint",
     priceCents: 245000,
-    photoUrl: "https://images.pokemontcg.io/neo2/1_hires.png",
+    photoUrl: "https://upload.wikimedia.org/wikipedia/en/thumb/3/30/1952_Topps_Mickey_Mantle.jpg/220px-1952_Topps_Mickey_Mantle.jpg",
     sellerBusinessName: "Diamond Deals",
     createdAt: "2026-04-17T09:30:00Z"
   },
@@ -227,7 +227,7 @@ export const mockListings: MockListing[] = [
     gradingCompany: "PSA",
     grade: "6",
     priceCents: 950000,
-    photoUrl: "https://images.pokemontcg.io/ex1/1_hires.png",
+    photoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/T206_Honus_Wagner.jpg/220px-T206_Honus_Wagner.jpg",
     sellerBusinessName: "Chicago Court",
     createdAt: "2026-04-14T08:45:00Z"
   },
@@ -262,7 +262,7 @@ export const mockListings: MockListing[] = [
     gradingCompany: "SGC",
     grade: "9",
     priceCents: 12500,
-    photoUrl: "https://images.pokemontcg.io/hgss1/1_hires.png",
+    photoUrl: "https://upload.wikimedia.org/wikipedia/en/thumb/3/30/1952_Topps_Mickey_Mantle.jpg/220px-1952_Topps_Mickey_Mantle.jpg",
     sellerBusinessName: "The Kid Collects",
     createdAt: "2026-04-19T14:20:00Z"
   },
@@ -297,7 +297,7 @@ export const mockListings: MockListing[] = [
     subcategory: "Football",
     condition: "Mint",
     priceCents: 35000,
-    photoUrl: "https://images.pokemontcg.io/sm1/1_hires.png",
+    photoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/T206_Honus_Wagner.jpg/220px-T206_Honus_Wagner.jpg",
     sellerBusinessName: "GOAT Vault",
     createdAt: "2026-04-20T12:00:00Z"
   },
