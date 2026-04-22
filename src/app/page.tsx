@@ -3,6 +3,7 @@ import { ShieldCheck } from "lucide-react";
 import { SearchBar } from "@/components/storefront/search-bar";
 import { CardRail } from "@/components/storefront/card-rail";
 import { mockListings } from "@/lib/mock/listings";
+import { FilterSidebar } from "@/components/storefront/filter-sidebar";
 
 export default function Home() {
   // "Recommended for you" - simple stable slice
@@ -33,8 +34,12 @@ export default function Home() {
         </div>
       </div>
 
+      <div className="max-w-7xl mx-auto px-4 md:px-8 pt-12">
+        <FilterSidebar />
+      </div>
+
       {/* Horizontal Dashboard Rails */}
-      <div className="pt-8">
+      <div className="pt-4">
         <CardRail 
           title="Recommended for you" 
           listings={recommendedListings} 
