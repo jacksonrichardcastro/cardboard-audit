@@ -5,15 +5,13 @@ import { POST } from "@/app/api/cron/payout-sweeper/route";
 import { eq } from "drizzle-orm";
 
 // Mock Stripe so transfers.create does not hit the network in CI.
-vi.mock("stripe", () => {
-  return {
-    default: vi.fn().mockImplementation(() => ({
-      transfers: {
-        create: vi.fn().mockResolvedValue({ id: "tr_mock123" })
-      }
-    }))
-  };
-});
+vi.mock("stripe", () => ({
+  default: class StripeMock {
+    transfers = {
+      create: vi.fn().mockResolvedValue({ id: "tr_mock123" })
+    }
+  }
+}));
 
 describe("P0-7: Cron Payout Sweeper Integration", () => {
   beforeAll(async () => {
