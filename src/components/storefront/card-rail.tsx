@@ -10,6 +10,8 @@ interface CardRailProps {
   seeAllHref?: string;
 }
 
+import { FilterSidebar } from "@/components/storefront/filter-sidebar";
+
 export function CardRail({ title, listings, seeAllHref }: CardRailProps) {
   return (
     <div className="w-full space-y-4 my-8">
@@ -24,6 +26,10 @@ export function CardRail({ title, listings, seeAllHref }: CardRailProps) {
         </Link>
       </div>
       
+      <div className="px-4 md:px-6 max-w-7xl mx-auto">
+        <FilterSidebar />
+      </div>
+
       {/* Horizontal scrolling strip locking Fanatics collect swiping grids */}
       <div className="w-full overflow-x-auto pb-4 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden px-4 md:px-6">
         <div className="flex gap-3 max-w-7xl mx-auto w-max">
@@ -31,10 +37,10 @@ export function CardRail({ title, listings, seeAllHref }: CardRailProps) {
             <Link 
               key={listing.id} 
               href={`/listing/${listing.id}`} 
-              className="snap-start shrink-0 block"
+              className="snap-start shrink-0 w-44 block"
             >
-              <div className="w-44 rounded-md overflow-hidden bg-card border border-border/50 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-150 cursor-pointer">
-                <div className="relative aspect-[3/4] bg-muted overflow-hidden">
+              <div className="rounded-md overflow-hidden bg-card border border-border/50 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-150 cursor-pointer">
+                <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-neutral-900">
                   <img
                     src={listing.photoUrl}
                     alt={listing.title}
