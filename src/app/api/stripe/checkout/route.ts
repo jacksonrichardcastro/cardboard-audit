@@ -5,13 +5,27 @@ import { listings, sellers } from "@/lib/db/schema";
 import { inArray, eq } from "drizzle-orm";
 import { env } from "@/env";
 import { stripe } from "@/lib/stripe";
+import {
+  rateLimit,
+  identifierFromRequest,
+  tooManyRequests,
+} from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
     const { userId } = await auth();
-    
+
     // Explicit security: No anonymous purchases allowed on platform
     if (!userId) return new NextResponse("Unauthorized", { status: 401 });
+
+    // 10 checkouts per minute per authenticated user is ample for real
+    // buyers and tight enough that a stolen session token can't spam
+    // Stripe sessions (each of which creates a PaymentIntent server-side).
+    const rl = await rateLimit(identifierFromRequest(req, userId), {
+      limit: 10,
+      windowSec: 60,
+    });
+    if (!rl.ok) return tooManyRequests(rl);
 
     const body = await req.json();
     const listingIds: number[] = body.listingIds;
