@@ -8,6 +8,8 @@ interface CardRailProps {
   title: string;
   listings: MockListing[];
   seeAllHref?: string;
+}
+
 export function CardRail({ title, listings, seeAllHref }: CardRailProps) {
   return (
     <div className="w-full space-y-4 my-8">
