@@ -1,17 +1,18 @@
 "use server";
 
-import { eq } from "drizzle-orm";
-import { db, withUserContext } from "@/lib/db";
+import { withUserContext } from "@/lib/db";
 import { sellers } from "@/lib/db/schema";
 import { auth } from "@clerk/nextjs/server";
-import Stripe from "stripe";
-import { env } from "@/env";
+import { stripe } from "@/lib/stripe";
 
 export async function createSellerApplication(payload: { businessName: string; description: string }) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const stripe = new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: "2023-10-16" as any });
+  // Single shared Stripe client from @/lib/stripe — pinned API version,
+  // consistent appInfo. Previously this file instantiated its own client
+  // at the legacy "2023-10-16" API version, which meant seller-KYC
+  // requests hit a different Stripe API than every other call site.
 
   // 1. Drizzle DB Upsert Application State
   // 1. Drizzle DB Upsert Application State

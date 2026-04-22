@@ -1,22 +1,32 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import Stripe from "stripe";
 import { db } from "@/lib/db";
 import { sellers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { env } from "@/env";
-
-const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-  apiVersion: "2026-03-25.dahlia" as any,
-});
+import { stripe } from "@/lib/stripe";
+import {
+  rateLimit,
+  identifierFromRequest,
+  tooManyRequests,
+} from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
     const { userId } = await auth();
-    
+
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
+
+    // 5/min per user. accounts.create and accountLinks.create both create
+    // real Stripe objects; the seller should never need more than a
+    // handful of onboarding link refreshes in quick succession.
+    const rl = await rateLimit(identifierFromRequest(req, userId), {
+      limit: 5,
+      windowSec: 60,
+    });
+    if (!rl.ok) return tooManyRequests(rl);
 
     // 1. Fetch current seller profile
     const [seller] = await db.select().from(sellers).where(eq(sellers.userId, userId));
