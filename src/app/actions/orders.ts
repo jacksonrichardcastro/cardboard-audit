@@ -1,14 +1,11 @@
 "use server";
 
 import { eq, desc, asc } from "drizzle-orm";
-import { db, withUserContext } from "@/lib/db";
-import { orders, stateTransitions, sellers, users, listings, payouts } from "@/lib/db/schema";
-import { OrderState } from "@/components/shared/transparency-ledger";
+import { withUserContext } from "@/lib/db";
+import { orders, stateTransitions, sellers, users, listings } from "@/lib/db/schema";
 import { auth } from "@clerk/nextjs/server";
-import Stripe from "stripe";
-import { env } from "@/env";
-import { calculateNetPayout } from "@/lib/payout-math";
 import { processBuyerReceipt } from "@/lib/orders/confirm";
+import { canTransition, parseOrderState, type OrderState } from "@/lib/orders/state-machine";
 
 export async function getOrderWithLedger(orderId: number) {
   try {
@@ -99,41 +96,70 @@ export async function confirmBuyerReceipt(orderId: number, triggerActor?: string
   return processBuyerReceipt(orderId, { id: userId, role: "buyer" });
 }
 
-// P1-5: Seller State Execution boundaries
-export async function updateOrderState(orderId: number, newState: string, trackingNumber?: string) {
+/**
+ * Seller-driven order state transition. The state machine in
+ * @/lib/orders/state-machine is the single source of truth for which
+ * transitions are legal for the seller actor. Anything outside that map
+ * throws, including attempts by a non-seller user, unknown target states,
+ * and any transition not explicitly enumerated for `actor: "seller"`.
+ *
+ * Update + state_transitions insert run inside a single withUserContext
+ * transaction so a failed insert rolls back the order-row update.
+ */
+export async function updateOrderState(
+  orderId: number,
+  newState: OrderState,
+  trackingNumber?: string,
+) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const currentOrder = await withUserContext(userId, async (tx) => {
-    const [record] = await tx.select({
-      id: orders.id,
-      currentState: orders.currentState,
-      sellerId: orders.sellerId
-    })
-    .from(orders)
-    .where(eq(orders.id, orderId)).limit(1);
-    return record;
-  });
-
-  if (!currentOrder) throw new Error("Order not found");
-  if (currentOrder.sellerId !== userId) throw new Error("Unauthorized restriction bounds");
-  
-  if (currentOrder.currentState !== "PAID" && Object.values(OrderStateLimits).indexOf(newState) > 0) {
-     throw new Error("Invalid state progression tracking");
+  const targetState = parseOrderState(newState);
+  if (!targetState) {
+    throw new Error(`Invalid target state: ${newState}`);
   }
 
-  await withUserContext(userId, async (tx) => {
-    await tx.update(orders).set({ currentState: newState }).where(eq(orders.id, orderId));
-  
+  return await withUserContext(userId, async (tx) => {
+    const [currentOrder] = await tx
+      .select({
+        id: orders.id,
+        currentState: orders.currentState,
+        sellerId: orders.sellerId,
+      })
+      .from(orders)
+      .where(eq(orders.id, orderId))
+      .limit(1);
+
+    if (!currentOrder) throw new Error("Order not found");
+    if (currentOrder.sellerId !== userId) {
+      throw new Error("Unauthorized: only the listing's seller may update this order");
+    }
+
+    const fromState = parseOrderState(currentOrder.currentState);
+    if (!fromState) {
+      throw new Error(`Order is in unknown state: ${currentOrder.currentState}`);
+    }
+
+    if (!canTransition(fromState, targetState, "seller")) {
+      throw new Error(
+        `Invalid seller transition: ${fromState} -> ${targetState}`,
+      );
+    }
+
+    await tx
+      .update(orders)
+      .set({ currentState: targetState })
+      .where(eq(orders.id, orderId));
+
     await tx.insert(stateTransitions).values({
-      orderId: orderId,
-      newState: newState,
-      previousState: currentOrder.currentState,
+      orderId,
+      newState: targetState,
+      previousState: fromState,
       actorId: userId,
       trackingNumber,
-      notes: trackingNumber ? `Updated tracking metadata: ${trackingNumber}` : undefined
+      notes: trackingNumber ? `Updated tracking metadata: ${trackingNumber}` : undefined,
     });
-  });
 
-  return { success: true };
+    return { success: true as const };
+  });
 }
