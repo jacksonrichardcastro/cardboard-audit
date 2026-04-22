@@ -1,5 +1,4 @@
 import { MockListing } from "@/lib/mock/listings";
-import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 
@@ -33,14 +32,16 @@ export function CardRail({ title, listings, seeAllHref }: CardRailProps) {
               className="snap-start shrink-0 block"
             >
               <div className="w-44 rounded-md overflow-hidden bg-card border border-border/50 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-150 cursor-pointer">
-                <div className="relative aspect-[3/4] bg-muted/20">
-                  <Image 
-                    src={listing.photoUrl} 
-                    alt={listing.title} 
-                    fill 
-                    unoptimized
-                    className="object-cover" 
+                <div className="relative aspect-[3/4] bg-muted overflow-hidden">
+                  <img
+                    src={listing.photoUrl}
+                    alt={listing.title}
+                    className="absolute inset-0 h-full w-full object-cover"
+                    loading="lazy"
                     draggable={false}
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).style.visibility = "hidden";
+                    }}
                   />
                 </div>
                 <div className="p-2 space-y-1">
