@@ -1,9 +1,13 @@
 "use server";
 
-import { eq, desc, asc } from "drizzle-orm";
-import { withUserContext } from "@/lib/db";
+import { eq, desc, asc, inArray, and } from "drizzle-orm";
+import { withUserContext, db } from "@/lib/db";
 import { orders, stateTransitions, sellers, users, listings } from "@/lib/db/schema";
 import { auth } from "@clerk/nextjs/server";
+import { headers } from "next/headers";
+import { env } from "@/env";
+import { stripe } from "@/lib/stripe";
+import { rateLimit } from "@/lib/rate-limit";
 import { processBuyerReceipt } from "@/lib/orders/confirm";
 import { canTransition, parseOrderState, type OrderState } from "@/lib/orders/state-machine";
 
@@ -49,7 +53,7 @@ export async function getOrderWithLedger(orderId: number) {
     return {
       ...orderData,
       currentState: orderData.currentState as OrderState,
-      history: transitions.map(t => ({
+      history: transitions.map((t: any) => ({
         ...t,
         createdAt: t.createdAt.toISOString()
       }))
@@ -163,14 +167,18 @@ export async function updateOrderState(
   });
 }
 
-import { stripe } from "@/lib/stripe";
-import { inArray } from "drizzle-orm";
-import { env } from "@/env";
-import { headers } from "next/headers";
-
 export async function createCheckoutSessionAction(listingIds: number[]) {
   const { userId } = await auth();
   if (!userId) return { error: "Unauthorized" };
+
+  const headerList = await headers();
+  const xff = headerList.get("x-forwarded-for") || "";
+  const rateLimitIdentifier = `checkout:u:${userId}_ip:${xff}`;
+
+  const rl = await rateLimit(rateLimitIdentifier, { limit: 10, windowSec: 60 });
+  if (!rl.ok) {
+    return { error: "Rate limit exceeded" };
+  }
 
   if (!listingIds || listingIds.length === 0) {
     return { error: "Cart is empty" };
@@ -187,7 +195,7 @@ export async function createCheckoutSessionAction(listingIds: number[]) {
     })
     .from(listings)
     .innerJoin(sellers, eq(listings.sellerId, sellers.userId))
-    .where(inArray(listings.id, listingIds));
+    .where(and(inArray(listings.id, listingIds), eq(listings.status, "ACTIVE")));
 
   if (dbItems.length !== listingIds.length) {
     return { error: "One or more items not found or unavailable." };
@@ -218,7 +226,6 @@ export async function createCheckoutSessionAction(listingIds: number[]) {
     quantity: 1
   });
 
-  const headerList = await headers();
   const host = headerList.get("origin") || env.NEXT_PUBLIC_APP_URL || "http://localhost:3001";
 
   try {

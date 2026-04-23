@@ -15,7 +15,7 @@ export function BuyerActions({ orderId, currentState }: { orderId: number, curre
     const handleConfirm = async () => {
         setLoading(true);
         try {
-            await confirmBuyerReceipt(orderId, "buyer");
+            await confirmBuyerReceipt(orderId);
             router.refresh();
         } catch (err: any) {
             alert(err.message);

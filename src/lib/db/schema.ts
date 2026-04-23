@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, timestamp, json, varchar, boolean, index } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, timestamp, json, varchar, boolean, index, unique } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 
 export const users = pgTable("users", {
@@ -25,6 +25,9 @@ export const listings = pgTable("listings", {
   title: varchar("title", { length: 255 }).notNull(),
   category: varchar("category", { length: 100 }).notNull(), // Sports, TCG, Graded
   subcategory: varchar("subcategory", { length: 100 }), // Pokemon, Baseball, etc.
+  set: varchar("set", { length: 100 }),
+  year: varchar("year", { length: 50 }),
+  cardNumber: varchar("card_number", { length: 100 }),
   condition: varchar("condition", { length: 100 }).notNull(),
   gradingCompany: varchar("grading_company", { length: 100 }),
   grade: varchar("grade", { length: 50 }),
@@ -38,6 +41,7 @@ export const listings = pgTable("listings", {
 }, (table) => ({
   sellerIdx: index("seller_idx").on(table.sellerId),
   categoryIdx: index("category_idx").on(table.category, table.subcategory),
+  titleSellerIdx: unique("title_seller_unique").on(table.title, table.sellerId),
 }));
 
 export const orders = pgTable("orders", {

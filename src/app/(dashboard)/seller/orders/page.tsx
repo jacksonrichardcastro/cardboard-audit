@@ -61,7 +61,7 @@ export default async function SellerFulfillmentQueue() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {orders.map((order) => {
+                {orders.map((order: any) => {
                   const netPayoutCents = (order.totalCents - order.shippingCents) - order.feeCents;
                   return (
                     <TableRow key={order.id} className="border-white/5 hover:bg-white/5 transition-colors">

@@ -50,7 +50,7 @@ export default async function SellerInventoryPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {inventory.map((item) => (
+                {inventory.map((item: any) => (
                   <TableRow key={item.id} className="border-white/5 hover:bg-white/5 transition-colors">
                     <TableCell className="font-semibold">{item.title}</TableCell>
                     <TableCell><Badge variant="outline" className="border-white/10">{item.category}</Badge></TableCell>

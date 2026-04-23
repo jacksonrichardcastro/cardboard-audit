@@ -79,7 +79,7 @@ describe("P0-5 Scenario 3: Cross-Tenant RLS Isolation", () => {
     }
 
     // Explicitly confirm user_B's seeded order is NOT in the result set.
-    const leakedRow = retrieved.find((r) => r.id === 501);
+    const leakedRow = retrieved.find((r: any) => r.id === 501);
     expect(leakedRow).toBeUndefined();
   });
 });

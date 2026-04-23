@@ -9,7 +9,7 @@ export default async function Home() {
   const dbListings = await getTrendingListings({});
   
   // Clean mapping standardizing Postgres arrays dynamically safely to existing UI constraints
-  const listings = dbListings.map(d => ({
+  const listings = dbListings.map((d: any) => ({
     id: d.id,
     title: d.title,
     category: d.category as any,
@@ -23,7 +23,7 @@ export default async function Home() {
   }));
 
   // "Recommended for you" - simple stable slice
-  const recommendedListings = listings.filter(l => l.category === "TCG" || l.category === "Graded").slice(0, 10);
+  const recommendedListings = listings.filter((l: any) => l.category === "TCG" || l.category === "Graded").slice(0, 10);
   
   // "Recently added" - sorted natively via DB query ordering
   const recentListings = listings.slice(0, 10);

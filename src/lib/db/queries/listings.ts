@@ -10,7 +10,7 @@ export async function getTrendingListings(params?: {
   maxPrice?: string;
 }) {
   try {
-    const filters: any[] = [];
+    const filters: any[] = [eq(listings.status, "ACTIVE")];
     
     if (params?.q) filters.push(ilike(listings.title, `%${params.q}%`));
     if (params?.category) filters.push(eq(listings.category, params.category));
@@ -54,6 +54,9 @@ export async function getListingById(id: number) {
       const [record] = await tx.select({
         id: listings.id,
         title: listings.title,
+        set: listings.set,
+        year: listings.year,
+        cardNumber: listings.cardNumber,
         category: listings.category,
         condition: listings.condition,
         gradingCompany: listings.gradingCompany,
@@ -67,7 +70,7 @@ export async function getListingById(id: number) {
       })
       .from(listings)
       .innerJoin(sellers, eq(listings.sellerId, sellers.userId))
-      .where(eq(listings.id, id))
+      .where(and(eq(listings.id, id), eq(listings.status, "ACTIVE")))
       .limit(1);
       return record;
     });
