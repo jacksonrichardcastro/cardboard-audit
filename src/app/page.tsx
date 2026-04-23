@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { ShieldCheck } from "lucide-react";
 import { SearchBar } from "@/components/storefront/search-bar";
 import { CardRail } from "@/components/storefront/card-rail";
-import { getTrendingListings } from "@/app/actions/listings";
+import { getTrendingListings } from "@/lib/db/queries/listings";
 import { FilterSidebar } from "@/components/storefront/filter-sidebar";
 
 export default async function Home() {
