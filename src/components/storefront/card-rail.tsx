@@ -30,7 +30,7 @@ export function CardRail({ title, listings, seeAllHref }: CardRailProps) {
           {listings.map((listing) => (
             <Link 
               key={listing.id} 
-              href={`/listing/${listing.id}`} 
+              href={`/listings/${listing.id}`} 
               className="snap-start shrink-0 w-44 block"
             >
               <div className="rounded-md overflow-hidden bg-card border border-border/50 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-150 cursor-pointer">

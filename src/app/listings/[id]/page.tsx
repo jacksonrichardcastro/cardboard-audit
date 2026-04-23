@@ -5,7 +5,7 @@ import { ShieldCheck, MapPin, CalendarDays, ExternalLink, ChevronRight, Home, Ex
 import { notFound } from "next/navigation";
 import { BuyNowButton } from "@/components/storefront/buy-now-button";
 import { CardRail } from "@/components/storefront/card-rail";
-import { getListingById, getTrendingListings } from "@/app/actions/listings";
+import { getListingById, getTrendingListings } from "@/lib/db/queries/listings";
 import Link from "next/link";
 import Image from "next/image"; // Will use img securely with static Next boundaries as specified earlier to bypass proxy issues if any, but since they are in public/, we can use img
 

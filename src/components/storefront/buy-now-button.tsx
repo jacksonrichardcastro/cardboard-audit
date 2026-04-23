@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner"; // Assuming sonner is used for toasts, if not I'll just use a generic alert/fallback UI or check nextjs hot toast. Wait, the project doesn't specify. I'll just use simple state.
+import { createCheckoutSessionAction } from "@/app/actions/orders";
 
 export function BuyNowButton({ listingId, price }: { listingId: number, price: number }) {
   const [loading, setLoading] = useState(false);
@@ -13,28 +13,18 @@ export function BuyNowButton({ listingId, price }: { listingId: number, price: n
   const handleBuy = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ listingIds: [listingId] }),
-      });
+      const res = await createCheckoutSessionAction([listingId]);
 
-      if (!res.ok) {
-        // Handle mock data discrepancy securely
-        if (res.status === 404) {
-          alert("Prototype Mode: The checkout flow requires a verified backend connection. The mock listing does not exist in the live database.");
-        } else {
-          alert("Checkout initialization failed.");
-        }
+      if (res.error) {
+        alert(res.error);
         return;
       }
 
-      const { url } = await res.json();
-      if (url) {
-        window.location.href = url;
+      if (res.url) {
+        window.location.href = res.url;
       }
-    } catch (err) {
-      alert("Network error during checkout initialization.");
+    } catch (err: any) {
+      alert("Network error during checkout initialization. " + (err.message || ""));
     } finally {
       setLoading(false);
     }

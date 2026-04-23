@@ -162,3 +162,89 @@ export async function updateOrderState(
     return { success: true as const };
   });
 }
+
+import { stripe } from "@/lib/stripe";
+import { inArray } from "drizzle-orm";
+import { env } from "@/env";
+import { headers } from "next/headers";
+
+export async function createCheckoutSessionAction(listingIds: number[]) {
+  const { userId } = await auth();
+  if (!userId) return { error: "Unauthorized" };
+
+  if (!listingIds || listingIds.length === 0) {
+    return { error: "Cart is empty" };
+  }
+
+  // We explicitly fetch over active bounds structurally natively
+  const dbItems = await db
+    .select({
+      id: listings.id,
+      title: listings.title,
+      priceCents: listings.priceCents,
+      sellerStripeId: sellers.stripeConnectAccountId,
+      sellerId: listings.sellerId,
+    })
+    .from(listings)
+    .innerJoin(sellers, eq(listings.sellerId, sellers.userId))
+    .where(inArray(listings.id, listingIds));
+
+  if (dbItems.length !== listingIds.length) {
+    return { error: "One or more items not found or unavailable." };
+  }
+
+  const transferGroupId = `group_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+  const distinctSellers = new Set(dbItems.map(i => i.sellerId));
+  const totalShippingCents = distinctSellers.size * 500;
+
+  const lineItems = dbItems.map(item => ({
+    price_data: {
+      currency: "usd",
+      product_data: { 
+        name: item.title, 
+        metadata: { listingId: item.id.toString(), sellerId: item.sellerId } 
+      },
+      unit_amount: item.priceCents,
+    },
+    quantity: 1,
+  }));
+
+  lineItems.push({
+    price_data: {
+      currency: "usd",
+      product_data: { name: "Expedited Escrow Shipping (Aggregated)", metadata: { listingId: "shipping", sellerId: "system" } },
+      unit_amount: totalShippingCents
+    },
+    quantity: 1
+  });
+
+  const headerList = await headers();
+  const host = headerList.get("origin") || env.NEXT_PUBLIC_APP_URL || "http://localhost:3001";
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      mode: "payment",
+      line_items: lineItems,
+      success_url: `${host}/orders/{CHECKOUT_SESSION_ID}/confirmation`,
+      cancel_url: `${host}/cart?canceled=true`,
+      payment_intent_data: {
+        transfer_group: transferGroupId,
+      },
+      metadata: {
+        buyerId: userId,
+        transferGroupId,
+        listingIds: JSON.stringify(listingIds),
+      }
+    });
+
+    if (!session.url) {
+      return { error: "Failed to generate Stripe URL internally." };
+    }
+
+    return { url: session.url };
+  } catch (error: any) {
+    console.error("Stripe Checkout Error:", error);
+    return { error: error.message || "Failed to initialize standard checkout." };
+  }
+}
