@@ -53,7 +53,7 @@ export async function getOrderWithLedger(orderId: number) {
     return {
       ...orderData,
       currentState: orderData.currentState as OrderState,
-      history: transitions.map((t: any) => ({
+      history: transitions.map((t: { createdAt: Date }) => ({
         ...t,
         createdAt: t.createdAt.toISOString()
       }))
