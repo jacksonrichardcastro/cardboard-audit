@@ -23,7 +23,9 @@ export default withSentryConfig(nextConfig, {
     console.warn("[sentry] sourcemap upload warning:", err?.message ?? err);
   },
   // Hide sourcemaps from public output once uploaded to Sentry.
-  hideSourceMaps: true,
+  sourcemaps: {
+    deleteSourcemapsAfterUpload: true,
+  },
   // Suppress the "missing global error handler" warning if we haven't
   // added global-error.tsx yet — we'll add it when we wire the UI layer.
   disableLogger: true,
