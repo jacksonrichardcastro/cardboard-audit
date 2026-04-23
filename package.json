@@ -10,7 +10,8 @@
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "db:seed": "tsx src/lib/db/seed.ts"
+    "db:seed": "tsx src/lib/db/seed.ts",
+    "seed": "tsx src/lib/db/seed.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.0",

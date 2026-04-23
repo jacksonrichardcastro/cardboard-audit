@@ -2,10 +2,10 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { ShieldCheck, MapPin, CalendarDays, ExternalLink, ChevronRight, Home, Expand } from "lucide-react";
-import { mockListings } from "@/lib/mock/listings";
 import { notFound } from "next/navigation";
 import { BuyNowButton } from "@/components/storefront/buy-now-button";
 import { CardRail } from "@/components/storefront/card-rail";
+import { getListingById, getTrendingListings } from "@/app/actions/listings";
 import Link from "next/link";
 import Image from "next/image"; // Will use img securely with static Next boundaries as specified earlier to bypass proxy issues if any, but since they are in public/, we can use img
 
@@ -15,10 +15,28 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   
   if (isNaN(listingId)) return notFound();
 
-  // Fetch strictly from the requested explicit frontend mocks 
-  const item = mockListings.find(i => i.id === listingId);
+  // Fetch directly from the native Backend schema
+  const dbItem = await getListingById(listingId);
   
-  if (!item) return notFound();
+  if (!dbItem) return notFound();
+
+  // Map to common structure cleanly
+  const item = {
+    id: dbItem.id,
+    title: dbItem.title,
+    category: dbItem.category,
+    condition: dbItem.condition,
+    gradingCompany: dbItem.gradingCompany,
+    grade: dbItem.grade,
+    description: dbItem.description,
+    priceCents: dbItem.priceCents,
+    photoUrl: Array.isArray(dbItem.photos) ? dbItem.photos[0] : (dbItem.photos as any || 'https://placehold.co/400x550'),
+    sellerBusinessName: dbItem.sellerName,
+    sellerVerified: dbItem.sellerVerified,
+    set: undefined as string | undefined,
+    year: undefined as string | undefined,
+    cardNumber: undefined as string | undefined,
+  };
 
   // Parse Title Dynamics natively to extract set/year logic for robust display
   // e.g. "1999 Pokemon Base Set Charizard Holo Rare"
@@ -27,8 +45,21 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   const derivedSet = item.set || (titleParts ? titleParts[2] : "Standard Base");
   const derivedName = titleParts ? titleParts[3] : item.title;
 
-  const relatedListings = mockListings
-    .filter(i => i.category === item.category && i.id !== item.id)
+  const dbRelated = await getTrendingListings({ category: item.category });
+  const relatedListings = dbRelated
+    .filter(i => i.id !== item.id)
+    .map(d => ({
+      id: d.id,
+      title: d.title,
+      category: d.category as any,
+      subcategory: "Other",
+      condition: d.condition,
+      grade: d.grade || undefined,
+      priceCents: d.priceCents,
+      photoUrl: Array.isArray(d.photos) ? d.photos[0] : (d.photos as any || 'https://placehold.co/400x550'),
+      sellerBusinessName: d.sellerName,
+      createdAt: new Date().toISOString()
+    }))
     .slice(0, 6);
 
   return (
