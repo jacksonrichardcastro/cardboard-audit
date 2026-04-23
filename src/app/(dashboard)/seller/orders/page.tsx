@@ -24,6 +24,18 @@ function getFulfillmentBadge(status: string) {
   }
 }
 
+type SoldOrderRecord = {
+  id: number;
+  buyerName: string;
+  buyerEmail: string;
+  listingTitle: string;
+  createdAt: Date;
+  totalCents: number;
+  shippingCents: number;
+  feeCents: number;
+  currentState: string;
+};
+
 export default async function SellerFulfillmentQueue() {
   const orders = await getSellerOrders();
 
@@ -61,7 +73,7 @@ export default async function SellerFulfillmentQueue() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {orders.map((order: any) => {
+                {orders.map((order: SoldOrderRecord) => {
                   const netPayoutCents = (order.totalCents - order.shippingCents) - order.feeCents;
                   return (
                     <TableRow key={order.id} className="border-white/5 hover:bg-white/5 transition-colors">

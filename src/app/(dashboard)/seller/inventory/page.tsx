@@ -7,6 +7,15 @@ import { PackageSearch, Plus, Eye, Edit3 } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 
+type InventoryItem = {
+  id: number;
+  title: string;
+  category: string;
+  condition: string;
+  priceCents: number;
+  createdAt: Date;
+};
+
 export default async function SellerInventoryPage() {
   const inventory = await getSellerInventory();
 
@@ -50,7 +59,7 @@ export default async function SellerInventoryPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {inventory.map((item: any) => (
+                {inventory.map((item: InventoryItem) => (
                   <TableRow key={item.id} className="border-white/5 hover:bg-white/5 transition-colors">
                     <TableCell className="font-semibold">{item.title}</TableCell>
                     <TableCell><Badge variant="outline" className="border-white/10">{item.category}</Badge></TableCell>

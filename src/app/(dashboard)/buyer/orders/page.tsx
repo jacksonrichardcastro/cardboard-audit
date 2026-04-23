@@ -24,6 +24,16 @@ function getStatusBadge(status: string) {
   }
 }
 
+type OrderRecord = {
+  id: number;
+  currentState: string;
+  totalCents: number;
+  createdAt: Date;
+  listingTitle: string;
+  listingImage: string[] | null;
+  sellerName: string;
+};
+
 export default async function BuyerOrdersPage() {
   const orders = await getBuyerOrders();
 
@@ -66,7 +76,7 @@ export default async function BuyerOrdersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {orders.map((order: any) => (
+                {orders.map((order: OrderRecord) => (
                   <TableRow key={order.id} className="border-white/5 hover:bg-white/5 transition-colors">
                     <TableCell>
                       <div className="flex items-center gap-3">
