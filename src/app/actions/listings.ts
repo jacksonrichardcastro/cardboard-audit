@@ -29,7 +29,8 @@ export async function getTrendingListings(params?: {
             priceCents: listings.priceCents,
             grade: listings.grade,
             condition: listings.condition,
-            image: listings.photos,
+            category: listings.category,
+            photos: listings.photos,
             sellerName: sellers.businessName,
           })
           .from(listings)

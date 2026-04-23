@@ -2,17 +2,31 @@ import { Badge } from "@/components/ui/badge";
 import { ShieldCheck } from "lucide-react";
 import { SearchBar } from "@/components/storefront/search-bar";
 import { CardRail } from "@/components/storefront/card-rail";
-import { mockListings } from "@/lib/mock/listings";
+import { getTrendingListings } from "@/app/actions/listings";
 import { FilterSidebar } from "@/components/storefront/filter-sidebar";
 
-export default function Home() {
-  // "Recommended for you" - simple stable slice
-  const recommendedListings = mockListings.slice(0, 10);
+export default async function Home() {
+  const dbListings = await getTrendingListings({});
   
-  // "Recently added" - sorted by createdAt descending
-  const recentListings = [...mockListings]
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 10);
+  // Clean mapping standardizing Postgres arrays dynamically safely to existing UI constraints
+  const listings = dbListings.map(d => ({
+    id: d.id,
+    title: d.title,
+    category: d.category as any,
+    subcategory: "Other",
+    condition: d.condition,
+    grade: d.grade || undefined,
+    priceCents: d.priceCents,
+    photoUrl: Array.isArray(d.photos) ? d.photos[0] : (d.photos as any || 'https://placehold.co/400x550'),
+    sellerBusinessName: d.sellerName,
+    createdAt: new Date().toISOString()
+  }));
+
+  // "Recommended for you" - simple stable slice
+  const recommendedListings = listings.filter(l => l.category === "TCG" || l.category === "Graded").slice(0, 10);
+  
+  // "Recently added" - sorted natively via DB query ordering
+  const recentListings = listings.slice(0, 10);
 
   return (
     <div className="min-h-screen bg-background pb-16">
