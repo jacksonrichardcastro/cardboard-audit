@@ -33,22 +33,15 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
     photoUrl: Array.isArray(dbItem.photos) ? dbItem.photos[0] : (dbItem.photos as any || 'https://placehold.co/400x550'),
     sellerBusinessName: dbItem.sellerName,
     sellerVerified: dbItem.sellerVerified,
-    set: undefined as string | undefined,
-    year: undefined as string | undefined,
-    cardNumber: undefined as string | undefined,
+    set: dbItem.set,
+    year: dbItem.year,
+    cardNumber: dbItem.cardNumber,
   };
-
-  // Parse Title Dynamics natively to extract set/year logic for robust display
-  // e.g. "1999 Pokemon Base Set Charizard Holo Rare"
-  const titleParts = item.title.match(/(\d{4})\s+(.+?)\s+(.*)/);
-  const derivedYear = item.year || (titleParts ? titleParts[1] : new Date().getFullYear().toString());
-  const derivedSet = item.set || (titleParts ? titleParts[2] : "Standard Base");
-  const derivedName = titleParts ? titleParts[3] : item.title;
 
   const dbRelated = await getTrendingListings({ category: item.category });
   const relatedListings = dbRelated
-    .filter(i => i.id !== item.id)
-    .map(d => ({
+    .filter((i: any) => i.id !== item.id)
+    .map((d: any) => ({
       id: d.id,
       title: d.title,
       category: d.category as any,
@@ -112,10 +105,10 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
               
               <div>
                 <p className="text-muted-foreground text-base tracking-wide font-medium mb-1">
-                  {derivedYear} {derivedSet}
+                  {item.year || ""} {item.set || ""}
                 </p>
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.1] text-foreground">
-                  {derivedName}
+                  {item.title}
                 </h1>
               </div>
 

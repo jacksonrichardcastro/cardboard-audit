@@ -54,12 +54,10 @@ async function main() {
         status: "ACTIVE", 
       };
 
-      try {
-        await db.insert(listings).values(insertPayload);
-        inserted++;
-      } catch (err) {
-        // Ignoring specific collision blocks natively if titles collide
-      }
+      // Utilize DB native boundaries tracking unique constraint exactly
+      await db.insert(listings).values(insertPayload)
+        .onConflictDoNothing({ target: [listings.title, listings.sellerId] });
+      inserted++;
     }
     
     console.log(`Success! Inserted ${inserted} active mocked listings correctly avoiding endpoints!`);

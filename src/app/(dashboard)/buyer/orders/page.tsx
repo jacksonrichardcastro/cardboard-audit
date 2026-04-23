@@ -66,7 +66,7 @@ export default async function BuyerOrdersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {orders.map((order) => (
+                {orders.map((order: any) => (
                   <TableRow key={order.id} className="border-white/5 hover:bg-white/5 transition-colors">
                     <TableCell>
                       <div className="flex items-center gap-3">

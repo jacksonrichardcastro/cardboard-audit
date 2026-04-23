@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { ShieldCheck, Lock, Store, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { createCheckoutSessionAction } from "@/app/actions/orders";
 
 export default function CartPage() {
   const { items, removeItem } = useCartStore();
@@ -39,16 +40,16 @@ export default function CartPage() {
     setCheckoutLoading(true);
     try {
       const listingIds = items.map(i => i.id);
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ listingIds })
-      });
+      const res = await createCheckoutSessionAction(listingIds);
       
-      const session = await res.json();
-      if (session.url) window.location.href = session.url;
+      if (res.error) {
+        alert(res.error);
+        return;
+      }
+      if (res.url) window.location.href = res.url;
     } catch {
       alert("Failed to initialize checkout.");
+    } finally {
       setCheckoutLoading(false);
     }
   };
