@@ -11,12 +11,34 @@ export const users = pgTable("users", {
 export const sellers = pgTable("sellers", {
   userId: varchar("user_id", { length: 255 }).primaryKey().references(() => users.id),
   businessName: varchar("business_name", { length: 255 }).notNull(),
+  handle: varchar("handle", { length: 40 }),
+  displayName: varchar("display_name", { length: 100 }),
+  bio: varchar("bio", { length: 160 }),
+  profilePhotoUrl: text("profile_photo_url"),
+  locationCity: varchar("location_city", { length: 100 }),
+  locationState: varchar("location_state", { length: 50 }),
   description: text("description"),
   identityVerified: boolean("identity_verified").notNull().default(false),
   applicationStatus: varchar("application_status", { length: 50 }).notNull().default("pending"), // pending, approved, rejected
   feeTier: varchar("fee_tier", { length: 50 }).notNull().default("standard"), // standard=5%, founding=3%
   stripeConnectAccountId: varchar("stripe_connect_account_id", { length: 255 }),
+  kycStatus: varchar("kyc_status", { length: 20 }).notNull().default("pending"),
+  approvalStatus: varchar("approval_status", { length: 20 }).notNull().default("unsubmitted"),
+  tosAcceptedAt: timestamp("tos_accepted_at"),
+  photoGuidelinesAcceptedAt: timestamp("photo_guidelines_accepted_at"),
+  approvedAt: timestamp("approved_at"),
+  rejectionReason: text("rejection_reason"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  handleIdx: unique("sellers_handle_idx").on(table.handle),
+  stripeConnectAccountIdIdx: unique("sellers_stripe_connect_account_id_idx").on(table.stripeConnectAccountId)
+}));
+
+export const sellerApprovalQueue = pgTable("seller_approval_queue", {
+  sellerId: varchar("seller_id", { length: 255 }).primaryKey().references(() => users.id),
+  submittedAt: timestamp("submitted_at").notNull().defaultNow(),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewerNotes: text("reviewer_notes"),
 });
 
 export const listings = pgTable("listings", {

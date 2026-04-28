@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
+  devIndicators: false,
   // Sentry adds tunnelRoute + error boundary overlay; no other Next config
   // needed for Sentry wiring itself.
 };
@@ -28,7 +29,6 @@ export default withSentryConfig(nextConfig, {
   },
   // Suppress the "missing global error handler" warning if we haven't
   // added global-error.tsx yet — we'll add it when we wire the UI layer.
-  disableLogger: true,
   // Upload additional files Next bundles into .next/ outputs.
   widenClientFileUpload: true,
 });
