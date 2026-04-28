@@ -67,7 +67,7 @@ export default async function Home() {
       </div>
 
       {/* Live Stat Element Buffer Zone */}
-      <div className="flex justify-center pt-8 pb-4">
+      <div className="flex justify-center pt-2 pb-6">
         <Badge className="bg-slate-800/40 text-slate-300 border border-white/5 hover:bg-slate-800/60 py-1.5 px-4 rounded-full text-xs font-medium">
           <span className="inline-block w-2 h-2 rounded-full bg-[#7C3AED] mr-2 animate-pulse"></span>
           {displayText}
