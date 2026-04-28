@@ -6,12 +6,16 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { stripe } from "@/lib/stripe";
 import { headers } from "next/headers";
+import { syncUserFromClerk } from "@/lib/auth-sync";
 
 export async function createStripeConnectAccount() {
   const { userId } = await auth();
   const user = await currentUser();
   
   if (!userId || !user) throw new Error("Unauthorized");
+
+  // Sync user locally to ensure FKs are satisfied
+  await syncUserFromClerk();
 
   const [seller] = await db.select().from(sellers).where(eq(sellers.userId, userId)).limit(1);
   if (!seller) throw new Error("Seller profile not found");
