@@ -1,6 +1,6 @@
-import { eq, desc, ilike, and, gte, lte } from "drizzle-orm";
+import { eq, desc, ilike, and, gte, lte, sql } from "drizzle-orm";
 import { withUserContext } from "@/lib/db";
-import { listings, sellers } from "@/lib/db/schema";
+import { listings, sellers, listingPhotos } from "@/lib/db/schema";
 import { unstable_cache } from "next/cache";
 
 export async function getTrendingListings(params?: {
@@ -29,7 +29,7 @@ export async function getTrendingListings(params?: {
             condition: listings.condition,
             category: listings.category,
             createdAt: listings.createdAt,
-            photos: listings.photos,
+            photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM listing_photos WHERE listing_id = ${listings.id}), '[]'::json)`,
             sellerName: sellers.businessName,
           })
           .from(listings)
@@ -65,7 +65,7 @@ export async function getListingById(id: number) {
         grade: listings.grade,
         description: listings.description,
         priceCents: listings.priceCents,
-        photos: listings.photos,
+        photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM listing_photos WHERE listing_id = ${listings.id}), '[]'::json)`,
         sellerId: listings.sellerId,
         sellerName: sellers.businessName,
         sellerVerified: sellers.identityVerified,

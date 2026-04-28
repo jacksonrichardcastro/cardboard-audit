@@ -52,7 +52,15 @@ export default async function SellerStorePage(props: Props) {
     notFound();
   }
 
-  const activeListings = await db.select()
+  const activeListings = await db.select({
+      id: listings.id,
+      title: listings.title,
+      priceCents: listings.priceCents,
+      grade: listings.grade,
+      gradingCompany: listings.gradingCompany,
+      condition: listings.condition,
+      photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM listing_photos WHERE listing_id = ${listings.id}), '[]'::json)`,
+    })
     .from(listings)
     .where(and(
       eq(listings.sellerId, seller.userId),
@@ -110,7 +118,7 @@ export default async function SellerStorePage(props: Props) {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {activeListings.map((listing) => {
-              const photoUrl = Array.isArray(listing.photos) ? listing.photos[0] : (listing.photos as any || 'https://placehold.co/400x550');
+              const photoUrl = (Array.isArray(listing.photos) && listing.photos.length > 0 && listing.photos[0] !== null) ? listing.photos[0] : 'https://placehold.co/400x550';
               
               return (
                 <Link 

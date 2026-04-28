@@ -1,8 +1,8 @@
 "use server";
 
-import { eq, desc, asc, inArray, and } from "drizzle-orm";
+import { eq, desc, asc, inArray, and, sql } from "drizzle-orm";
 import { withUserContext, db } from "@/lib/db";
-import { orders, stateTransitions, sellers, users, listings } from "@/lib/db/schema";
+import { orders, stateTransitions, sellers, users, listings, listingPhotos } from "@/lib/db/schema";
 import { auth } from "@clerk/nextjs/server";
 import { headers } from "next/headers";
 import { env } from "@/env";
@@ -76,7 +76,7 @@ export async function getBuyerOrders() {
         totalCents: orders.totalCents,
         createdAt: orders.createdAt,
         listingTitle: listings.title,
-        listingImage: listings.photos,
+        listingImage: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM listing_photos WHERE listing_id = ${listings.id}), '[]'::json)`,
         sellerName: sellers.businessName,
       })
       .from(orders)
