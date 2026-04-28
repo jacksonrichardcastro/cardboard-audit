@@ -2,26 +2,30 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Camera, RefreshCw } from "lucide-react";
+import { Camera, UploadCloud, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 export interface CapturedPhoto {
   kind: "front" | "back" | "angle";
   sortOrder: number;
-  dataUrl: string; // Temporarily base64 for 5b
+  url: string;
 }
 
 interface Props {
   onCapture: (photo: CapturedPhoto) => void;
   kind: "front" | "back" | "angle";
   sortOrder: number;
+  draftId: number | null;
 }
 
-export function PhotoCapture({ onCapture, kind, sortOrder }: Props) {
+export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     startCamera();
@@ -32,11 +36,12 @@ export function PhotoCapture({ onCapture, kind, sortOrder }: Props) {
 
   const startCamera = async () => {
     try {
+      setCameraError(null);
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: "environment", // Use rear camera on mobile
-          width: { ideal: 1500, min: 1500 },
-          height: { ideal: 2000, min: 2000 },
+          width: { min: 1500 },
+          height: { min: 1500 },
         },
         audio: false,
       });
@@ -52,23 +57,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder }: Props) {
       }
     } catch (err: any) {
       console.error("Camera error:", err);
-      // Fallback for laptops/webcams that don't support 1500px min
-      try {
-        const fallbackStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment" },
-          audio: false,
-        });
-        setStream(fallbackStream);
-        if (videoRef.current) {
-          videoRef.current.srcObject = fallbackStream;
-          videoRef.current.onloadedmetadata = () => {
-            videoRef.current?.play();
-            setIsReady(true);
-          };
-        }
-      } catch (fallbackErr: any) {
-        setError(fallbackErr.message || "Could not access camera.");
-      }
+      setCameraError(err.message || "Could not access camera or device does not meet resolution requirements.");
     }
   };
 
@@ -78,13 +67,74 @@ export function PhotoCapture({ onCapture, kind, sortOrder }: Props) {
     }
   };
 
+  const validateImage = (width: number, height: number, sizeBytes: number): string | null => {
+    if (sizeBytes > 10 * 1024 * 1024) {
+      return "File must be smaller than 10MB.";
+    }
+    if (width < 1500 || height < 1500) {
+      return `Image resolution too low. Minimum 1500x1500px required. Got ${width}x${height}.`;
+    }
+    const ratio = width / height;
+    // 3:4 aspect ratio = 0.75. Accept within 10% (0.675 - 0.825)
+    if (ratio < 0.675 || ratio > 0.825) {
+      return `Image aspect ratio must be approx 3:4 (portrait). Got ratio ${ratio.toFixed(2)}.`;
+    }
+    return null;
+  };
+
+  const uploadToSupabase = async (blob: Blob) => {
+    if (!draftId) throw new Error("Draft must be saved before uploading photos.");
+    
+    // Get signed URL
+    const res = await fetch("/api/storage/upload", {
+      method: "POST",
+      body: JSON.stringify({ draftId, kind }),
+      headers: { "Content-Type": "application/json" }
+    });
+    
+    if (!res.ok) throw new Error("Failed to get upload URL");
+    
+    const { signedUrl, publicUrl } = await res.json();
+
+    // Upload directly to Supabase via signed URL
+    const uploadRes = await fetch(signedUrl, {
+      method: "PUT",
+      body: blob,
+      headers: {
+        "Content-Type": "image/jpeg"
+      }
+    });
+
+    if (!uploadRes.ok) throw new Error("Failed to upload image");
+
+    return publicUrl;
+  };
+
+  const processAndUpload = async (blob: Blob, width: number, height: number) => {
+    setValidationError(null);
+    const vError = validateImage(width, height, blob.size);
+    if (vError) {
+      setValidationError(vError);
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const url = await uploadToSupabase(blob);
+      onCapture({ kind, sortOrder, url });
+    } catch (err: any) {
+      setValidationError(err.message || "Upload failed");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleCapture = () => {
     if (!videoRef.current || !canvasRef.current) return;
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
     
-    // Set internal canvas dimensions to match video source exactly
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     
@@ -92,19 +142,57 @@ export function PhotoCapture({ onCapture, kind, sortOrder }: Props) {
     if (!ctx) return;
 
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
     
-    onCapture({ kind, sortOrder, dataUrl });
+    canvas.toBlob((blob) => {
+      if (blob) {
+        processAndUpload(blob, canvas.width, canvas.height);
+      }
+    }, "image/jpeg", 0.9);
   };
 
-  if (error) {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      processAndUpload(file, img.width, img.height);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      setValidationError("Failed to read image file.");
+    };
+    img.src = objectUrl;
+  };
+
+  if (cameraError) {
     return (
-      <div className="p-4 bg-destructive/10 text-destructive rounded-lg border border-destructive/20 text-center">
-        <p className="font-semibold">Camera Access Denied</p>
-        <p className="text-sm mt-1">{error}</p>
-        <Button onClick={startCamera} variant="outline" className="mt-4">
-          <RefreshCw className="w-4 h-4 mr-2" /> Try Again
-        </Button>
+      <div className="p-6 bg-card border border-border rounded-xl shadow-sm text-center">
+        <p className="font-semibold mb-2 text-destructive">Camera Access Denied or Unsupported</p>
+        <p className="text-sm text-muted-foreground mb-6">{cameraError}</p>
+        
+        <div className="space-y-4">
+          <p className="text-sm font-medium">Upload a photo manually:</p>
+          <p className="text-xs text-muted-foreground">Min 1500x1500px, ~3:4 aspect ratio (portrait).</p>
+          <Input 
+            type="file" 
+            accept="image/*" 
+            onChange={handleFileUpload}
+            disabled={isUploading || !draftId}
+            className="max-w-xs mx-auto"
+          />
+          {validationError && (
+            <p className="text-sm text-destructive font-medium mt-2">{validationError}</p>
+          )}
+          {isUploading && (
+            <p className="text-sm text-primary flex items-center justify-center gap-2 mt-4">
+              <Loader2 className="w-4 h-4 animate-spin" /> Uploading to secure bucket...
+            </p>
+          )}
+          {!draftId && <p className="text-xs text-destructive mt-2">Saving draft state... Please wait.</p>}
+        </div>
       </div>
     );
   }
@@ -129,20 +217,34 @@ export function PhotoCapture({ onCapture, kind, sortOrder }: Props) {
           <div className="absolute h-8 w-px bg-white/50"></div>
         </div>
 
-        {/* Loading state */}
-        {!isReady && !error && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/80">
-            <span className="text-white animate-pulse">Initializing camera...</span>
+        {/* Loading / Uploading state */}
+        {(!isReady || isUploading) && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-white p-4 text-center">
+            {isUploading ? (
+              <>
+                <Loader2 className="w-8 h-8 animate-spin mb-4" />
+                <span>Uploading...</span>
+              </>
+            ) : (
+              <span className="animate-pulse">Initializing camera...</span>
+            )}
           </div>
         )}
       </div>
+
+      {validationError && (
+        <p className="text-sm text-destructive font-medium mt-4 text-center">{validationError}</p>
+      )}
+      {!draftId && (
+        <p className="text-xs text-muted-foreground mt-4 text-center animate-pulse">Initializing draft state, please wait...</p>
+      )}
 
       <div className="mt-6 flex flex-col items-center gap-2">
         <Button 
           size="lg" 
           className="rounded-full w-16 h-16 p-0 border-4 border-background shadow-xl hover:scale-105 transition-transform" 
           onClick={handleCapture}
-          disabled={!isReady}
+          disabled={!isReady || isUploading || !draftId}
         >
           <Camera className="w-6 h-6" />
           <span className="sr-only">Capture Photo</span>
