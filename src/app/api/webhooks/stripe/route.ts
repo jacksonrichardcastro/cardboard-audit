@@ -97,6 +97,36 @@ export async function POST(req: Request) {
       return new NextResponse(null, { status: 200 });
     }
 
+    if (event.type === "account.updated") {
+      const account = event.data.object as Stripe.Account;
+      let newStatus = "pending";
+      if (account.details_submitted && account.charges_enabled) {
+        newStatus = "verified";
+      } else if (account.details_submitted) {
+        newStatus = "incomplete"; // Needs more info
+      }
+      
+      await db
+        .update(sellers)
+        .set({ kycStatus: newStatus })
+        .where(eq(sellers.stripeConnectAccountId, account.id));
+      
+      return new NextResponse(null, { status: 200 });
+    }
+
+    if (event.type === "account.application.deauthorized") {
+      const application = event.data.object as Stripe.Application;
+      // In connect webhooks, the account ID is in event.account
+      const accountId = event.account;
+      if (accountId) {
+        await db
+          .update(sellers)
+          .set({ kycStatus: "incomplete" })
+          .where(eq(sellers.stripeConnectAccountId, accountId));
+      }
+      return new NextResponse(null, { status: 200 });
+    }
+
     if (event.type === "checkout.session.completed") {
       await handleCheckoutCompleted(event);
       return new NextResponse(null, { status: 200 });

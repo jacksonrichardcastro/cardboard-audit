@@ -1,8 +1,13 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { clerkMiddleware, createRouteMatcher, clerkClient } from "@clerk/nextjs/server";
 
 import { NextResponse } from "next/server";
 
-const isProtectedRoute = createRouteMatcher(["/dashboard(.*)", "/seller(.*)", "/admin(.*)"]);
+const isProtectedRoute = createRouteMatcher([
+  "/dashboard(.*)",
+  "/seller/onboarding(.*)",
+  "/seller/dashboard(.*)",
+  "/admin(.*)"
+]);
 const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
@@ -11,12 +16,15 @@ export default clerkMiddleware(async (auth, req) => {
   }
 
   if (isAdminRoute(req)) {
-    // Explicit Role Check constraint mandated by P0-4
-    const resolvedAuth = await auth();
-    const role = (resolvedAuth?.sessionClaims?.public_metadata as { role?: string })?.role;
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.redirect(new URL('/sign-in', req.url));
+    }
+    const client = await clerkClient();
+    const user = await client.users.getUser(userId);
+    const role = (user.publicMetadata as { role?: string })?.role;
     if (role !== "admin") {
-      const homeUrl = new URL('/', req.url);
-      return NextResponse.redirect(homeUrl);
+      return NextResponse.redirect(new URL('/', req.url));
     }
   }
 });

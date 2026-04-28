@@ -11,8 +11,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "CardBound",
-  description: "The ultimate trading card marketplace for sports cards and TCGs.",
+  title: "Trax — By the hobby. For the hobby.",
+  description: "The trading card marketplace where serious collectors find their holy grails. Vetted sellers, full transparency, fair fees.",
 };
 
 export default function RootLayout({
@@ -21,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider afterSignOutUrl="/">
       <html
         lang="en"
         className={`${inter.variable} h-full antialiased dark`}

@@ -25,8 +25,10 @@ export async function getTrendingListings(params?: {
             title: listings.title,
             priceCents: listings.priceCents,
             grade: listings.grade,
+            gradingCompany: listings.gradingCompany,
             condition: listings.condition,
             category: listings.category,
+            createdAt: listings.createdAt,
             photos: listings.photos,
             sellerName: sellers.businessName,
           })
