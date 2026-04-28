@@ -11,10 +11,11 @@ export default async function DraftsPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
-  const client = await clerkClient();
-  const user = await client.users.getUser(userId);
+  const seller = await db.query.sellers.findFirst({
+    where: eq(sellers.userId, userId),
+  });
 
-  if (user.publicMetadata.role !== "seller") {
+  if (!seller || seller.applicationStatus !== "approved") {
     redirect("/seller/become");
   }
 

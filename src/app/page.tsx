@@ -20,7 +20,7 @@ export default async function Home() {
     condition: d.condition,
     grade: d.grade || undefined,
     priceCents: d.priceCents,
-    photoUrl: Array.isArray(d.photos) ? d.photos[0] : (d.photos as any || 'https://placehold.co/400x550'),
+    photoUrl: (Array.isArray(d.photos) && d.photos.length > 0 && d.photos[0] !== null) ? d.photos[0] : 'https://placehold.co/400x550',
     sellerBusinessName: d.sellerName,
     createdAt: new Date().toISOString()
   }));

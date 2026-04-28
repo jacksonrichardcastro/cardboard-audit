@@ -56,7 +56,6 @@ export const listings = pgTable("listings", {
   description: text("description"),
   priceCents: integer("price_cents").notNull(), // Stored in cents
   quantity: integer("quantity").notNull().default(1),
-  photos: json("photos").$type<string[]>(), // Array of image URLs
   status: varchar("status", { length: 50 }).notNull().default("ACTIVE"), // ACTIVE, SOLD, DRAFT, PENDING_REVIEW, REJECTED
   edition: varchar("edition", { length: 100 }),
   graded: boolean("graded").notNull().default(false),
