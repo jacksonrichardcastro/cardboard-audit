@@ -57,7 +57,13 @@ export const listings = pgTable("listings", {
   priceCents: integer("price_cents").notNull(), // Stored in cents
   quantity: integer("quantity").notNull().default(1),
   photos: json("photos").$type<string[]>(), // Array of image URLs
-  status: varchar("status", { length: 50 }).notNull().default("ACTIVE"), // ACTIVE, SOLD, DRAFT
+  status: varchar("status", { length: 50 }).notNull().default("ACTIVE"), // ACTIVE, SOLD, DRAFT, PENDING_REVIEW, REJECTED
+  edition: varchar("edition", { length: 100 }),
+  graded: boolean("graded").notNull().default(false),
+  shippingMethod: varchar("shipping_method", { length: 100 }),
+  reviewNotes: text("review_notes"),
+  publishedAt: timestamp("published_at"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => ({
@@ -213,4 +219,41 @@ export const disputesRelations = relations(disputes, ({ one }) => ({
     fields: [disputes.openedBy],
     references: [users.id],
   }),
+}));
+
+export const listingPhotos = pgTable("listing_photos", {
+  id: serial("id").primaryKey(),
+  listingId: integer("listing_id").notNull().references(() => listings.id, { onDelete: "cascade" }),
+  kind: varchar("kind", { length: 50 }).notNull(), // front, back, angle
+  sortOrder: integer("sort_order").notNull().default(0),
+  storagePath: text("storage_path").notNull(),
+  width: integer("width"),
+  height: integer("height"),
+  capturedAt: timestamp("captured_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  listingIdx: index("idx_listing_photos_listing_id").on(table.listingId),
+  listingSortIdx: index("idx_listing_photos_listing_id_sort").on(table.listingId, table.sortOrder),
+}));
+
+export const listingReviews = pgTable("listing_reviews", {
+  id: serial("id").primaryKey(),
+  listingId: integer("listing_id").notNull().references(() => listings.id, { onDelete: "cascade" }),
+  reviewerId: varchar("reviewer_id", { length: 255 }).notNull().references(() => users.id),
+  action: varchar("action", { length: 50 }).notNull(), // approved, rejected, changes_requested
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  listingIdx: index("idx_listing_reviews_listing_id").on(table.listingId),
+  reviewerIdx: index("idx_listing_reviews_reviewer_id").on(table.reviewerId),
+}));
+
+export const listingDrafts = pgTable("listing_drafts", {
+  id: serial("id").primaryKey(),
+  sellerId: varchar("seller_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  data: json("data").notNull().default({}),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  sellerIdx: index("idx_listing_drafts_seller_id").on(table.sellerId),
 }));
