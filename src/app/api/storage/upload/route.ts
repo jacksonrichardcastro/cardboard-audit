@@ -16,14 +16,13 @@ export async function POST(req: Request) {
     if (!userId) return new NextResponse("Unauthorized", { status: 401 });
 
     const body = await req.json();
-    const { filename } = body;
+    const { draftId, kind } = body;
     
-    if (!filename) {
-      return new NextResponse("Filename is required", { status: 400 });
+    if (!draftId || !kind) {
+      return new NextResponse("draftId and kind are required", { status: 400 });
     }
 
-    // Cryptographic isolation enforcing multitenancy file ownership inside the bucket
-    const filePath = `listings/${userId}/${Date.now()}_${filename}`;
+    const filePath = `listings/${userId}/${draftId}/${kind}-${Date.now()}.jpg`;
 
     const { data, error } = await supabase.storage
       .from("cardbound-media")

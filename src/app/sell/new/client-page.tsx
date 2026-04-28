@@ -34,7 +34,7 @@ export default function NewListingPage() {
     price: "",
     description: "",
 
-    photos: [] as { kind: string; url?: string; dataUrl?: string; sortOrder: number }[],
+    photos: [] as { kind: string; url: string; sortOrder: number }[],
 
     shippingMethod: "seller_managed"
   });
@@ -199,10 +199,11 @@ export default function NewListingPage() {
               <div className="py-4">
                 <h3 className="text-center font-medium mb-4 text-muted-foreground">Capture Front of Card</h3>
                 <PhotoCapture 
+                  draftId={draftId}
                   kind="front" 
                   sortOrder={0} 
                   onCapture={(photo) => {
-                    console.log("Captured front photo:", photo);
+                    console.log("Captured front photo:", photo.url);
                     setFormData({ ...formData, photos: [...formData.photos, photo] });
                   }} 
                 />
@@ -211,10 +212,11 @@ export default function NewListingPage() {
               <div className="py-4">
                 <h3 className="text-center font-medium mb-4 text-muted-foreground">Capture Back of Card</h3>
                 <PhotoCapture 
+                  draftId={draftId}
                   kind="back" 
                   sortOrder={1} 
                   onCapture={(photo) => {
-                    console.log("Captured back photo:", photo);
+                    console.log("Captured back photo:", photo.url);
                     setFormData({ ...formData, photos: [...formData.photos, photo] });
                   }} 
                 />
@@ -225,7 +227,7 @@ export default function NewListingPage() {
                 <div className="grid grid-cols-2 gap-4">
                   {formData.photos.map((p: any, i: number) => (
                     <div key={i} className="relative aspect-[3/4] bg-neutral-900 rounded-lg overflow-hidden border border-border">
-                      <img src={p.dataUrl || p.url} className="absolute inset-0 w-full h-full object-cover" />
+                      <img src={p.url} className="absolute inset-0 w-full h-full object-cover" />
                       <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
                         {p.kind}
                       </div>
@@ -249,7 +251,12 @@ export default function NewListingPage() {
 
             <div className="flex justify-between pt-4">
               <Button variant="outline" onClick={() => setStep(2)}>Back</Button>
-              <Button onClick={() => setStep(4)} disabled={formData.photos.length < 2}>Next: Price & Details</Button>
+              <Button 
+                onClick={() => setStep(4)} 
+                disabled={formData.photos.length === 0 || (!formData.graded && formData.photos.length < 2)}
+              >
+                Next: Price & Details
+              </Button>
             </div>
           </div>
         )}
