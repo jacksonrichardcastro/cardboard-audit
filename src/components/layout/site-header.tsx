@@ -1,30 +1,15 @@
-"use client";
+
 
 import Link from "next/link";
 import { Menu } from "lucide-react";
-import { useUser, UserButton } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
+import { NavAuthControls } from "./nav-auth-controls";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 
-export function SiteHeader() {
-  const { isSignedIn, isLoaded } = useUser();
-
-  const authControls = (
-    <>
-      {!isLoaded ? null : isSignedIn ? (
-        <UserButton />
-      ) : (
-        <>
-          <Link href="/sign-in">
-            <Button variant="ghost">Sign in</Button>
-          </Link>
-          <Link href="/sign-up">
-            <Button>Sign up</Button>
-          </Link>
-        </>
-      )}
-    </>
-  );
+export async function SiteHeader() {
+  const { userId } = await auth();
+  const isSignedIn = !!userId;
 
   return (
     <header className="sticky top-0 z-50 h-16 border-b border-white/10 bg-background/80 backdrop-blur-sm">
@@ -72,7 +57,7 @@ export function SiteHeader() {
             <Link href="/sell" className="hidden md:inline-flex">
               <Button>Sell</Button>
             </Link>
-            {authControls}
+            <NavAuthControls isSignedIn={isSignedIn} />
           </div>
           <div className="md:hidden">
             <Sheet>
@@ -102,7 +87,7 @@ export function SiteHeader() {
                     <Button className="w-full">Sell</Button>
                   </Link>
                   <div className="flex flex-col gap-4 border-t border-border pt-6">
-                    {authControls}
+                    <NavAuthControls isSignedIn={isSignedIn} />
                   </div>
                 </div>
               </SheetContent>
