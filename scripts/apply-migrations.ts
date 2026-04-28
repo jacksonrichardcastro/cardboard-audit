@@ -25,14 +25,17 @@ async function main() {
     try {
       await sql.unsafe(contents);
       console.log("ok");
-    } catch (err) {
-      console.log("FAILED");
-      console.error(err);
-      ok = false;
-      break;
+    } catch (err: any) {
+      if (err.code === '42P07' || err.code === '42701' || err.message?.includes('already exists')) {
+        console.log("ok (already exists)");
+      } else {
+        console.log("FAILED");
+        console.error(err);
+        ok = false;
+        break;
+      }
     }
   }
-
   await sql.end();
   process.exit(ok ? 0 : 1);
 }
