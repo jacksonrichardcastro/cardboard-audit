@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { SiteHeader } from "@/components/layout/site-header";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -33,7 +34,10 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {children}
+            <SiteHeader />
+            <main className="flex-1">
+              {children}
+            </main>
           </ThemeProvider>
         </body>
       </html>
