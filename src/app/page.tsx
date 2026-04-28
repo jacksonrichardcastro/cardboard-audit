@@ -41,7 +41,7 @@ export default async function Home() {
             Find Your Holy Grail.
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Shop highly vetted sellers with full 100% supply chain transparency, standard payout logic, and the fairest fees in the hobby.
+            By the hobby. For the hobby. Shop highly vetted sellers with 100% transparency.
           </p>
           
           <SearchBar />
