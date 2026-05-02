@@ -40,8 +40,9 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: "environment", // Use rear camera on mobile
-          width: { min: 1500 },
-          height: { min: 1500 },
+          width: { ideal: 1500 },
+          height: { ideal: 2000 },
+          aspectRatio: { ideal: 3 / 4 },
         },
         audio: false,
       });
@@ -134,18 +135,38 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    
+
+    const sourceWidth = video.videoWidth;
+    const sourceHeight = video.videoHeight;
+
+    // Calculate centered 3:4 portrait crop region
+    let cropWidth: number, cropHeight: number;
+    if (sourceWidth / sourceHeight > 0.75) {
+      // Source wider than 3:4 — constrain width
+      cropHeight = sourceHeight;
+      cropWidth = sourceHeight * 0.75;
+    } else {
+      // Source taller than 3:4 — constrain height
+      cropWidth = sourceWidth;
+      cropHeight = sourceWidth / 0.75;
+    }
+    const sourceX = (sourceWidth - cropWidth) / 2;
+    const sourceY = (sourceHeight - cropHeight) / 2;
+
+    canvas.width = cropWidth;
+    canvas.height = cropHeight;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
+    ctx.drawImage(
+      video,
+      sourceX, sourceY, cropWidth, cropHeight,
+      0, 0, cropWidth, cropHeight
+    );
+
     canvas.toBlob((blob) => {
       if (blob) {
-        processAndUpload(blob, canvas.width, canvas.height);
+        processAndUpload(blob, cropWidth, cropHeight);
       }
     }, "image/jpeg", 0.9);
   };
