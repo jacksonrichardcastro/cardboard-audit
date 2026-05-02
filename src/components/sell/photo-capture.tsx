@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Camera, UploadCloud, Loader2 } from "lucide-react";
+import { Camera, Loader2, Play } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { processFrame, CheckResult } from "@/lib/image-processing";
+import { cn } from "@/lib/utils";
 
 export interface CapturedPhoto {
   kind: "front" | "back" | "angle";
@@ -21,25 +23,75 @@ interface Props {
 export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const processCanvasRef = useRef<HTMLCanvasElement>(null);
+  
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [hasRequestedCamera, setHasRequestedCamera] = useState(false);
+
+  // Check states
+  const [tilt, setTilt] = useState<CheckResult>({ state: "idle", tip: "Waiting..." });
+  const [framing, setFraming] = useState<CheckResult>({ state: "idle", tip: "Waiting..." });
+  const [lighting, setLighting] = useState<CheckResult>({ state: "idle", tip: "Waiting..." });
+  const [background, setBackground] = useState<CheckResult>({ state: "idle", tip: "Waiting..." });
+  const [useGyro, setUseGyro] = useState(false);
+
+  const lastProcessTime = useRef(0);
+  const requestRef = useRef<number | null>(null);
 
   useEffect(() => {
-    startCamera();
     return () => {
       stopCamera();
+      if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
   }, []);
 
-  const startCamera = async () => {
+  const handleDeviceOrientation = useCallback((e: DeviceOrientationEvent) => {
+    let devBeta = e.beta ? Math.abs(e.beta) : 0;
+    let devGamma = e.gamma ? Math.abs(e.gamma) : 0;
+    
+    // Deviation from nearest multiple of 90 (handles flat on table or upright on stand)
+    let tiltB = Math.min(devBeta % 90, 90 - (devBeta % 90));
+    let tiltG = Math.min(devGamma % 90, 90 - (devGamma % 90));
+    
+    let maxTilt = Math.max(tiltB, tiltG);
+    
+    let result: CheckResult = { state: "pass", tip: "Level" };
+    if (maxTilt > 10) {
+      result = { state: "fail", tip: "Phone is tilted. Hold it parallel to card." };
+    } else if (maxTilt > 5) {
+      result = { state: "warn", tip: "Phone slightly tilted." };
+    }
+    setTilt(result);
+  }, []);
+
+  const startCameraAndSensors = async () => {
+    setHasRequestedCamera(true);
+    
+    // Request gyro permission on iOS 13+
+    if (typeof (DeviceOrientationEvent as any)?.requestPermission === 'function') {
+      try {
+        const permissionState = await (DeviceOrientationEvent as any).requestPermission();
+        if (permissionState === 'granted') {
+          window.addEventListener('deviceorientation', handleDeviceOrientation);
+          setUseGyro(true);
+        }
+      } catch (err) {
+        console.error("Gyro permission denied:", err);
+      }
+    } else if (typeof window !== 'undefined' && window.DeviceOrientationEvent) {
+      window.addEventListener('deviceorientation', handleDeviceOrientation);
+      setUseGyro(true);
+    }
+
     try {
       setCameraError(null);
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: "environment", // Use rear camera on mobile
+          facingMode: "environment",
           width: { ideal: 1500 },
           height: { ideal: 2000 },
           aspectRatio: { ideal: 3 / 4 },
@@ -54,11 +106,60 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
         videoRef.current.onloadedmetadata = () => {
           videoRef.current?.play();
           setIsReady(true);
+          requestRef.current = requestAnimationFrame(processLoop);
         };
       }
     } catch (err: any) {
       console.error("Camera error:", err);
-      setCameraError(err.message || "Could not access camera or device does not meet resolution requirements.");
+      setCameraError(err.message || "Could not access camera.");
+    }
+  };
+
+  const processLoop = (time: number) => {
+    if (!videoRef.current || !processCanvasRef.current) return;
+    
+    // Process at ~5-8 Hz (every 150ms)
+    if (time - lastProcessTime.current > 150) {
+      lastProcessTime.current = time;
+      
+      const video = videoRef.current;
+      const canvas = processCanvasRef.current;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      
+      if (ctx && video.videoWidth > 0 && video.videoHeight > 0) {
+        const sourceWidth = video.videoWidth;
+        const sourceHeight = video.videoHeight;
+        let cropWidth: number, cropHeight: number;
+        if (sourceWidth / sourceHeight > 0.75) {
+          cropHeight = sourceHeight;
+          cropWidth = sourceHeight * 0.75;
+        } else {
+          cropWidth = sourceWidth;
+          cropHeight = sourceWidth / 0.75;
+        }
+        const sourceX = (sourceWidth - cropWidth) / 2;
+        const sourceY = (sourceHeight - cropHeight) / 2;
+        
+        ctx.drawImage(
+          video,
+          sourceX, sourceY, cropWidth, cropHeight,
+          0, 0, canvas.width, canvas.height
+        );
+        
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const results = processFrame(imageData);
+        
+        setLighting(results.lighting);
+        setBackground(results.background);
+        setFraming(results.framing);
+        if (!useGyro) {
+          setTilt(results.tilt);
+        }
+      }
+    }
+    
+    if (isReady && !isUploading) {
+      requestRef.current = requestAnimationFrame(processLoop);
     }
   };
 
@@ -66,6 +167,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
     if (stream) {
       stream.getTracks().forEach((track) => track.stop());
     }
+    window.removeEventListener('deviceorientation', handleDeviceOrientation);
   };
 
   const validateImage = (width: number, height: number, sizeBytes: number): string | null => {
@@ -76,7 +178,6 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
       return `Image resolution too low. Minimum 1200x1600px required. Got ${width}x${height}.`;
     }
     const ratio = width / height;
-    // 3:4 aspect ratio = 0.75. Accept within 10% (0.675 - 0.825)
     if (ratio < 0.675 || ratio > 0.825) {
       return `Image aspect ratio must be approx 3:4 (portrait). Got ratio ${ratio.toFixed(2)}.`;
     }
@@ -85,29 +186,19 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
 
   const uploadToSupabase = async (blob: Blob) => {
     if (!draftId) throw new Error("Draft must be saved before uploading photos.");
-    
-    // Get signed URL
     const res = await fetch("/api/storage/upload", {
       method: "POST",
       body: JSON.stringify({ draftId, kind }),
       headers: { "Content-Type": "application/json" }
     });
-    
     if (!res.ok) throw new Error("Failed to get upload URL");
-    
     const { signedUrl, publicUrl } = await res.json();
-
-    // Upload directly to Supabase via signed URL
     const uploadRes = await fetch(signedUrl, {
       method: "PUT",
       body: blob,
-      headers: {
-        "Content-Type": "image/jpeg"
-      }
+      headers: { "Content-Type": "image/jpeg" }
     });
-
     if (!uploadRes.ok) throw new Error("Failed to upload image");
-
     return publicUrl;
   };
 
@@ -120,13 +211,15 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
     }
 
     setIsUploading(true);
+    if (requestRef.current) cancelAnimationFrame(requestRef.current);
+
     try {
       const url = await uploadToSupabase(blob);
       onCapture({ kind, sortOrder, url });
     } catch (err: any) {
       setValidationError(err.message || "Upload failed");
-    } finally {
       setIsUploading(false);
+      requestRef.current = requestAnimationFrame(processLoop);
     }
   };
 
@@ -139,14 +232,11 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
     const sourceWidth = video.videoWidth;
     const sourceHeight = video.videoHeight;
 
-    // Calculate centered 3:4 portrait crop region
     let cropWidth: number, cropHeight: number;
     if (sourceWidth / sourceHeight > 0.75) {
-      // Source wider than 3:4 — constrain width
       cropHeight = sourceHeight;
       cropWidth = sourceHeight * 0.75;
     } else {
-      // Source taller than 3:4 — constrain height
       cropWidth = sourceWidth;
       cropHeight = sourceWidth / 0.75;
     }
@@ -188,6 +278,29 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
     img.src = objectUrl;
   };
 
+  const IndicatorDot = ({ label, check }: { label: string, check: CheckResult }) => {
+    const colorClass = 
+      check.state === 'pass' ? 'bg-green-500' :
+      check.state === 'warn' ? 'bg-yellow-500' :
+      check.state === 'fail' ? 'bg-red-500' : 'bg-gray-500';
+      
+    return (
+      <div className="flex flex-col items-center group relative cursor-pointer w-16">
+        <div className={cn("w-3 h-3 rounded-full mb-1 transition-colors", colorClass)} />
+        <span className="text-[10px] text-white/80 uppercase tracking-wider">{label}</span>
+        <div className="absolute top-full mt-2 w-32 bg-popover/90 text-popover-foreground text-xs p-2 rounded shadow-lg text-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+          {check.tip}
+        </div>
+      </div>
+    );
+  };
+
+  const isAnyFail = [tilt, framing, lighting, background].some(c => c.state === 'fail');
+  const isAnyWarn = [tilt, framing, lighting, background].some(c => c.state === 'warn');
+  const captureButtonClass = isAnyWarn && !isAnyFail ? 'bg-yellow-500 hover:bg-yellow-600 text-yellow-950' : 
+                             !isAnyFail ? 'bg-green-500 hover:bg-green-600 text-white' : 
+                             'bg-muted text-muted-foreground opacity-50 cursor-not-allowed';
+
   if (cameraError) {
     return (
       <div className="p-6 bg-card border border-border rounded-xl shadow-sm text-center">
@@ -196,7 +309,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
         
         <div className="space-y-4">
           <p className="text-sm font-medium">Upload a photo manually:</p>
-          <p className="text-xs text-muted-foreground">Min 1500x1500px, ~3:4 aspect ratio (portrait).</p>
+          <p className="text-xs text-muted-foreground">Min 1200x1600px, ~3:4 aspect ratio (portrait).</p>
           <Input 
             type="file" 
             accept="image/*" 
@@ -218,8 +331,33 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
     );
   }
 
+  if (!hasRequestedCamera) {
+    return (
+      <div className="p-6 bg-card border border-border rounded-xl shadow-sm text-center max-w-sm mx-auto">
+        <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+          <Camera className="w-8 h-8 text-muted-foreground" />
+        </div>
+        <h3 className="font-semibold mb-2">Capture {kind} photo</h3>
+        <p className="text-sm text-muted-foreground mb-6">
+          We'll need camera and motion sensor access to help you take the perfect shot.
+        </p>
+        <Button onClick={startCameraAndSensors} className="w-full gap-2">
+          <Play className="w-4 h-4" /> Start Camera
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-full max-w-sm mx-auto flex flex-col items-center">
+      {/* Real-time Indicator Dots */}
+      <div className="flex justify-center gap-2 mb-3 bg-black/80 rounded-full px-4 py-2 text-white shadow-lg w-full z-10">
+        <IndicatorDot label="Tilt" check={tilt} />
+        <IndicatorDot label="Framing" check={framing} />
+        <IndicatorDot label="Lighting" check={lighting} />
+        <IndicatorDot label="Bkgnd" check={background} />
+      </div>
+
       <div className="relative w-full aspect-[3/4] bg-black rounded-xl overflow-hidden shadow-lg border border-border">
         {/* Live video feed */}
         <video 
@@ -232,7 +370,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
         
         {/* 3:4 Overlay Guide */}
         <div className="absolute inset-0 pointer-events-none p-4 flex items-center justify-center">
-          <div className="w-full h-full border-4 border-white/50 rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]"></div>
+          <div className="w-full h-full border-4 border-white/50 rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] transition-colors duration-300"></div>
           {/* Center crosshairs */}
           <div className="absolute w-8 h-px bg-white/50"></div>
           <div className="absolute h-8 w-px bg-white/50"></div>
@@ -240,7 +378,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
 
         {/* Loading / Uploading state */}
         {(!isReady || isUploading) && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-white p-4 text-center">
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-white p-4 text-center z-20">
             {isUploading ? (
               <>
                 <Loader2 className="w-8 h-8 animate-spin mb-4" />
@@ -263,20 +401,25 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
       <div className="mt-6 flex flex-col items-center gap-2">
         <Button 
           size="lg" 
-          className="rounded-full w-16 h-16 p-0 border-4 border-background shadow-xl hover:scale-105 transition-transform" 
+          className={cn("rounded-full w-16 h-16 p-0 border-4 border-background shadow-xl hover:scale-105 transition-all", captureButtonClass)} 
           onClick={handleCapture}
-          disabled={!isReady || isUploading || !draftId}
+          disabled={!isReady || isUploading || !draftId || isAnyFail}
         >
           <Camera className="w-6 h-6" />
           <span className="sr-only">Capture Photo</span>
         </Button>
-        <p className="text-sm text-muted-foreground mt-2">
-          Align the card within the guide
+        <p className="text-sm text-muted-foreground mt-2 text-center max-w-[250px] min-h-[40px]">
+          {isAnyFail 
+            ? [tilt, framing, lighting, background].find(c => c.state === 'fail')?.tip 
+            : isAnyWarn 
+              ? [tilt, framing, lighting, background].find(c => c.state === 'warn')?.tip 
+              : "Align the card within the guide"}
         </p>
       </div>
       
-      {/* Hidden canvas for extraction */}
+      {/* Hidden canvas for extraction and processing */}
       <canvas ref={canvasRef} className="hidden" />
+      <canvas ref={processCanvasRef} width={150} height={200} className="hidden" />
     </div>
   );
 }
