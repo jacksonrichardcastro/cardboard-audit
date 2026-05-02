@@ -54,9 +54,9 @@ export async function SiteHeader() {
         </div>
         <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center gap-4">
-            <Link href="/sell" className="hidden md:inline-flex">
-              <Button>Sell</Button>
-            </Link>
+            <Button asChild>
+              <Link href="/sell" className="hidden md:inline-flex">Sell</Link>
+            </Button>
             <NavAuthControls isSignedIn={isSignedIn} />
           </div>
           <div className="md:hidden">
@@ -83,9 +83,9 @@ export async function SiteHeader() {
                       Soon
                     </span>
                   </Link>
-                  <Link href="/sell">
-                    <Button className="w-full">Sell</Button>
-                  </Link>
+                  <Button asChild className="w-full">
+                    <Link href="/sell">Sell</Link>
+                  </Button>
                   <div className="flex flex-col gap-4 border-t border-border pt-6">
                     <NavAuthControls isSignedIn={isSignedIn} />
                   </div>

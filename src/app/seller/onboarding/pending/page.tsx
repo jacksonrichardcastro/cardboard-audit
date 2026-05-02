@@ -13,9 +13,9 @@ export default function PendingReviewPage() {
       <p className="text-lg text-muted-foreground mb-8">
         Trax is hand-vetting every founding seller. You'll hear from us within 48 hours.
       </p>
-      <Link href="/">
-        <Button variant="outline">Return to marketplace</Button>
-      </Link>
+      <Button asChild variant="outline">
+        <Link href="/">Return to marketplace</Link>
+      </Button>
     </div>
   );
 }

@@ -64,9 +64,9 @@ export default async function AdminSellersPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Link href={`/admin/sellers/${seller.userId}`}>
-                      <Button variant="outline" size="sm">Review</Button>
-                    </Link>
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={`/admin/sellers/${seller.userId}`}>Review</Link>
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}

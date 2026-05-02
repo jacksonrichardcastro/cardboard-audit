@@ -34,9 +34,9 @@ export default async function SellerDashboardPage() {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">Add new inventory to your store.</p>
-            <Link href="/sell/new">
-              <Button className="w-full bg-violet-600 hover:bg-violet-700">New Listing</Button>
-            </Link>
+            <Button asChild className="w-full bg-violet-600 hover:bg-violet-700">
+              <Link href="/sell/new">New Listing</Link>
+            </Button>
           </CardContent>
         </Card>
 
@@ -46,9 +46,9 @@ export default async function SellerDashboardPage() {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">See how buyers view your listings.</p>
-            <Link href={`/store/${seller.handle}`}>
-              <Button variant="outline" className="w-full">Storefront</Button>
-            </Link>
+            <Button asChild variant="outline" className="w-full">
+              <Link href={`/store/${seller.handle}`}>Storefront</Link>
+            </Button>
           </CardContent>
         </Card>
 

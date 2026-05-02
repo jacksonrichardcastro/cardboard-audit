@@ -62,9 +62,9 @@ export default function CartPage() {
         <Card className="bg-card/40 border-white/5 py-12 text-center">
           <CardContent>
             <p className="text-muted-foreground mb-4">Your escrow vault is empty.</p>
-            <Link href="/">
-              <Button variant="outline" className="border-white/10">Browse Holy Grails</Button>
-            </Link>
+            <Button asChild variant="outline" className="border-white/10">
+              <Link href="/">Browse Holy Grails</Link>
+            </Button>
           </CardContent>
         </Card>
       ) : (

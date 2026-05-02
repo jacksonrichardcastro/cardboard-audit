@@ -26,11 +26,11 @@ export default async function SellerInventoryPage() {
           <h1 className="text-3xl font-bold tracking-tight">Active Inventory</h1>
           <p className="text-muted-foreground mt-1">Manage your storefront listings and optimize pricing.</p>
         </div>
-        <Link href="/seller/listings/new">
-          <Button className="h-12 shadow-lg shadow-primary/20">
+        <Button asChild className="h-12 shadow-lg shadow-primary/20">
+          <Link href="/seller/listings/new">
             <Plus className="w-5 h-5 mr-2" /> Create New Listing
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
 
       <Card className="bg-card/40 border-white/5 backdrop-blur-xl">
@@ -69,11 +69,11 @@ export default async function SellerInventoryPage() {
                        {format(new Date(item.createdAt), "MMM d, yyyy")}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Link href={`/listing/${item.id}`}>
-                        <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-white mr-2">
+                      <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-white mr-2">
+                        <Link href={`/listing/${item.id}`}>
                           <Eye className="w-4 h-4" />
-                        </Button>
-                      </Link>
+                        </Link>
+                      </Button>
                       <Button variant="outline" size="sm" className="border-white/10">
                         <Edit3 className="w-4 h-4 mr-1.5" /> Edit
                       </Button>

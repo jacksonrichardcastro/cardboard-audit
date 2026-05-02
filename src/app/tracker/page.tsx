@@ -25,9 +25,9 @@ export default function TrackerPage() {
           </p>
         </CardContent>
         <CardFooter className="flex justify-center pt-6 pb-12">
-          <Link href="/">
-            <Button size="lg" variant="default" className="px-8">Browse the marketplace</Button>
-          </Link>
+          <Button asChild size="lg" variant="default" className="px-8">
+            <Link href="/">Browse the marketplace</Link>
+          </Button>
         </CardFooter>
       </Card>
     </div>

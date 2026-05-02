@@ -31,17 +31,17 @@ export default async function DraftsPage() {
           <h1 className="text-3xl font-bold tracking-tight">Your Drafts</h1>
           <p className="text-muted-foreground mt-1">Finish creating your listings.</p>
         </div>
-        <Link href="/sell/new">
-          <Button>Create New Listing</Button>
-        </Link>
+        <Button asChild>
+          <Link href="/sell/new">Create New Listing</Link>
+        </Button>
       </div>
 
       {drafts.length === 0 ? (
         <div className="text-center py-24 bg-card rounded-xl border border-border/50">
           <p className="text-muted-foreground mb-4">You have no in-progress listings.</p>
-          <Link href="/sell/new">
-            <Button variant="secondary">Start a Listing</Button>
-          </Link>
+          <Button asChild variant="secondary">
+            <Link href="/sell/new">Start a Listing</Link>
+          </Button>
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -65,9 +65,9 @@ export default async function DraftsPage() {
                     }}>
                       <Button variant="ghost" size="sm" type="submit" className="text-destructive hover:text-destructive hover:bg-destructive/10">Delete</Button>
                     </form>
-                    <Link href={`/sell/new?draftId=${draft.id}`}>
-                      <Button size="sm" variant="secondary">Resume</Button>
-                    </Link>
+                    <Button asChild size="sm" variant="secondary">
+                      <Link href={`/sell/new?draftId=${draft.id}`}>Resume</Link>
+                    </Button>
                   </div>
                 </div>
               </div>
