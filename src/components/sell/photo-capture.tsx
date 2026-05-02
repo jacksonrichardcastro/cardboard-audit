@@ -26,6 +26,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
   const processCanvasRef = useRef<HTMLCanvasElement>(null);
   
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
@@ -99,6 +100,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
         audio: false,
       });
       
+      streamRef.current = mediaStream;
       setStream(mediaStream);
       
       if (videoRef.current) {
@@ -164,8 +166,9 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
   };
 
   const stopCamera = () => {
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
     }
     window.removeEventListener('deviceorientation', handleDeviceOrientation);
   };
