@@ -72,8 +72,8 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
     if (sizeBytes > 10 * 1024 * 1024) {
       return "File must be smaller than 10MB.";
     }
-    if (width < 1500 || height < 1500) {
-      return `Image resolution too low. Minimum 1500x1500px required. Got ${width}x${height}.`;
+    if (width < 1200 || height < 1600) {
+      return `Image resolution too low. Minimum 1200x1600px required. Got ${width}x${height}.`;
     }
     const ratio = width / height;
     // 3:4 aspect ratio = 0.75. Accept within 10% (0.675 - 0.825)
