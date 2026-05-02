@@ -57,11 +57,11 @@ export default async function BuyerOrdersPage() {
             <div className="text-center py-12 text-muted-foreground">
               You haven&apos;t purchased any holy grails yet.
               <br />
-              <Link href="/">
-                <Button variant="outline" className="mt-4 border-white/10 hover:bg-white/5">
+              <Button asChild variant="outline" className="mt-4 border-white/10 hover:bg-white/5">
+                <Link href="/">
                   Browse Storefront
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
           ) : (
             <Table>
@@ -100,11 +100,11 @@ export default async function BuyerOrdersPage() {
                       {getStatusBadge(order.currentState)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Link href={`/orders/${order.id}`}>
-                        <Button variant="outline" size="sm" className="border-primary/30 text-primary hover:bg-primary/10">
+                      <Button asChild variant="outline" size="sm" className="border-primary/30 text-primary hover:bg-primary/10">
+                        <Link href={`/orders/${order.id}`}>
                           View Ledger
-                        </Button>
-                      </Link>
+                        </Link>
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}

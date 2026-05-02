@@ -98,11 +98,11 @@ export default async function SellerFulfillmentQueue() {
                             <Ticket className="w-4 h-4 mr-2" /> Buy Label
                           </Button>
                         ) : (
-                          <Link href={`/orders/${order.id}`}>
-                            <Button variant="outline" size="sm" className="border-white/10">
+                          <Button asChild variant="outline" size="sm" className="border-white/10">
+                            <Link href={`/orders/${order.id}`}>
                               View Ledger
-                            </Button>
-                          </Link>
+                            </Link>
+                          </Button>
                         )}
                       </TableCell>
                     </TableRow>

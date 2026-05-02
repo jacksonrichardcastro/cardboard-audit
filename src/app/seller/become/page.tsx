@@ -27,11 +27,11 @@ export default function BecomeSellerPage() {
         </div>
       </div>
 
-      <Link href="/seller/onboarding/profile">
-        <Button size="lg" className="w-full sm:w-auto px-12 py-6 text-lg bg-violet-600 hover:bg-violet-700 mb-8 shadow-lg shadow-violet-500/20">
+      <Button asChild size="lg" className="w-full sm:w-auto px-12 py-6 text-lg bg-violet-600 hover:bg-violet-700 mb-8 shadow-lg shadow-violet-500/20">
+        <Link href="/seller/onboarding/profile">
           Start Onboarding
-        </Button>
-      </Link>
+        </Link>
+      </Button>
 
       <details className="text-sm text-muted-foreground cursor-pointer group">
         <summary className="font-medium hover:text-white transition-colors">What you'll need</summary>
