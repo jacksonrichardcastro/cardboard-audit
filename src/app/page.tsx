@@ -48,6 +48,9 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-background pb-16">
+      <div style={{ background: 'red', color: 'white', padding: '40px', fontSize: '24px', fontWeight: 'bold' }}>
+        TRAX MOBILE TEST — IF YOU SEE THIS, RENDERING WORKS
+      </div>
       {/* Hero Banner */}
       <div className="relative overflow-hidden bg-black/60 border-b border-white/5 pt-16 pb-8">
         <div className="absolute inset-0 bg-[url('https://placehold.co/1920x400/000/111?text=+')] opacity-20 bg-cover bg-center -z-20" />
