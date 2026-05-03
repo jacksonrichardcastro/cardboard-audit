@@ -24,10 +24,10 @@ export default function RootLayout({
     <ClerkProvider afterSignOutUrl="/">
       <html
         lang="en"
-        className={`${inter.variable} h-full antialiased dark`}
+        className={`${inter.variable} h-screen antialiased dark`}
         suppressHydrationWarning
       >
-        <body className="min-h-full flex flex-col font-sans">
+        <body className="min-h-screen flex flex-col font-sans">
           <ThemeProvider
             attribute="class"
             defaultTheme="dark"
@@ -44,3 +44,4 @@ export default function RootLayout({
     </ClerkProvider>
   );
 }
+// touch
