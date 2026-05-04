@@ -40,12 +40,25 @@ const buttonVariants = cva(
   }
 )
 
+import { Slot } from "@radix-ui/react-slot"
+
 function Button({
   className,
   variant = "default",
   size = "default",
+  asChild = false,
   ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants> & { asChild?: boolean }) {
+  if (asChild) {
+    return (
+      <Slot
+        data-slot="button"
+        className={cn(buttonVariants({ variant, size, className }))}
+        {...(props as any)}
+      />
+    )
+  }
+
   return (
     <ButtonPrimitive
       data-slot="button"
