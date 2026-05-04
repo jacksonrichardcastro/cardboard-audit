@@ -37,6 +37,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
   const [tilt, setTilt] = useState<CheckResult>({ state: "idle", tip: "Waiting..." });
   const [framing, setFraming] = useState<CheckResult>({ state: "idle", tip: "Waiting..." });
   const [lighting, setLighting] = useState<CheckResult>({ state: "idle", tip: "Waiting..." });
+  const [focus, setFocus] = useState<CheckResult>({ state: "idle", tip: "Waiting..." });
   const [background, setBackground] = useState<CheckResult>({ state: "idle", tip: "Waiting..." });
   const [useGyro, setUseGyro] = useState(false);
 
@@ -154,6 +155,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
         setLighting(results.lighting);
         setBackground(results.background);
         setFraming(results.framing);
+        setFocus(results.focus);
         if (!useGyro) {
           setTilt(results.tilt);
         }
@@ -298,8 +300,8 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
     );
   };
 
-  const isAnyFail = [tilt, framing, lighting, background].some(c => c.state === 'fail');
-  const isAnyWarn = [tilt, framing, lighting, background].some(c => c.state === 'warn');
+  const isAnyFail = [tilt, framing, lighting, focus, background].some(c => c.state === 'fail');
+  const isAnyWarn = [tilt, framing, lighting, focus, background].some(c => c.state === 'warn');
   const captureButtonClass = isAnyWarn && !isAnyFail ? 'bg-yellow-500 hover:bg-yellow-600 text-yellow-950' : 
                              !isAnyFail ? 'bg-green-500 hover:bg-green-600 text-white' : 
                              'bg-muted text-muted-foreground opacity-50 cursor-not-allowed';
@@ -354,10 +356,11 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
   return (
     <div className="relative w-full max-w-sm mx-auto flex flex-col items-center">
       {/* Real-time Indicator Dots */}
-      <div className="flex justify-center gap-2 mb-3 bg-black/80 rounded-full px-4 py-2 text-white shadow-lg w-full z-10">
+      <div className="flex justify-center gap-1 mb-3 bg-black/80 rounded-full px-2 py-2 text-white shadow-lg w-full z-10 overflow-x-auto">
         <IndicatorDot label="Tilt" check={tilt} />
         <IndicatorDot label="Framing" check={framing} />
         <IndicatorDot label="Lighting" check={lighting} />
+        <IndicatorDot label="Focus" check={focus} />
         <IndicatorDot label="Bkgnd" check={background} />
       </div>
 
@@ -413,16 +416,16 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
         </Button>
         <p className="text-sm text-muted-foreground mt-2 text-center max-w-[250px] min-h-[40px]">
           {isAnyFail 
-            ? [tilt, framing, lighting, background].find(c => c.state === 'fail')?.tip 
+            ? [tilt, framing, lighting, focus, background].find(c => c.state === 'fail')?.tip 
             : isAnyWarn 
-              ? [tilt, framing, lighting, background].find(c => c.state === 'warn')?.tip 
+              ? [tilt, framing, lighting, focus, background].find(c => c.state === 'warn')?.tip 
               : "Align the card within the guide"}
         </p>
       </div>
       
       {/* Hidden canvas for extraction and processing */}
       <canvas ref={canvasRef} className="hidden" />
-      <canvas ref={processCanvasRef} width={150} height={200} className="hidden" />
+      <canvas ref={processCanvasRef} width={300} height={400} className="hidden" />
     </div>
   );
 }
