@@ -40,6 +40,11 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
   const [focus, setFocus] = useState<CheckResult>({ state: "idle", tip: "Waiting..." });
   const [background, setBackground] = useState<CheckResult>({ state: "idle", tip: "Waiting..." });
   const [useGyro, setUseGyro] = useState(false);
+  const [frameCount, setFrameCount] = useState(0);
+
+  const isReadyRef = useRef(false);
+  const isUploadingRef = useRef(false);
+  const useGyroRef = useRef(false);
 
   const lastProcessTime = useRef(0);
   const requestRef = useRef<number | null>(null);
@@ -80,6 +85,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
         if (permissionState === 'granted') {
           window.addEventListener('deviceorientation', handleDeviceOrientation);
           setUseGyro(true);
+          useGyroRef.current = true;
         }
       } catch (err) {
         console.error("Gyro permission denied:", err);
@@ -87,6 +93,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
     } else if (typeof window !== 'undefined' && window.DeviceOrientationEvent) {
       window.addEventListener('deviceorientation', handleDeviceOrientation);
       setUseGyro(true);
+      useGyroRef.current = true;
     }
 
     try {
@@ -109,6 +116,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
         videoRef.current.onloadedmetadata = () => {
           videoRef.current?.play();
           setIsReady(true);
+          isReadyRef.current = true;
           requestRef.current = requestAnimationFrame(processLoop);
         };
       }
@@ -156,13 +164,14 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
         setBackground(results.background);
         setFraming(results.framing);
         setFocus(results.focus);
-        if (!useGyro) {
+        setFrameCount(c => c + 1);
+        if (!useGyroRef.current) {
           setTilt(results.tilt);
         }
       }
     }
     
-    if (isReady && !isUploading) {
+    if (isReadyRef.current && !isUploadingRef.current) {
       requestRef.current = requestAnimationFrame(processLoop);
     }
   };
@@ -216,6 +225,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
     }
 
     setIsUploading(true);
+    isUploadingRef.current = true;
     if (requestRef.current) cancelAnimationFrame(requestRef.current);
 
     try {
@@ -224,6 +234,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
     } catch (err: any) {
       setValidationError(err.message || "Upload failed");
       setIsUploading(false);
+      isUploadingRef.current = false;
       requestRef.current = requestAnimationFrame(processLoop);
     }
   };
@@ -367,6 +378,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
       <div className="relative w-full aspect-[3/4] bg-black rounded-xl overflow-hidden shadow-lg border border-border">
         {/* RAW METRICS OVERLAY (TEMPORARY FOR EMPIRICAL HARDWARE TUNING) */}
         <div className="absolute top-2 left-2 bg-black/80 text-green-400 text-[11px] p-2 rounded z-30 pointer-events-none font-mono">
+          <div>FRAMES: {frameCount}</div>
           <div>TILT: {tilt.raw?.toFixed(2) ?? 'N/A'}</div>
           <div>FRAMING: {framing.raw?.toFixed(4) ?? 'N/A'}</div>
           <div>LIGHTING: {lighting.raw?.toFixed(4) ?? 'N/A'}</div>
