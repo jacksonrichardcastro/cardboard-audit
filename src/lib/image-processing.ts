@@ -50,12 +50,12 @@ export function processFrame(imageData: ImageData): ProcessingResult {
 
   let lighting: CheckResult = { state: "pass", tip: "Lighting OK" };
   const glarePercent = glareCount / numPixels;
-  if (glarePercent > 0.05) {
+  if (glarePercent > 0.25) {
     lighting = { state: "fail", tip: "Too much glare. Adjust angle." };
-  } else if (medianLuma < 60) {
+  } else if (meanLuma < 40 || medianLuma < 40) {
     lighting = { state: "fail", tip: "Too dark. Add more light." };
-  } else if (stddevLuma > 80) {
-    lighting = { state: "fail", tip: "Harsh shadows. Diffuse light." };
+  } else if (meanLuma > 220) {
+    lighting = { state: "fail", tip: "Washed out. Reduce light." };
   }
 
   // 2. Background Check (4 corners, ~10% width/height each)
@@ -90,6 +90,8 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   }
   const stddevBg = Math.sqrt(varSum / (cornerPixels.length * 3));
   
+  console.log("[BKGND] stddevBg:", stddevBg.toFixed(2));
+  
   let background: CheckResult = { state: "pass", tip: "Background OK" };
   if (stddevBg >= 40) {
     background = { state: "fail", tip: "Background too busy/textured." };
@@ -98,9 +100,11 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   }
 
   // 3 & 4. Framing and Visual Tilt (Sobel)
-  let minX = width, maxX = 0, minY = height, maxY = 0;
   const angles: number[] = new Array(180).fill(0); // Bins for 0-179 degrees
   let strongEdges = 0;
+  
+  const xEdges = new Int32Array(width);
+  const yEdges = new Int32Array(height);
 
   for (let y = 1; y < height - 1; y++) {
     for (let x = 1; x < width - 1; x++) {
@@ -121,14 +125,40 @@ export function processFrame(imageData: ImageData): ProcessingResult {
       
       if (magnitude > 60) {
         strongEdges++;
-        if (x < minX) minX = x;
-        if (x > maxX) maxX = x;
-        if (y < minY) minY = y;
-        if (y > maxY) maxY = y;
+        xEdges[x]++;
+        yEdges[y]++;
         
         let angle = Math.atan2(gy, gx) * 180 / Math.PI;
         if (angle < 0) angle += 180;
         angles[Math.floor(angle)]++;
+      }
+    }
+  }
+
+  // Find robust bounding box using 5th and 95th percentiles of edge distribution
+  let minX = 0, maxX = width, minY = 0, maxY = height;
+  if (strongEdges > 0) {
+    let currentXCount = 0;
+    const lowerXThresh = strongEdges * 0.05;
+    const upperXThresh = strongEdges * 0.95;
+    for (let x = 0; x < width; x++) {
+      currentXCount += xEdges[x];
+      if (minX === 0 && currentXCount > lowerXThresh) minX = x;
+      if (currentXCount > upperXThresh) {
+        maxX = x;
+        break;
+      }
+    }
+    
+    let currentYCount = 0;
+    const lowerYThresh = strongEdges * 0.05;
+    const upperYThresh = strongEdges * 0.95;
+    for (let y = 0; y < height; y++) {
+      currentYCount += yEdges[y];
+      if (minY === 0 && currentYCount > lowerYThresh) minY = y;
+      if (currentYCount > upperYThresh) {
+        maxY = y;
+        break;
       }
     }
   }
@@ -140,9 +170,9 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   } else {
     const boxArea = (maxX - minX) * (maxY - minY);
     const fraction = boxArea / numPixels;
-    if (fraction < 0.4 || fraction > 0.95) {
+    if (fraction < 0.3 || fraction > 0.9) {
       framing = { state: "fail", tip: "Move card closer or further." };
-    } else if (fraction < 0.5 || fraction > 0.9) {
+    } else if (fraction < 0.4 || fraction > 0.85) {
       framing = { state: "warn", tip: "Almost there, adjust distance." };
     }
   }
