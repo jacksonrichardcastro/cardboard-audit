@@ -66,11 +66,11 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
     
     let maxTilt = Math.max(tiltB, tiltG);
     
-    let result: CheckResult = { state: "pass", tip: "Level" };
+    let result: CheckResult = { state: "pass", tip: "Level", raw: maxTilt };
     if (maxTilt > 10) {
-      result = { state: "fail", tip: "Phone is tilted. Hold it parallel to card." };
+      result = { state: "fail", tip: "Phone is tilted. Hold it parallel to card.", raw: maxTilt };
     } else if (maxTilt > 5) {
-      result = { state: "warn", tip: "Phone slightly tilted." };
+      result = { state: "warn", tip: "Phone slightly tilted.", raw: maxTilt };
     }
     setTilt(result);
   }, []);
@@ -368,7 +368,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
     <div className="relative w-full max-w-sm mx-auto flex flex-col items-center">
       {/* Real-time Indicator Dots */}
       <div className="flex justify-center gap-1 mb-3 bg-black/80 rounded-full px-2 py-2 text-white shadow-lg w-full z-10 overflow-x-auto">
-        <IndicatorDot label="Tilt" check={tilt} />
+        <IndicatorDot label="Level" check={tilt} />
         <IndicatorDot label="Framing" check={framing} />
         <IndicatorDot label="Lighting" check={lighting} />
         <IndicatorDot label="Focus" check={focus} />
@@ -379,11 +379,11 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
         {/* RAW METRICS OVERLAY (TEMPORARY FOR EMPIRICAL HARDWARE TUNING) */}
         <div className="absolute top-2 left-2 bg-black/80 text-green-400 text-[11px] p-2 rounded z-30 pointer-events-none font-mono">
           <div>FRAMES: {frameCount}</div>
-          <div>TILT: {tilt.raw?.toFixed(2) ?? 'N/A'}</div>
+          <div>LEVEL: {tilt.raw?.toFixed(2) ?? 'N/A'}</div>
           <div>FRAMING: {framing.raw?.toFixed(4) ?? 'N/A'}</div>
           <div>LIGHTING: {lighting.raw?.toFixed(4) ?? 'N/A'}</div>
           <div>FOCUS: {focus.raw?.toFixed(2) ?? 'N/A'}</div>
-          <div>BKGND: {background.raw?.toFixed(2) ?? 'N/A'}</div>
+          <div>BKGND: {background.raw?.toFixed(4) ?? 'N/A'}</div>
         </div>
         {/* Live video feed */}
         <video 
