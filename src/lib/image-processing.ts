@@ -12,6 +12,21 @@ export interface ProcessingResult {
   framing: CheckResult;
   focus: CheckResult;
   tilt: CheckResult; // Fallback visual tilt
+  debug: {
+    bgTL: number;
+    bgTR: number;
+    bgBL: number;
+    bgBR: number;
+    fTotalEdges: number;
+    fAvgX: number;
+    fAvgY: number;
+    fThreshX: number;
+    fThreshY: number;
+    fMinX: number;
+    fMaxX: number;
+    fMinY: number;
+    fMaxY: number;
+  };
 }
 
 export function processFrame(imageData: ImageData): ProcessingResult {
@@ -97,47 +112,77 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     }
   }
 
-  // 2. Background & Framing Check (using edge regions instead of color variance)
-  // Define Center region (50% of width/height, 25% of area)
-  // Outer perimeter region is the rest.
-  const cxStart = Math.floor(width * 0.25);
-  const cxEnd = Math.floor(width * 0.75);
-  const cyStart = Math.floor(height * 0.25);
-  const cyEnd = Math.floor(height * 0.75);
-  
-  const centerArea = (cxEnd - cxStart) * (cyEnd - cyStart);
-  const perimeterArea = numPixels - centerArea;
-  
-  let centerEdges = 0;
-  for (let y = cyStart; y < cyEnd; y++) {
-    for (let x = cxStart; x < cxEnd; x++) {
-      if (edgeMap[y * width + x]) centerEdges++;
+  // 2. Background Check (Corner-only sampling to ignore card)
+  const cornerW = Math.floor(width * 0.1);
+  const cornerH = Math.floor(height * 0.1);
+  let tl = 0, tr = 0, bl = 0, br = 0;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (edgeMap[y * width + x]) {
+        if (x < cornerW && y < cornerH) tl++;
+        else if (x >= width - cornerW && y < cornerH) tr++;
+        else if (x < cornerW && y >= height - cornerH) bl++;
+        else if (x >= width - cornerW && y >= height - cornerH) br++;
+      }
     }
   }
-  const perimeterEdges = totalStrongEdges - centerEdges;
+  const cornerArea = cornerW * cornerH;
+  const bgTL = tl / cornerArea;
+  const bgTR = tr / cornerArea;
+  const bgBL = bl / cornerArea;
+  const bgBR = br / cornerArea;
   
-  const perimeterEdgeDensity = perimeterEdges / perimeterArea;
-  const centerEdgeDensity = centerEdges / centerArea;
-  const edgeDensityRatio = centerEdgeDensity / (perimeterEdgeDensity || 0.0001);
+  const cornerEdges = tl + tr + bl + br;
+  const totalCornerArea = cornerArea * 4;
+  const bkgndDensity = cornerEdges / totalCornerArea;
 
-  // Background is now determined strictly by perimeter edge density (texture/busyness)
-  let background: CheckResult = { state: "pass", tip: "Background OK", raw: perimeterEdgeDensity };
-  if (perimeterEdgeDensity >= 0.15) { // 15% of perimeter pixels are edges
-    background = { state: "fail", tip: "Background too busy/textured.", raw: perimeterEdgeDensity };
-  } else if (perimeterEdgeDensity >= 0.08) {
-    background = { state: "warn", tip: "Consider a plainer background.", raw: perimeterEdgeDensity };
+  let background: CheckResult = { state: "pass", tip: "Background OK", raw: bkgndDensity };
+  if (bkgndDensity >= 0.15) { 
+    background = { state: "fail", tip: "Background too busy/textured.", raw: bkgndDensity };
+  } else if (bkgndDensity >= 0.08) {
+    background = { state: "warn", tip: "Consider a plainer background.", raw: bkgndDensity };
   }
 
-  // Framing relies on the ratio of center edges to perimeter edges
-  let framing: CheckResult = { state: "pass", tip: "Framing OK", raw: edgeDensityRatio };
-  if (totalStrongEdges < 100) {
-    framing = { state: "warn", tip: "Place card inside the rectangle.", raw: edgeDensityRatio };
+  // 3. Framing Check (Adaptive 1D projection bounding box to filter noise)
+  let minX = width, maxX = 0, minY = height, maxY = 0;
+  let avgX = 0, avgY = 0, threshX = 0, threshY = 0;
+  
+  if (totalStrongEdges > 100) {
+    avgX = totalStrongEdges / width;
+    avgY = totalStrongEdges / height;
+    threshX = Math.max(avgX * 1.5, height * 0.02); 
+    threshY = Math.max(avgY * 1.5, width * 0.02);
+
+    for (let x = 2; x < width - 2; x++) {
+      let val = (xEdges[x-2] + xEdges[x-1] + xEdges[x] + xEdges[x+1] + xEdges[x+2]) / 5;
+      if (val > threshX) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+      }
+    }
+    
+    for (let y = 2; y < height - 2; y++) {
+      let val = (yEdges[y-2] + yEdges[y-1] + yEdges[y] + yEdges[y+1] + yEdges[y+2]) / 5;
+      if (val > threshY) {
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
   } else {
-    // If the card is perfectly framed, center density will be massive compared to perimeter.
-    if (edgeDensityRatio < 1.5) {
-      framing = { state: "fail", tip: "Move card closer or further.", raw: edgeDensityRatio };
-    } else if (edgeDensityRatio < 2.5) {
-      framing = { state: "warn", tip: "Almost there, center the card.", raw: edgeDensityRatio };
+    minX = width; maxX = 0; minY = height; maxY = 0;
+  }
+
+  const boxArea = Math.max(0, maxX - minX) * Math.max(0, maxY - minY);
+  const cardFillRatio = boxArea / numPixels;
+
+  let framing: CheckResult = { state: "pass", tip: "Framing OK", raw: cardFillRatio };
+  if (totalStrongEdges < 100 || cardFillRatio === 0) {
+    framing = { state: "warn", tip: "Place card inside the rectangle.", raw: cardFillRatio };
+  } else {
+    if (cardFillRatio < 0.25 || cardFillRatio > 0.85) {
+      framing = { state: "fail", tip: "Move card closer or further.", raw: cardFillRatio };
+    } else if (cardFillRatio < 0.35 || cardFillRatio > 0.75) {
+      framing = { state: "warn", tip: "Almost there, adjust distance.", raw: cardFillRatio };
     }
   }
 
@@ -185,5 +230,14 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   // However, we satisfy the ProcessingResult interface:
   tilt = { state: "pass", tip: "Level", raw: 0 };
 
-  return { lighting, background, framing, focus, tilt };
+  const debug = {
+    bgTL, bgTR, bgBL, bgBR,
+    fTotalEdges: totalStrongEdges,
+    fAvgX: avgX, fAvgY: avgY,
+    fThreshX: threshX, fThreshY: threshY,
+    fMinX: minX, fMaxX: maxX,
+    fMinY: minY, fMaxY: maxY
+  };
+
+  return { lighting, background, framing, focus, tilt, debug };
 }
