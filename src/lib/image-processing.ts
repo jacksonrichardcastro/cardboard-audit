@@ -30,7 +30,7 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     const luma = 0.299 * r + 0.587 * g + 0.114 * b;
     lumas[i] = luma;
     sumLuma += luma;
-    if (luma > 245) glareCount++;
+    if (luma > 220) glareCount++;
   }
   
   const meanLuma = sumLuma / numPixels;
@@ -52,9 +52,9 @@ export function processFrame(imageData: ImageData): ProcessingResult {
 
   const glarePercent = glareCount / numPixels;
   let lighting: CheckResult = { state: "pass", tip: "Lighting OK", raw: glarePercent };
-  if (glarePercent > 0.08) {
+  if (glarePercent > 0.005) {
     lighting = { state: "fail", tip: "Too much glare. Adjust angle.", raw: glarePercent };
-  } else if (glarePercent > 0.05) {
+  } else if (glarePercent > 0.002) {
     lighting = { state: "warn", tip: "Minor glare detected.", raw: glarePercent };
   } else if (meanLuma < 40) {
     lighting = { state: "fail", tip: "Too dark. Add more light.", raw: meanLuma };
@@ -139,32 +139,28 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     }
   }
 
-  // Find robust bounding box using 5th and 95th percentiles of edge distribution
-  let minX = 0, maxX = width, minY = 0, maxY = height;
+  // Robust Bounding Box using density filter to ignore noise
+  let minX = width, maxX = 0, minY = height, maxY = 0;
   if (strongEdges > 0) {
-    let currentXCount = 0;
-    const lowerXThresh = strongEdges * 0.05;
-    const upperXThresh = strongEdges * 0.95;
+    const minColEdges = height * 0.02; // At least 2% of the column must be edges
     for (let x = 0; x < width; x++) {
-      currentXCount += xEdges[x];
-      if (minX === 0 && currentXCount > lowerXThresh) minX = x;
-      if (currentXCount > upperXThresh) {
+      if (xEdges[x] > minColEdges) {
+        if (minX === width) minX = x;
         maxX = x;
-        break;
       }
     }
     
-    let currentYCount = 0;
-    const lowerYThresh = strongEdges * 0.05;
-    const upperYThresh = strongEdges * 0.95;
+    const minRowEdges = width * 0.02; // At least 2% of the row must be edges
     for (let y = 0; y < height; y++) {
-      currentYCount += yEdges[y];
-      if (minY === 0 && currentYCount > lowerYThresh) minY = y;
-      if (currentYCount > upperYThresh) {
+      if (yEdges[y] > minRowEdges) {
+        if (minY === height) minY = y;
         maxY = y;
-        break;
       }
     }
+    
+    // Fallback if density filter is too strict
+    if (minX >= maxX) { minX = 0; maxX = width; }
+    if (minY >= maxY) { minY = 0; maxY = height; }
   }
 
   // Framing
@@ -240,12 +236,14 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     const deviation = Math.min(peakAngle % 90, 90 - (peakAngle % 90));
     
     if (deviation > 10) {
-      tilt = { state: "fail", tip: "Card is tilted. Please level it." };
+      tilt = { state: "fail", tip: "Card is tilted. Please level it.", raw: deviation };
     } else if (deviation > 5) {
-      tilt = { state: "warn", tip: "Card slightly tilted." };
+      tilt = { state: "warn", tip: "Card slightly tilted.", raw: deviation };
+    } else {
+      tilt = { state: "pass", tip: "Level", raw: deviation };
     }
   } else {
-    tilt = { state: "warn", tip: "No edges detected." };
+    tilt = { state: "warn", tip: "No edges detected.", raw: 0 };
   }
 
   return { lighting, background, framing, focus, tilt };
