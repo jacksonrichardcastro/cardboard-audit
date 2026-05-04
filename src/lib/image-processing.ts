@@ -3,12 +3,14 @@ export type CheckState = "pass" | "warn" | "fail" | "idle";
 export interface CheckResult {
   state: CheckState;
   tip: string;
+  raw?: number;
 }
 
 export interface ProcessingResult {
   lighting: CheckResult;
   background: CheckResult;
   framing: CheckResult;
+  focus: CheckResult;
   tilt: CheckResult; // Fallback visual tilt
 }
 
@@ -48,14 +50,16 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   sampledLumas.sort((a, b) => a - b);
   const medianLuma = sampledLumas[Math.floor(sampledLumas.length / 2)];
 
-  let lighting: CheckResult = { state: "pass", tip: "Lighting OK" };
   const glarePercent = glareCount / numPixels;
-  if (glarePercent > 0.25) {
-    lighting = { state: "fail", tip: "Too much glare. Adjust angle." };
-  } else if (meanLuma < 40 || medianLuma < 40) {
-    lighting = { state: "fail", tip: "Too dark. Add more light." };
-  } else if (meanLuma > 220) {
-    lighting = { state: "fail", tip: "Washed out. Reduce light." };
+  let lighting: CheckResult = { state: "pass", tip: "Lighting OK", raw: glarePercent };
+  if (glarePercent > 0.08) {
+    lighting = { state: "fail", tip: "Too much glare. Adjust angle.", raw: glarePercent };
+  } else if (glarePercent > 0.05) {
+    lighting = { state: "warn", tip: "Minor glare detected.", raw: glarePercent };
+  } else if (meanLuma < 40) {
+    lighting = { state: "fail", tip: "Too dark. Add more light.", raw: meanLuma };
+  } else if (meanLuma > 180) {
+    lighting = { state: "fail", tip: "Washed out. Reduce light.", raw: meanLuma };
   }
 
   // 2. Background Check (4 corners, ~10% width/height each)
@@ -92,11 +96,11 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   
   console.log("[BKGND] stddevBg:", stddevBg.toFixed(2));
   
-  let background: CheckResult = { state: "pass", tip: "Background OK" };
-  if (stddevBg >= 40) {
-    background = { state: "fail", tip: "Background too busy/textured." };
-  } else if (stddevBg >= 20) {
-    background = { state: "warn", tip: "Consider a plainer background." };
+  let background: CheckResult = { state: "pass", tip: "Background OK", raw: stddevBg };
+  if (stddevBg >= 60) {
+    background = { state: "fail", tip: "Background too busy/textured.", raw: stddevBg };
+  } else if (stddevBg >= 30) {
+    background = { state: "warn", tip: "Consider a plainer background.", raw: stddevBg };
   }
 
   // 3 & 4. Framing and Visual Tilt (Sobel)
@@ -164,17 +168,57 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   }
 
   // Framing
-  let framing: CheckResult = { state: "pass", tip: "Framing OK" };
+  let framing: CheckResult = { state: "pass", tip: "Framing OK", raw: 0 };
+  const boxArea = (maxX - minX) * (maxY - minY);
+  const fraction = boxArea / numPixels;
+  framing.raw = fraction;
+
   if (strongEdges < 50) {
-    framing = { state: "warn", tip: "Place card inside the rectangle." };
+    framing = { state: "warn", tip: "Place card inside the rectangle.", raw: fraction };
   } else {
-    const boxArea = (maxX - minX) * (maxY - minY);
-    const fraction = boxArea / numPixels;
-    if (fraction < 0.3 || fraction > 0.9) {
-      framing = { state: "fail", tip: "Move card closer or further." };
-    } else if (fraction < 0.4 || fraction > 0.85) {
-      framing = { state: "warn", tip: "Almost there, adjust distance." };
+    if (fraction < 0.2 || fraction > 0.85) {
+      framing = { state: "fail", tip: "Move card closer or further.", raw: fraction };
+    } else if (fraction < 0.3 || fraction > 0.7) {
+      framing = { state: "warn", tip: "Almost there, adjust distance.", raw: fraction };
     }
+  }
+
+  // Focus (Laplacian Variance)
+  let laplacianSum = 0;
+  let laplacianSqSum = 0;
+  let laplacianCount = 0;
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      const i = y * width + x;
+      const lTC = lumas[i - width];
+      const lML = lumas[i - 1];
+      const lMC = lumas[i];
+      const lMR = lumas[i + 1];
+      const lBC = lumas[i + width];
+      const laplacian = lTC + lML + lMR + lBC - 4 * lMC;
+      laplacianSum += laplacian;
+      laplacianCount++;
+    }
+  }
+  const lapMean = laplacianSum / laplacianCount;
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      const i = y * width + x;
+      const lTC = lumas[i - width];
+      const lML = lumas[i - 1];
+      const lMC = lumas[i];
+      const lMR = lumas[i + 1];
+      const lBC = lumas[i + width];
+      const laplacian = lTC + lML + lMR + lBC - 4 * lMC;
+      laplacianSqSum += (laplacian - lapMean) ** 2;
+    }
+  }
+  const focusVariance = laplacianSqSum / laplacianCount;
+  let focus: CheckResult = { state: "pass", tip: "Focus OK", raw: focusVariance };
+  if (focusVariance < 100) {
+    focus = { state: "fail", tip: "Image is too blurry.", raw: focusVariance };
+  } else if (focusVariance < 200) {
+    focus = { state: "warn", tip: "Slightly blurry.", raw: focusVariance };
   }
 
   // Tilt
@@ -204,5 +248,5 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     tilt = { state: "warn", tip: "No edges detected." };
   }
 
-  return { lighting, background, framing, tilt };
+  return { lighting, background, framing, focus, tilt };
 }
