@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Camera, Loader2, Play } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { processFrame, CheckResult } from "@/lib/image-processing";
+import { processFrame, CheckResult, ProcessingResult } from "@/lib/image-processing";
 import { cn } from "@/lib/utils";
 
 export interface CapturedPhoto {
@@ -41,6 +41,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
   const [background, setBackground] = useState<CheckResult>({ state: "idle", tip: "Waiting..." });
   const [useGyro, setUseGyro] = useState(false);
   const [frameCount, setFrameCount] = useState(0);
+  const [debugData, setDebugData] = useState<ProcessingResult['debug'] | null>(null);
 
   const isReadyRef = useRef(false);
   const isUploadingRef = useRef(false);
@@ -164,6 +165,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
         setBackground(results.background);
         setFraming(results.framing);
         setFocus(results.focus);
+        setDebugData(results.debug);
         setFrameCount(c => c + 1);
         if (!useGyroRef.current) {
           setTilt(results.tilt);
@@ -377,14 +379,35 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
 
       <div className="relative w-full aspect-[3/4] bg-black rounded-xl overflow-hidden shadow-lg border border-border">
         {/* RAW METRICS OVERLAY (TEMPORARY FOR EMPIRICAL HARDWARE TUNING) */}
-        <div className="absolute top-2 left-2 bg-black/80 text-green-400 text-[11px] p-2 rounded z-30 pointer-events-none font-mono">
+        <div className="absolute top-2 left-2 bg-black/80 text-green-400 text-[10px] p-2 rounded z-30 pointer-events-none font-mono">
           <div>FRAMES: {frameCount}</div>
           <div>LEVEL: {tilt.raw?.toFixed(2) ?? 'N/A'}</div>
-          <div>FRAMING: {framing.raw?.toFixed(4) ?? 'N/A'}</div>
           <div>LIGHTING: {lighting.raw?.toFixed(4) ?? 'N/A'}</div>
           <div>FOCUS: {focus.raw?.toFixed(2) ?? 'N/A'}</div>
-          <div>BKGND: {background.raw?.toFixed(4) ?? 'N/A'}</div>
+          <div className="mt-1 text-white border-b border-gray-600">BKGND: {background.raw?.toFixed(4) ?? 'N/A'}</div>
+          {debugData && (
+            <>
+              <div className="grid grid-cols-2 gap-x-2">
+                <span>TL:{debugData.bgTL.toFixed(3)}</span>
+                <span>TR:{debugData.bgTR.toFixed(3)}</span>
+                <span>BL:{debugData.bgBL.toFixed(3)}</span>
+                <span>BR:{debugData.bgBR.toFixed(3)}</span>
+              </div>
+            </>
+          )}
+          <div className="mt-1 text-white border-b border-gray-600">FRAMING: {framing.raw?.toFixed(4) ?? 'N/A'}</div>
+          {debugData && (
+            <>
+              <div>EDGES: {debugData.fTotalEdges}</div>
+              <div>AVG X/Y: {debugData.fAvgX.toFixed(1)} / {debugData.fAvgY.toFixed(1)}</div>
+              <div>THR X/Y: {debugData.fThreshX.toFixed(1)} / {debugData.fThreshY.toFixed(1)}</div>
+              <div>BOX: ({debugData.fMinX},{debugData.fMinY}) to ({debugData.fMaxX},{debugData.fMaxY})</div>
+            </>
+          )}
         </div>
+        {/* Debug Canvas Thumbnail */}
+        <canvas ref={processCanvasRef} width={300} height={400} className="absolute top-2 right-2 w-[75px] h-[100px] border-2 border-red-500 z-30 pointer-events-none opacity-80 bg-black" />
+        
         {/* Live video feed */}
         <video 
           ref={videoRef}
@@ -445,7 +468,6 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
       
       {/* Hidden canvas for extraction and processing */}
       <canvas ref={canvasRef} className="hidden" />
-      <canvas ref={processCanvasRef} width={300} height={400} className="hidden" />
     </div>
   );
 }
