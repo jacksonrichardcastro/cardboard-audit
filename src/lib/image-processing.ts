@@ -150,8 +150,8 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   if (totalStrongEdges > 100) {
     avgX = totalStrongEdges / width;
     avgY = totalStrongEdges / height;
-    threshX = Math.max(avgX * 1.5, height * 0.02); 
-    threshY = Math.max(avgY * 1.5, width * 0.02);
+    threshX = Math.max(avgX * 0.5, height * 0.02); 
+    threshY = Math.max(avgY * 0.5, width * 0.02);
 
     for (let x = 2; x < width - 2; x++) {
       let val = (xEdges[x-2] + xEdges[x-1] + xEdges[x] + xEdges[x+1] + xEdges[x+2]) / 5;
