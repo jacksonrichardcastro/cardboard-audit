@@ -36,7 +36,7 @@ export async function getTrendingListings(params?: {
           .innerJoin(sellers, eq(listings.sellerId, sellers.userId))
           .where(filters.length > 0 ? and(...filters) : undefined)
           .orderBy(desc(listings.createdAt))
-          .limit(24);
+          .limit(32);
         });
       },
       ['trending-listings', JSON.stringify(params || {})],

@@ -1,6 +1,7 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { users, sellers, listings } from "./schema";
+import { users, sellers, listings, listingPhotos } from "./schema";
+import { eq } from "drizzle-orm";
 import { env } from "@/env";
 import { mockListings } from "../mock/listings"; // Use existing mock arrays to dynamically power the Drizzle seed script natively
 
@@ -50,13 +51,31 @@ async function main() {
         grade: item.grade,
         description: item.description || "Mint condition stored completely flawlessly natively.",
         priceCents: item.priceCents,
-        photos: [item.photoUrl], // Inject primary public local asset URL here
         status: "ACTIVE", 
       };
 
       // Utilize DB native boundaries tracking unique constraint exactly
-      await db.insert(listings).values(insertPayload)
-        .onConflictDoNothing({ target: [listings.title, listings.sellerId] });
+      const [newListing] = await db.insert(listings).values(insertPayload)
+        .onConflictDoNothing({ target: [listings.title, listings.sellerId] })
+        .returning({ id: listings.id });
+      
+      let listingId;
+      if (newListing) {
+        listingId = newListing.id;
+      } else {
+        const [existing] = await db.select({ id: listings.id }).from(listings).where(eq(listings.title, item.title)).limit(1);
+        if (existing) listingId = existing.id;
+      }
+
+      if (listingId && item.photoUrl) {
+        await db.insert(listingPhotos).values({
+          listingId,
+          kind: "front",
+          sortOrder: 0,
+          storagePath: item.photoUrl,
+        });
+      }
+
       inserted++;
     }
     

@@ -19,17 +19,18 @@ export default async function Home() {
     subcategory: "Other",
     condition: d.condition,
     grade: d.grade || undefined,
+    gradingCompany: d.gradingCompany,
     priceCents: d.priceCents,
     photoUrl: (Array.isArray(d.photos) && d.photos.length > 0 && d.photos[0] !== null) ? d.photos[0] : 'https://placehold.co/400x550',
     sellerBusinessName: d.sellerName,
     createdAt: new Date().toISOString()
   }));
 
-  // "Recommended for you" - simple stable slice
-  const recommendedListings = listingsData.filter((l: any) => l.category === "TCG" || l.category === "Graded").slice(0, 10);
-  
-  // "Recently added" - sorted natively via DB query ordering
-  const recentListings = listingsData.slice(0, 10);
+  // "Recently added" - sorted natively via DB query ordering (first 16)
+  const recentListings = listingsData.slice(0, 16);
+
+  // "Recommended for you" - stable slice of the next 16 items to guarantee zero overlap
+  const recommendedListings = listingsData.slice(16, 32);
 
   const LAUNCH_DATE = new Date('2026-05-31T00:00:00Z');
   const now = new Date();
@@ -55,7 +56,7 @@ export default async function Home() {
           <Badge className="bg-primary/20 text-primary border-none hover:bg-primary/30 py-1.5 px-4 rounded-full text-sm">
             <ShieldCheck className="w-4 h-4 mr-2 inline" /> Every seller, hand-vetted.
           </Badge>
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tighter bg-gradient-to-br from-white to-gray-400 bg-clip-text text-transparent">
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tighter bg-gradient-to-br from-white to-gray-400 bg-clip-text text-transparent pb-2">
             Find Your Holy Grail.
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">

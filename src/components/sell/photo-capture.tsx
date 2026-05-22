@@ -315,9 +315,11 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
 
   const isAnyFail = [tilt, framing, lighting, focus, background].some(c => c.state === 'fail');
   const isAnyWarn = [tilt, framing, lighting, focus, background].some(c => c.state === 'warn');
-  const captureButtonClass = isAnyWarn && !isAnyFail ? 'bg-yellow-500 hover:bg-yellow-600 text-yellow-950' : 
-                             !isAnyFail ? 'bg-green-500 hover:bg-green-600 text-white' : 
-                             'bg-muted text-muted-foreground opacity-50 cursor-not-allowed';
+  const isAnyIdle = [tilt, framing, lighting, focus, background].some(c => c.state === 'idle');
+  
+  const captureButtonClass = isAnyFail || isAnyIdle ? 'bg-muted text-muted-foreground opacity-50 cursor-not-allowed' :
+                             isAnyWarn ? 'bg-yellow-500 hover:bg-yellow-600 text-yellow-950' : 
+                             'bg-green-500 hover:bg-green-600 text-white';
 
   if (cameraError) {
     return (
@@ -406,7 +408,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
           )}
         </div>
         {/* Debug Canvas Thumbnail */}
-        <canvas ref={processCanvasRef} width={300} height={400} className="absolute top-2 right-2 w-[75px] h-[100px] border-2 border-red-500 z-30 pointer-events-none opacity-80 bg-black" />
+        <canvas ref={processCanvasRef} width={300} height={400} className="hidden" />
         
         {/* Live video feed */}
         <video 
@@ -452,7 +454,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
           size="lg" 
           className={cn("rounded-full w-16 h-16 p-0 border-4 border-background shadow-xl hover:scale-105 transition-all", captureButtonClass)} 
           onClick={handleCapture}
-          disabled={!isReady || isUploading || !draftId || isAnyFail}
+          disabled={!isReady || isUploading || !draftId || isAnyFail || isAnyIdle}
         >
           <Camera className="w-6 h-6" />
           <span className="sr-only">Capture Photo</span>
