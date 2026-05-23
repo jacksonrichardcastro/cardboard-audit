@@ -381,7 +381,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
 
       <div className="relative w-full aspect-[3/4] bg-black rounded-xl overflow-hidden shadow-lg border border-border">
         {/* RAW METRICS OVERLAY (TEMPORARY FOR EMPIRICAL HARDWARE TUNING) */}
-        <div className="absolute top-2 left-2 bg-black/80 text-green-400 text-[10px] p-2 rounded z-30 pointer-events-none font-mono">
+        <div className="hidden absolute top-2 left-2 bg-black/80 text-green-400 text-[10px] p-2 rounded z-30 pointer-events-none font-mono">
           <div>FRAMES: {frameCount}</div>
           <div>LEVEL: {tilt.raw?.toFixed(2) ?? 'N/A'}</div>
           <div>LIGHTING: {lighting.raw?.toFixed(4) ?? 'N/A'}</div>
