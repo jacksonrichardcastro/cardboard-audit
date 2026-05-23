@@ -174,9 +174,9 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   const bkgndScore = meanDensity + (stdDevDensity * 1.5);
 
   let background: CheckResult = { state: "pass", tip: "Background OK", raw: bkgndScore };
-  if (bkgndScore >= 0.20) { 
+  if (bkgndScore >= 0.50) { 
     background = { state: "fail", tip: "Background too busy/textured.", raw: bkgndScore };
-  } else if (bkgndScore >= 0.18) {
+  } else if (bkgndScore >= 0.35) {
     background = { state: "warn", tip: "Consider a plainer background.", raw: bkgndScore };
   }
   

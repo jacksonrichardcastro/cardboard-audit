@@ -1,0 +1,61 @@
+Retrieving project…
+Deploying jacksonrichardcastros-projects/card-bound
+Uploading [--------------------] (0.0B/35.7KB)
+Uploading [======--------------] (11.1KB/35.7KB)
+Uploading [===============-----] (27.1KB/35.7KB)
+Uploading [==================--] (32.9KB/35.7KB)
+Uploading [====================] (35.7KB/35.7KB)
+  Inspect     https://vercel.com/jacksonrichardcastros-projects/card-bound/3FJXvVqfxMX9ZTyL25tfX1ZfbSk9
+  Preview     https://card-bound-i0a3o9hxx-jacksonrichardcastros-projects.vercel.app
+Building…
+Building…
+Running build in Washington, D.C., USA (East) – iad1
+Build machine configuration: 2 cores, 8 GB
+Retrieving list of deployment files...
+Downloading 14761 deployment files...
+Restored build cache from previous deployment (6xMF7U6T5TRVdG4BY4PsPohyXwLw)
+Running "vercel build"
+Vercel CLI 54.4.1
+Installing dependencies...
+up to date in 1s
+260 packages are looking for funding
+run `npm fund` for details
+Detected Next.js version: 16.2.4
+Running "npm run build"
+> cardbound-app@0.1.0 build
+> next build
+Applying modifyConfig from Vercel
+▲ Next.js 16.2.4 (Turbopack)
+- Experiments (use with caution):
+· clientTraceMetadata
+Creating an optimized production build ...
+✓ Compiled successfully in 41s
+Running next.config.js provided runAfterProductionCompile ...
+[@sentry/nextjs - After Production Compile] Info: Sending telemetry data on issues and performance to Sentry. To disable telemetry, set `options.telemetry` to `false`.
+[@sentry/nextjs - After Production Compile] Warning: No auth token provided. Will not create release. Please set the `authToken` option. You can find information on how to generate a Sentry auth token here: https://docs.sentry.io/api/auth/
+[@sentry/nextjs - After Production Compile] Warning: No auth token provided. Will not upload source maps. Please set the `authToken` option. You can find information on how to generate a Sentry auth token here: https://docs.sentry.io/api/auth/
+✓ Completed runAfterProductionCompile in 403ms
+Running TypeScript ...
+Failed to type check.
+./src/lib/image-processing.ts:331:56
+Type error: Type '{ bgTL: number; bgTR: number; bgBL: number; bgBR: number; fTotalEdges: number; fAvgX: number; fAvgY: number; fThreshX: number; fThreshY: number; fMinY: number; fMaxY: number; bkgndZones: number[]; bkgndMean: number; bkgndStdDev: number; bkgndScore: number; }' is missing the following properties from type '{ bgTL: number; bgTR: number; bgBL: number; bgBR: number; bkgndZones: number[]; bkgndMean: number; bkgndStdDev: number; bkgndScore: number; fTotalEdges: number; fAvgX: number; fAvgY: number; fThreshX: number; ... 4 more ...; fMaxY: number; }': fMinX, fMaxX
+329 |   };
+330 |
+> 331 |   return { lighting, background, framing, focus, tilt, debug };
+|                                                        ^
+332 | }
+333 |
+Next.js build worker exited with code: 1 and signal: null
+Error: Command "npm run build" exited with 1
+{
+  "status": "error",
+  "reason": "deploy_failed",
+  "message": "Command \"npm run build\" exited with 1",
+  "next": [
+    {
+      "command": "vercel deploy",
+      "when": "retry deploy"
+    }
+  ]
+}
+Error: Command "npm run build" exited with 1
