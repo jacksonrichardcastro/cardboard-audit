@@ -172,17 +172,60 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     minX = width; maxX = 0; minY = height; maxY = 0;
   }
 
-  const boxArea = Math.max(0, maxX - minX) * Math.max(0, maxY - minY);
-  const cardFillRatio = boxArea / numPixels;
+  const boxWidth = Math.max(0, maxX - minX);
+  const boxHeight = Math.max(0, maxY - minY);
+  const boxArea = boxWidth * boxHeight;
+  let cardFillRatio = boxArea / numPixels;
 
   let framing: CheckResult = { state: "pass", tip: "Framing OK", raw: cardFillRatio };
-  if (totalStrongEdges < 100 || cardFillRatio === 0) {
+
+  // MVP Validation Layer Constants
+  const MIN_ASPECT_RATIO = 0.55;
+  const MAX_ASPECT_RATIO = 0.90;
+  const CENTER_TOLERANCE_X = width * 0.15; // 15% tolerance from center
+  const CENTER_TOLERANCE_Y = height * 0.15;
+  const MIN_EDGE_DENSITY = 0.60;
+
+  if (totalStrongEdges < 100 || boxArea === 0) {
     framing = { state: "warn", tip: "Place card inside the rectangle.", raw: cardFillRatio };
+    cardFillRatio = 0;
   } else {
-    if (cardFillRatio < 0.25 || cardFillRatio > 0.85) {
-      framing = { state: "fail", tip: "Move card closer or further.", raw: cardFillRatio };
-    } else if (cardFillRatio < 0.35 || cardFillRatio > 0.75) {
-      framing = { state: "warn", tip: "Almost there, adjust distance.", raw: cardFillRatio };
+    const aspectRatio = boxWidth / boxHeight;
+    const boxCenterX = minX + boxWidth / 2;
+    const boxCenterY = minY + boxHeight / 2;
+    const frameCenterX = width / 2;
+    const frameCenterY = height / 2;
+    
+    // Count edges strictly inside the bounding box
+    let edgesInsideBox = 0;
+    for (let y = minY; y <= maxY; y++) {
+      for (let x = minX; x <= maxX; x++) {
+        if (edgeMap[y * width + x]) edgesInsideBox++;
+      }
+    }
+    const edgeDensity = edgesInsideBox / totalStrongEdges;
+
+    // Validate properties
+    const isValidAspect = aspectRatio >= MIN_ASPECT_RATIO && aspectRatio <= MAX_ASPECT_RATIO;
+    const isCenteredX = Math.abs(boxCenterX - frameCenterX) <= CENTER_TOLERANCE_X;
+    const isCenteredY = Math.abs(boxCenterY - frameCenterY) <= CENTER_TOLERANCE_Y;
+    const hasEnoughEdges = edgeDensity >= MIN_EDGE_DENSITY;
+
+    if (!isValidAspect) {
+      framing = { state: "fail", tip: "Card cut off or wrong shape.", raw: aspectRatio };
+      cardFillRatio = 0;
+    } else if (!isCenteredX || !isCenteredY) {
+      framing = { state: "fail", tip: "Center the card in the frame.", raw: cardFillRatio };
+      cardFillRatio = 0;
+    } else if (!hasEnoughEdges) {
+      framing = { state: "fail", tip: "Card not clearly detected.", raw: edgeDensity };
+      cardFillRatio = 0;
+    } else {
+      if (cardFillRatio < 0.25 || cardFillRatio > 0.85) {
+        framing = { state: "fail", tip: "Move card closer or further.", raw: cardFillRatio };
+      } else if (cardFillRatio < 0.35 || cardFillRatio > 0.75) {
+        framing = { state: "warn", tip: "Almost there, adjust distance.", raw: cardFillRatio };
+      }
     }
   }
 
