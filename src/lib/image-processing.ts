@@ -321,6 +321,7 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     fTotalEdges: totalStrongEdges,
     fAvgX: avgX, fAvgY: avgY,
     fThreshX: threshX, fThreshY: threshY,
+    fMinX: minX, fMaxX: maxX,
     fMinY: minY, fMaxY: maxY,
     bkgndZones: Array.from(zoneDensities),
     bkgndMean: meanDensity,
