@@ -137,9 +137,9 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   const bkgndDensity = cornerEdges / totalCornerArea;
 
   let background: CheckResult = { state: "pass", tip: "Background OK", raw: bkgndDensity };
-  if (bkgndDensity >= 0.15) { 
+  if (bkgndDensity >= 0.25) { 
     background = { state: "fail", tip: "Background too busy/textured.", raw: bkgndDensity };
-  } else if (bkgndDensity >= 0.08) {
+  } else if (bkgndDensity >= 0.15) {
     background = { state: "warn", tip: "Consider a plainer background.", raw: bkgndDensity };
   }
 

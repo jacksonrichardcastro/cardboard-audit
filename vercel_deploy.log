@@ -1,0 +1,49 @@
+WARNING! `--confirm` is deprecated, please use `--yes` instead
+Retrieving project…
+Deploying jacksonrichardcastros-projects/card-bound
+Uploading [--------------------] (0.0B/137B)
+Uploading [====================] (137.0B/137B)
+  Inspect     https://vercel.com/jacksonrichardcastros-projects/card-bound/ETC9v9bLUdjkUKVCH8fM3YiurLJm
+  Preview     https://card-bound-dg1zq5kry-jacksonrichardcastros-projects.vercel.app
+https://card-bound-dg1zq5kry-jacksonrichardcastros-projects.vercel.appBuilding…
+Building…
+Running build in Washington, D.C., USA (East) – iad1
+Build machine configuration: 2 cores, 8 GB
+Retrieving list of deployment files...
+Downloading 14753 deployment files...
+Restored build cache from previous deployment (5ZUJzP5mewv7vzmgqfWAAtNWE2FN)
+Running "vercel build"
+Vercel CLI 54.3.0
+Installing dependencies...
+up to date in 1s
+260 packages are looking for funding
+run `npm fund` for details
+Detected Next.js version: 16.2.4
+Running "npm run build"
+> cardbound-app@0.1.0 build
+> next build
+Applying modifyConfig from Vercel
+▲ Next.js 16.2.4 (Turbopack)
+- Experiments (use with caution):
+· clientTraceMetadata
+Creating an optimized production build ...
+✓ Compiled successfully in 42s
+Running next.config.js provided runAfterProductionCompile ...
+[@sentry/nextjs - After Production Compile] Info: Sending telemetry data on issues and performance to Sentry. To disable telemetry, set `options.telemetry` to `false`.
+[@sentry/nextjs - After Production Compile] Warning: No auth token provided. Will not create release. Please set the `authToken` option. You can find information on how to generate a Sentry auth token here: https://docs.sentry.io/api/auth/
+[@sentry/nextjs - After Production Compile] Warning: No auth token provided. Will not upload source maps. Please set the `authToken` option. You can find information on how to generate a Sentry auth token here: https://docs.sentry.io/api/auth/
+✓ Completed runAfterProductionCompile in 315ms
+Running TypeScript ...
+Failed to type check.
+./src/lib/mock/listings.ts:146:5
+Type error: Type 'null' is not assignable to type 'string | undefined'.
+144 |     condition: "Raw",
+145 |     gradingCompany: "Raw",
+> 146 |     grade: null,
+|     ^
+147 |     priceCents: 7899,
+148 |     photoUrl: "/mock-cards/FullSizeRender.jpg",
+149 |     sellerBusinessName: "Jackson's Vault",
+Next.js build worker exited with code: 1 and signal: null
+Error: Command "npm run build" exited with 1
+Error: Command "npm run build" exited with 1
