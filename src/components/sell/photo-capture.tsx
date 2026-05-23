@@ -451,6 +451,24 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
             )}
           </div>
         )}
+
+        {/* Phase 1.3: Visual Debug Overlays for the 8 BKGND Zones */}
+        {debugData && debugData.bkgndRects && (
+          <div className="absolute inset-0 pointer-events-none z-10">
+            {debugData.bkgndRects.map((rect, i) => (
+              <div 
+                key={i} 
+                className="absolute border border-yellow-400/50 bg-red-500/20" 
+                style={{ 
+                  left: `${rect.x}%`, 
+                  top: `${rect.y}%`, 
+                  width: `${rect.w}%`, 
+                  height: `${rect.h}%` 
+                }} 
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {validationError && (

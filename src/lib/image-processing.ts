@@ -18,6 +18,7 @@ export interface ProcessingResult {
     bgBL: number;
     bgBR: number;
     bkgndZones: number[];
+    bkgndRects: {x: number, y: number, w: number, h: number}[];
     bkgndMean: number;
     bkgndStdDev: number;
     bkgndScore: number;
@@ -324,6 +325,16 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     fMinX: minX, fMaxX: maxX,
     fMinY: minY, fMaxY: maxY,
     bkgndZones: Array.from(zoneDensities),
+    bkgndRects: [
+      { x: 0, y: 0, w: (marginW/width)*100, h: (marginH/height)*100 }, // TL
+      { x: (marginW/width)*100, y: 0, w: ((width - 2*marginW)/width)*100, h: (marginH/height)*100 }, // TC
+      { x: ((width - marginW)/width)*100, y: 0, w: (marginW/width)*100, h: (marginH/height)*100 }, // TR
+      { x: 0, y: (marginH/height)*100, w: (marginW/width)*100, h: ((height - 2*marginH)/height)*100 }, // ML
+      { x: ((width - marginW)/width)*100, y: (marginH/height)*100, w: (marginW/width)*100, h: ((height - 2*marginH)/height)*100 }, // MR
+      { x: 0, y: ((height - marginH)/height)*100, w: (marginW/width)*100, h: (marginH/height)*100 }, // BL
+      { x: (marginW/width)*100, y: ((height - marginH)/height)*100, w: ((width - 2*marginW)/width)*100, h: (marginH/height)*100 }, // BC
+      { x: ((width - marginW)/width)*100, y: ((height - marginH)/height)*100, w: (marginW/width)*100, h: (marginH/height)*100 }  // BR
+    ],
     bkgndMean: meanDensity,
     bkgndStdDev: stdDevDensity,
     bkgndScore: bkgndScore
