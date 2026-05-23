@@ -112,36 +112,74 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     }
   }
 
-  // 2. Background Check (Corner-only sampling to ignore card)
-  const cornerW = Math.floor(width * 0.1);
-  const cornerH = Math.floor(height * 0.1);
-  let tl = 0, tr = 0, bl = 0, br = 0;
+  // 2. Background Check (Multi-zone perimeter sampling - Phase 1)
+  const marginW = Math.floor(width * 0.1);
+  const marginH = Math.floor(height * 0.1);
+  
+  const zoneCounts = new Float32Array(8);
+  
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       if (edgeMap[y * width + x]) {
-        if (x < cornerW && y < cornerH) tl++;
-        else if (x >= width - cornerW && y < cornerH) tr++;
-        else if (x < cornerW && y >= height - cornerH) bl++;
-        else if (x >= width - cornerW && y >= height - cornerH) br++;
+        if (y < marginH) {
+          if (x < marginW) zoneCounts[0]++; // TL
+          else if (x >= width - marginW) zoneCounts[2]++; // TR
+          else zoneCounts[1]++; // TC
+        } else if (y >= height - marginH) {
+          if (x < marginW) zoneCounts[5]++; // BL
+          else if (x >= width - marginW) zoneCounts[7]++; // BR
+          else zoneCounts[6]++; // BC
+        } else {
+          if (x < marginW) zoneCounts[3]++; // ML
+          else if (x >= width - marginW) zoneCounts[4]++; // MR
+        }
       }
     }
   }
-  const cornerArea = cornerW * cornerH;
-  const bgTL = tl / cornerArea;
-  const bgTR = tr / cornerArea;
-  const bgBL = bl / cornerArea;
-  const bgBR = br / cornerArea;
   
-  const cornerEdges = tl + tr + bl + br;
-  const totalCornerArea = cornerArea * 4;
-  const bkgndDensity = cornerEdges / totalCornerArea;
-
-  let background: CheckResult = { state: "pass", tip: "Background OK", raw: bkgndDensity };
-  if (bkgndDensity >= 0.25) { 
-    background = { state: "fail", tip: "Background too busy/textured.", raw: bkgndDensity };
-  } else if (bkgndDensity >= 0.15) {
-    background = { state: "warn", tip: "Consider a plainer background.", raw: bkgndDensity };
+  const cornerArea = marginW * marginH;
+  const tcBcArea = (width - 2 * marginW) * marginH;
+  const mlMrArea = marginW * (height - 2 * marginH);
+  
+  const zoneDensities = new Float32Array([
+    zoneCounts[0] / cornerArea,
+    zoneCounts[1] / tcBcArea,
+    zoneCounts[2] / cornerArea,
+    zoneCounts[3] / mlMrArea,
+    zoneCounts[4] / mlMrArea,
+    zoneCounts[5] / cornerArea,
+    zoneCounts[6] / tcBcArea,
+    zoneCounts[7] / cornerArea
+  ]);
+  
+  let sumDensity = 0;
+  for (let i = 0; i < 8; i++) {
+    sumDensity += zoneDensities[i];
   }
+  const meanDensity = sumDensity / 8;
+  
+  let sqSumDensity = 0;
+  for (let i = 0; i < 8; i++) {
+    sqSumDensity += (zoneDensities[i] - meanDensity) ** 2;
+  }
+  const stdDevDensity = Math.sqrt(sqSumDensity / 8);
+  
+  // BKGND Score penalizes high variance between zones (busy backgrounds like chairs/keyboards)
+  // while allowing higher uniform density (cork, wood)
+  const bkgndScore = meanDensity + (stdDevDensity * 1.5);
+
+  let background: CheckResult = { state: "pass", tip: "Background OK", raw: bkgndScore };
+  if (bkgndScore >= 0.20) { 
+    background = { state: "fail", tip: "Background too busy/textured.", raw: bkgndScore };
+  } else if (bkgndScore >= 0.18) {
+    background = { state: "warn", tip: "Consider a plainer background.", raw: bkgndScore };
+  }
+  
+  // Map corner densities to debug output to satisfy interface
+  const bgTL = zoneDensities[0];
+  const bgTR = zoneDensities[2];
+  const bgBL = zoneDensities[5];
+  const bgBR = zoneDensities[7];
 
   // 3. Framing Check (Adaptive 1D projection bounding box to filter noise)
   let minX = width, maxX = 0, minY = height, maxY = 0;
