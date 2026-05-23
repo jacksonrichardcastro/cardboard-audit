@@ -400,11 +400,13 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
                 <span>BC:{debugData.bkgndZones[6].toFixed(2)}</span>
                 <span>BR:{debugData.bkgndZones[7].toFixed(2)}</span>
               </div>
-              <div className="mt-1 text-[9px] text-yellow-300">
-                Mean: {debugData.bkgndMean.toFixed(3)} | SD: {debugData.bkgndStdDev.toFixed(3)}
-              </div>
-              <div className="text-[9px] text-yellow-300 mb-1 border-b border-gray-600 pb-1">
-                Score: {debugData.bkgndScore.toFixed(3)}
+              <div className="mt-1 text-[9px] text-yellow-300 border-b border-gray-600 pb-1">
+                <div>Score: {debugData.bkgndScore.toFixed(3)}</div>
+                <div className="flex justify-between mt-1">
+                  <span>WHT BKGND: {debugData.isWhiteBackground ? "YES" : "NO"}</span>
+                  <span>LUMA: {debugData.perimeterAvgLuma.toFixed(1)}</span>
+                  <span>SD: {debugData.perimeterStdDevLuma.toFixed(1)}</span>
+                </div>
               </div>
             </>
           )}

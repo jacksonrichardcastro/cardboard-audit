@@ -22,6 +22,9 @@ export interface ProcessingResult {
     bkgndMean: number;
     bkgndStdDev: number;
     bkgndScore: number;
+    isWhiteBackground: boolean;
+    perimeterAvgLuma: number;
+    perimeterStdDevLuma: number;
     fTotalEdges: number;
     fAvgX: number;
     fAvgY: number;
@@ -174,11 +177,49 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   // while allowing higher uniform density (cork, wood)
   const bkgndScore = meanDensity + (stdDevDensity * 1.5);
 
+  // Calculate perimeter luma stats for Phase 2 (White-Surface Detection)
+  let sumPerimLuma = 0;
+  let sqSumPerimLuma = 0;
+  let perimCount = 0;
+  
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const isPerim = (y < marginH || y >= height - marginH || x < marginW || x >= width - marginW);
+      if (isPerim) {
+        const i = y * width + x;
+        const luma = lumas[i];
+        sumPerimLuma += luma;
+        sqSumPerimLuma += luma * luma;
+        perimCount++;
+      }
+    }
+  }
+
+  const perimeterAvgLuma = sumPerimLuma / perimCount;
+  // Variance = E[X^2] - E[X]^2
+  const perimeterVarianceLuma = Math.max(0, (sqSumPerimLuma / perimCount) - (perimeterAvgLuma * perimeterAvgLuma));
+  const perimeterStdDevLuma = Math.sqrt(perimeterVarianceLuma);
+
+  const isWhiteBackground = perimeterAvgLuma > 220;
+
   let background: CheckResult = { state: "pass", tip: "Background OK", raw: bkgndScore };
-  if (bkgndScore >= 0.50) { 
-    background = { state: "fail", tip: "Background too busy/textured.", raw: bkgndScore };
-  } else if (bkgndScore >= 0.35) {
-    background = { state: "warn", tip: "Consider a plainer background.", raw: bkgndScore };
+  
+  if (isWhiteBackground) {
+    // Phase 2: Override edge-density BKGND check for white surfaces
+    if (perimeterStdDevLuma >= 25) {
+      background = { state: "fail", tip: "White background too shadowed/uneven.", raw: perimeterStdDevLuma };
+    } else if (perimeterStdDevLuma >= 15) {
+      background = { state: "warn", tip: "Smooth out white background.", raw: perimeterStdDevLuma };
+    } else {
+      background = { state: "pass", tip: "White background OK", raw: perimeterStdDevLuma };
+    }
+  } else {
+    // Phase 1.3: Standard edge-density check for non-white surfaces
+    if (bkgndScore >= 0.50) { 
+      background = { state: "fail", tip: "Background too busy/textured.", raw: bkgndScore };
+    } else if (bkgndScore >= 0.35) {
+      background = { state: "warn", tip: "Consider a plainer background.", raw: bkgndScore };
+    }
   }
   
   // Map corner densities to debug output to satisfy interface
@@ -337,7 +378,10 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     ],
     bkgndMean: meanDensity,
     bkgndStdDev: stdDevDensity,
-    bkgndScore: bkgndScore
+    bkgndScore: bkgndScore,
+    isWhiteBackground,
+    perimeterAvgLuma,
+    perimeterStdDevLuma
   };
 
   return { lighting, background, framing, focus, tilt, debug };
