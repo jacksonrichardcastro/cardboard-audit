@@ -179,12 +179,12 @@ export function processFrame(imageData: ImageData): ProcessingResult {
 
   let framing: CheckResult = { state: "pass", tip: "Framing OK", raw: cardFillRatio };
 
-  // MVP Validation Layer Constants
-  const MIN_ASPECT_RATIO = 0.55;
-  const MAX_ASPECT_RATIO = 0.90;
+  // MVP Validation Layer Constants (Tuned May 23)
+  const MIN_ASPECT_RATIO = 0.45;
+  const MAX_ASPECT_RATIO = 0.95;
   const CENTER_TOLERANCE_X = width * 0.15; // 15% tolerance from center
   const CENTER_TOLERANCE_Y = height * 0.15;
-  const MIN_EDGE_DENSITY = 0.60;
+  const MIN_EDGE_DENSITY = 0.45;
 
   if (totalStrongEdges < 100 || boxArea === 0) {
     framing = { state: "warn", tip: "Place card inside the rectangle.", raw: cardFillRatio };
