@@ -17,6 +17,10 @@ export interface ProcessingResult {
     bgTR: number;
     bgBL: number;
     bgBR: number;
+    bkgndZones: number[];
+    bkgndMean: number;
+    bkgndStdDev: number;
+    bkgndScore: number;
     fTotalEdges: number;
     fAvgX: number;
     fAvgY: number;
@@ -113,8 +117,9 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   }
 
   // 2. Background Check (Multi-zone perimeter sampling - Phase 1)
-  const marginW = Math.floor(width * 0.1);
-  const marginH = Math.floor(height * 0.1);
+  // Fix 6b: Shrink margin to 3% so it samples the OUTSIDE of the p-4 (4.1%) framing guide, avoiding card overlap
+  const marginW = Math.floor(width * 0.03);
+  const marginH = Math.floor(height * 0.03);
   
   const zoneCounts = new Float32Array(8);
   
@@ -316,8 +321,11 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     fTotalEdges: totalStrongEdges,
     fAvgX: avgX, fAvgY: avgY,
     fThreshX: threshX, fThreshY: threshY,
-    fMinX: minX, fMaxX: maxX,
-    fMinY: minY, fMaxY: maxY
+    fMinY: minY, fMaxY: maxY,
+    bkgndZones: Array.from(zoneDensities),
+    bkgndMean: meanDensity,
+    bkgndStdDev: stdDevDensity,
+    bkgndScore: bkgndScore
   };
 
   return { lighting, background, framing, focus, tilt, debug };

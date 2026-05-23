@@ -381,7 +381,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
 
       <div className="relative w-full aspect-[3/4] bg-black rounded-xl overflow-hidden shadow-lg border border-border">
         {/* RAW METRICS OVERLAY (TEMPORARY FOR EMPIRICAL HARDWARE TUNING) */}
-        <div className="hidden absolute top-2 left-2 bg-black/80 text-green-400 text-[10px] p-2 rounded z-30 pointer-events-none font-mono">
+        <div className="absolute top-2 left-2 bg-black/80 text-green-400 text-[10px] p-2 rounded z-30 pointer-events-none font-mono">
           <div>FRAMES: {frameCount}</div>
           <div>LEVEL: {tilt.raw?.toFixed(2) ?? 'N/A'}</div>
           <div>LIGHTING: {lighting.raw?.toFixed(4) ?? 'N/A'}</div>
@@ -389,11 +389,22 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
           <div className="mt-1 text-white border-b border-gray-600">BKGND: {background.raw?.toFixed(4) ?? 'N/A'}</div>
           {debugData && (
             <>
-              <div className="grid grid-cols-2 gap-x-2">
-                <span>TL:{debugData.bgTL.toFixed(3)}</span>
-                <span>TR:{debugData.bgTR.toFixed(3)}</span>
-                <span>BL:{debugData.bgBL.toFixed(3)}</span>
-                <span>BR:{debugData.bgBR.toFixed(3)}</span>
+              <div>BKGND SCORES:</div>
+              <div className="grid grid-cols-4 gap-x-1 text-[8px]">
+                <span>TL:{debugData.bkgndZones[0].toFixed(2)}</span>
+                <span>TC:{debugData.bkgndZones[1].toFixed(2)}</span>
+                <span>TR:{debugData.bkgndZones[2].toFixed(2)}</span>
+                <span>ML:{debugData.bkgndZones[3].toFixed(2)}</span>
+                <span>MR:{debugData.bkgndZones[4].toFixed(2)}</span>
+                <span>BL:{debugData.bkgndZones[5].toFixed(2)}</span>
+                <span>BC:{debugData.bkgndZones[6].toFixed(2)}</span>
+                <span>BR:{debugData.bkgndZones[7].toFixed(2)}</span>
+              </div>
+              <div className="mt-1 text-[9px] text-yellow-300">
+                Mean: {debugData.bkgndMean.toFixed(3)} | SD: {debugData.bkgndStdDev.toFixed(3)}
+              </div>
+              <div className="text-[9px] text-yellow-300 mb-1 border-b border-gray-600 pb-1">
+                Score: {debugData.bkgndScore.toFixed(3)}
               </div>
             </>
           )}
