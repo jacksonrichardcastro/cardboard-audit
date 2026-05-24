@@ -240,9 +240,9 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     }
   } else {
     // Phase 1.3: Standard edge-density check for non-white surfaces
-    if (bkgndScore >= 0.50) { 
+    if (bkgndScore >= 0.60) { 
       background = { state: "fail", tip: "Background too busy/textured.", raw: bkgndScore };
-    } else if (bkgndScore >= 0.40) {
+    } else if (bkgndScore >= 0.50) {
       background = { state: "warn", tip: "Consider a plainer background.", raw: bkgndScore };
     }
   }
