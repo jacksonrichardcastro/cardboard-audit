@@ -346,11 +346,9 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   const gridEdgesCount = new Float32Array(64);
   const gridValidPixels = new Float32Array(64);
 
-  // If card bounding box collapsed OR hallucinates full canvas (>75% area, >90% width, or >90% height), sample whole frame
-  const hasCardBox = finalBoxArea > 0 && 
-                     (finalBoxArea / numPixels) <= 0.75 && 
-                     (finalBoxWidth / width) <= 0.90 && 
-                     (finalBoxHeight / height) <= 0.90;
+  // Fix D: Hallucinated full canvas reject only if BOTH width and height > 90%
+  const isHallucinated = (finalBoxWidth / width) > 0.90 && (finalBoxHeight / height) > 0.90;
+  const hasCardBox = finalBoxArea > 0 && !isHallucinated;
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
