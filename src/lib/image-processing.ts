@@ -176,7 +176,7 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   
   // BKGND Score penalizes high variance between zones (busy backgrounds like chairs/keyboards)
   // while allowing higher uniform density (cork, wood)
-  const bkgndScore = meanDensity + (stdDevDensity * 1.5);
+  const bkgndScore = meanDensity + (stdDevDensity * 3.0);
 
   // Calculate perimeter luma and saturation stats for Phase 2 (White-Surface Detection)
   let sumPerimLuma = 0;
@@ -213,7 +213,7 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   const perimeterStdDevLuma = Math.sqrt(perimeterVarianceLuma);
 
   // Both bright enough AND monochromatic (white)
-  const isWhiteBackground = perimeterAvgLuma > 140 && perimeterAvgSaturation < 15;
+  const isWhiteBackground = perimeterAvgLuma > 140 && perimeterAvgSaturation < 25;
 
   let background: CheckResult = { state: "pass", tip: "Background OK", raw: bkgndScore };
   
