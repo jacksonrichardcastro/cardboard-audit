@@ -402,6 +402,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
                 <div>Score: {debugData.bkgndScore.toFixed(3)}</div>
                 EDGE BOX: {debugData.edgeBox ? `${debugData.edgeBox.w}x${debugData.edgeBox.h}` : 'N/A'}<br/>
                 COLOR BOX: {debugData.colorBox ? `${debugData.colorBox.w}x${debugData.colorBox.h}` : 'N/A'}<br/>
+                HDR BOX: {debugData.hdrBox ? `${debugData.hdrBox.w}x${debugData.hdrBox.h}` : 'N/A'} (Glare: {debugData.glarePercent ? debugData.glarePercent.toFixed(1) : '0.0'}%)<br/>
                 VALID CELLS: {debugData.validCellCount !== undefined ? debugData.validCellCount : 'N/A'}/64
               </div>
               <div className="flex flex-wrap justify-between mt-1 gap-x-2 gap-y-1">

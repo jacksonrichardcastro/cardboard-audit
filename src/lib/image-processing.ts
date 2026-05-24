@@ -44,6 +44,11 @@ export interface ProcessingResult {
     fMaxX: number;
     fMinY: number;
     fMaxY: number;
+    fillRatio: number;
+    
+    // HDR Investigation Phase 1
+    hdrBox: { x: number, y: number, w: number, h: number } | null;
+    glarePercent: number;
   };
 }
 
@@ -56,6 +61,10 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   let glareCount = 0;
   let sumLuma = 0;
   
+  // HDR telemetry
+  const glareMask = new Uint8Array(numPixels);
+  let trueGlareCount = 0;
+  
   for (let i = 0; i < numPixels; i++) {
     const r = data[i * 4];
     const g = data[i * 4 + 1];
@@ -64,7 +73,17 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     lumas[i] = luma;
     sumLuma += luma;
     if (luma > 220) glareCount++;
+
+    // HDR Investigation: Specular highlight suppression
+    const maxC = Math.max(r, g, b);
+    const minC = Math.min(r, g, b);
+    const sat = maxC === 0 ? 0 : ((maxC - minC) / maxC) * 100;
+    if (luma > 230 && sat < 15) {
+      glareMask[i] = 1;
+      trueGlareCount++;
+    }
   }
+  const glarePercent = (trueGlareCount / numPixels) * 100;
   
   const meanLuma = sumLuma / numPixels;
   let sqSumLuma = 0;
@@ -96,6 +115,115 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   } else if (meanLuma > 180) {
     lighting = { state: "fail", tip: "Washed out. Reduce light.", raw: meanLuma };
   }
+
+  // -------------------------------------------------------------
+  // HDR Investigation: Multi-Scale Edge Detection
+  // -------------------------------------------------------------
+  const DOWNSAMPLE = 4;
+  const dsWidth = Math.floor(width / DOWNSAMPLE);
+  const dsHeight = Math.floor(height / DOWNSAMPLE);
+  const dsLumas = new Float32Array(dsWidth * dsHeight);
+  
+  // Downsample luminance, ignoring glare pixels
+  for (let dy = 0; dy < dsHeight; dy++) {
+    for (let dx = 0; dx < dsWidth; dx++) {
+      let sumL = 0;
+      let countL = 0;
+      for (let oy = 0; oy < DOWNSAMPLE; oy++) {
+        for (let ox = 0; ox < DOWNSAMPLE; ox++) {
+           const px = dx * DOWNSAMPLE + ox;
+           const py = dy * DOWNSAMPLE + oy;
+           if (px < width && py < height) {
+             const idx = py * width + px;
+             if (!glareMask[idx]) {
+               sumL += lumas[idx];
+               countL++;
+             }
+           }
+        }
+      }
+      dsLumas[dy * dsWidth + dx] = countL > 0 ? sumL / countL : 255;
+    }
+  }
+
+  // Gaussian Blur on downsampled lumas (3x3 kernel approx)
+  const blurredLumas = new Float32Array(dsWidth * dsHeight);
+  for (let y = 1; y < dsHeight - 1; y++) {
+    for (let x = 1; x < dsWidth - 1; x++) {
+      let sum = 0;
+      sum += dsLumas[(y - 1) * dsWidth + (x - 1)];
+      sum += dsLumas[(y - 1) * dsWidth + x] * 2;
+      sum += dsLumas[(y - 1) * dsWidth + (x + 1)];
+      sum += dsLumas[y * dsWidth + (x - 1)] * 2;
+      sum += dsLumas[y * dsWidth + x] * 4;
+      sum += dsLumas[y * dsWidth + (x + 1)] * 2;
+      sum += dsLumas[(y + 1) * dsWidth + (x - 1)];
+      sum += dsLumas[(y + 1) * dsWidth + x] * 2;
+      sum += dsLumas[(y + 1) * dsWidth + (x + 1)];
+      blurredLumas[y * dsWidth + x] = sum / 16;
+    }
+  }
+
+  // Edge detection on blurred downsampled lumas
+  const dsXEdges = new Float32Array(dsWidth);
+  const dsYEdges = new Float32Array(dsHeight);
+  let dsTotalEdges = 0;
+
+  for (let y = 2; y < dsHeight - 2; y++) {
+    for (let x = 2; x < dsWidth - 2; x++) {
+      const i = y * dsWidth + x;
+      const lTL = blurredLumas[i - dsWidth - 1];
+      const lTC = blurredLumas[i - dsWidth];
+      const lTR = blurredLumas[i - dsWidth + 1];
+      const lML = blurredLumas[i - 1];
+      const lMR = blurredLumas[i + 1];
+      const lBL = blurredLumas[i + dsWidth - 1];
+      const lBC = blurredLumas[i + dsWidth];
+      const lBR = blurredLumas[i + dsWidth + 1];
+
+      const gx = -lTL + lTR - 2 * lML + 2 * lMR - lBL + lBR;
+      const gy = -lTL - 2 * lTC - lTR + lBL + 2 * lBC + lBR;
+      
+      const magnitude = Math.sqrt(gx * gx + gy * gy);
+      
+      // Threshold for multi-scale edges (lower because of blur)
+      if (magnitude > 25) {
+        dsTotalEdges++;
+        dsXEdges[x]++;
+        dsYEdges[y]++;
+      }
+    }
+  }
+
+  const dsAvgX = dsWidth > 0 ? dsTotalEdges / dsWidth : 0;
+  const dsAvgY = dsHeight > 0 ? dsTotalEdges / dsHeight : 0;
+  const dsThreshX = dsAvgX * 0.5;
+  const dsThreshY = dsAvgY * 0.5;
+
+  let dsMinX = dsWidth, dsMaxX = 0, dsMinY = dsHeight, dsMaxY = 0;
+  for (let x = 0; x < dsWidth; x++) {
+    if (dsXEdges[x] > dsThreshX) {
+      if (x < dsMinX) dsMinX = x;
+      if (x > dsMaxX) dsMaxX = x;
+    }
+  }
+  for (let y = 0; y < dsHeight; y++) {
+    if (dsYEdges[y] > dsThreshY) {
+      if (y < dsMinY) dsMinY = y;
+      if (y > dsMaxY) dsMaxY = y;
+    }
+  }
+
+  let hdrBox = null;
+  if (dsMinX <= dsMaxX && dsMinY <= dsMaxY) {
+     hdrBox = {
+       x: dsMinX * DOWNSAMPLE,
+       y: dsMinY * DOWNSAMPLE,
+       w: (dsMaxX - dsMinX) * DOWNSAMPLE,
+       h: (dsMaxY - dsMinY) * DOWNSAMPLE
+     };
+  }
+  // -------------------------------------------------------------
 
   // Calculate edges first (required for BKGND and FRAMING)
   const xEdges = new Float32Array(width);
@@ -519,6 +647,10 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     fMinX: minX, fMaxX: maxX,
     fMinY: minY, fMaxY: maxY,
     fillRatio: cardFillRatio,
+    
+    // HDR Investigation Phase 1
+    hdrBox,
+    glarePercent,
   };
 
   return { lighting, background, framing, focus, tilt, debug };
