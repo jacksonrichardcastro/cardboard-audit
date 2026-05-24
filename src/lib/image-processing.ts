@@ -338,25 +338,10 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   const marginMaskX = Math.floor(width * 0.05);
   const marginMaskY = Math.floor(height * 0.05);
   
-  let maskMinX = minX;
-  let maskMaxX = maxX;
-  let maskMinY = minY;
-  let maskMaxY = maxY;
-
-  // Fix G: Fall back to a fixed 50% center rectangle when detection hallucinated full-frame
-  if (isHallucinated) {
-    const overlayPadX = Math.floor(width * 0.20);
-    const overlayPadY = Math.floor(height * 0.20);
-    maskMinX = overlayPadX;
-    maskMaxX = width - overlayPadX;
-    maskMinY = overlayPadY;
-    maskMaxY = height - overlayPadY;
-  }
-
-  const finalMaskMinX = Math.max(0, maskMinX - marginMaskX);
-  const finalMaskMaxX = Math.min(width - 1, maskMaxX + marginMaskX);
-  const finalMaskMinY = Math.max(0, maskMinY - marginMaskY);
-  const finalMaskMaxY = Math.min(height - 1, maskMaxY + marginMaskY);
+  const finalMaskMinX = Math.max(0, minX - marginMaskX);
+  const finalMaskMaxX = Math.min(width - 1, maxX + marginMaskX);
+  const finalMaskMinY = Math.max(0, minY - marginMaskY);
+  const finalMaskMaxY = Math.min(height - 1, maxY + marginMaskY);
   
   // 8x8 Grid 
   const GRID_COLS = 8;
@@ -368,7 +353,7 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   const gridEdgesCount = new Float32Array(64);
   const gridValidPixels = new Float32Array(64);
 
-  const hasCardBox = finalBoxArea > 0 || isHallucinated;
+  const hasCardBox = finalBoxArea > 0 && !isHallucinated;
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
@@ -395,8 +380,20 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   let validCellCount = 0;
 
   for (let i = 0; i < 64; i++) {
+    const col = i % GRID_COLS;
+    const row = Math.floor(i / GRID_COLS);
+    
+    // Fix I: Outer-ring sampling when Fix D triggers
+    let isCellValid = true;
+    if (isHallucinated) {
+      // Only the outer ring is valid: top row, bottom row, left col, right col
+      if (!(row === 0 || row === GRID_ROWS - 1 || col === 0 || col === GRID_COLS - 1)) {
+        isCellValid = false;
+      }
+    }
+
     // Only consider the cell valid for sampling if at least 25% of it is outside the mask
-    if (gridValidPixels[i] > cellArea * 0.25) {
+    if (isCellValid && gridValidPixels[i] > cellArea * 0.25) {
       const density = gridEdgesCount[i] / gridValidPixels[i];
       gridDensities[i] = density;
       sumDensity += density;
