@@ -406,6 +406,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
                   <span>WHT BKGND: {debugData.isWhiteBackground ? "YES" : "NO"}</span>
                   <span>LUMA: {debugData.perimeterAvgLuma.toFixed(1)}</span>
                   <span>SD: {debugData.perimeterStdDevLuma.toFixed(1)}</span>
+                  <span>SAT: {debugData.perimeterAvgSaturation.toFixed(1)}</span>
                 </div>
               </div>
             </>

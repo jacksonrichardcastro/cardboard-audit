@@ -25,6 +25,7 @@ export interface ProcessingResult {
     isWhiteBackground: boolean;
     perimeterAvgLuma: number;
     perimeterStdDevLuma: number;
+    perimeterAvgSaturation: number;
     fTotalEdges: number;
     fAvgX: number;
     fAvgY: number;
@@ -177,9 +178,10 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   // while allowing higher uniform density (cork, wood)
   const bkgndScore = meanDensity + (stdDevDensity * 1.5);
 
-  // Calculate perimeter luma stats for Phase 2 (White-Surface Detection)
+  // Calculate perimeter luma and saturation stats for Phase 2 (White-Surface Detection)
   let sumPerimLuma = 0;
   let sqSumPerimLuma = 0;
+  let sumPerimSat = 0;
   let perimCount = 0;
   
   for (let y = 0; y < height; y++) {
@@ -187,20 +189,31 @@ export function processFrame(imageData: ImageData): ProcessingResult {
       const isPerim = (y < marginH || y >= height - marginH || x < marginW || x >= width - marginW);
       if (isPerim) {
         const i = y * width + x;
+        const r = data[i * 4];
+        const g = data[i * 4 + 1];
+        const b = data[i * 4 + 2];
+        
         const luma = lumas[i];
+        const maxC = Math.max(r, g, b);
+        const minC = Math.min(r, g, b);
+        const sat = maxC - minC;
+        
         sumPerimLuma += luma;
         sqSumPerimLuma += luma * luma;
+        sumPerimSat += sat;
         perimCount++;
       }
     }
   }
 
   const perimeterAvgLuma = sumPerimLuma / perimCount;
+  const perimeterAvgSaturation = sumPerimSat / perimCount;
   // Variance = E[X^2] - E[X]^2
   const perimeterVarianceLuma = Math.max(0, (sqSumPerimLuma / perimCount) - (perimeterAvgLuma * perimeterAvgLuma));
   const perimeterStdDevLuma = Math.sqrt(perimeterVarianceLuma);
 
-  const isWhiteBackground = perimeterAvgLuma > 220;
+  // Both bright enough AND monochromatic (white)
+  const isWhiteBackground = perimeterAvgLuma > 140 && perimeterAvgSaturation < 15;
 
   let background: CheckResult = { state: "pass", tip: "Background OK", raw: bkgndScore };
   
@@ -381,7 +394,8 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     bkgndScore: bkgndScore,
     isWhiteBackground,
     perimeterAvgLuma,
-    perimeterStdDevLuma
+    perimeterStdDevLuma,
+    perimeterAvgSaturation
   };
 
   return { lighting, background, framing, focus, tilt, debug };
