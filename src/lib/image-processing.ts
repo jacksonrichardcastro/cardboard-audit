@@ -52,9 +52,12 @@ export interface ProcessingResult {
     finalBoxSrc: string;
     bkgndMaskBox: { w: number, h: number };
     
-    // Fix M Telemetry
+    // Fix M & N-A Telemetry
     isHdrScene: boolean;
     bkgndStrategy: string;
+    bkgndMetricUsed: string;
+    meanLumaAcrossCells: number;
+    lumaSdAcrossCells: number;
   };
 }
 
@@ -503,6 +506,7 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   function computeGridSampling(useOuterRing: boolean, maskMinX: number, maskMaxX: number, maskMinY: number, maskMaxY: number) {
     const pixels = new Float32Array(64);
     const edges = new Float32Array(64);
+    const lumas = new Float32Array(64);
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         if (hasCardBox && x >= maskMinX && x <= maskMaxX && y >= maskMinY && y <= maskMaxY) {
@@ -514,12 +518,19 @@ export function processFrame(imageData: ImageData): ProcessingResult {
         if (idx >= 0 && idx < 64) {
           pixels[idx]++;
           if (edgeMap[y * width + x]) edges[idx]++;
+          const r = data[(y * width + x) * 4];
+          const g = data[(y * width + x) * 4 + 1];
+          const b = data[(y * width + x) * 4 + 2];
+          lumas[idx] += 0.299 * r + 0.587 * g + 0.114 * b;
         }
       }
     }
     const densities = new Float32Array(64);
+    const cellLumas = new Float32Array(64);
     densities.fill(-1);
+    cellLumas.fill(-1);
     let sumD = 0;
+    let sumL = 0;
     let vCount = 0;
     for (let i = 0; i < 64; i++) {
       const col = i % GRID_COLS;
@@ -533,10 +544,12 @@ export function processFrame(imageData: ImageData): ProcessingResult {
       if (isValidPos && pixels[i] > cellArea * 0.25) {
         densities[i] = edges[i] / pixels[i];
         sumD += densities[i];
+        cellLumas[i] = lumas[i] / pixels[i];
+        sumL += cellLumas[i];
         vCount++;
       }
     }
-    return { densities, vCount, sumD };
+    return { densities, cellLumas, vCount, sumD, sumL };
   }
 
   let bkgndStrategy = "STANDARD";
@@ -564,7 +577,7 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     finalMaskMaxY = Math.min(height - 1, Math.floor(cy + newMaskHeight / 2));
   }
 
-  let { densities: gridDensities, vCount: validCellCount, sumD: sumDensity } = computeGridSampling(applyOuterRing, finalMaskMinX, finalMaskMaxX, finalMaskMinY, finalMaskMaxY);
+  let { densities: gridDensities, cellLumas: gridLumas, vCount: validCellCount, sumD: sumDensity, sumL: sumCellLuma } = computeGridSampling(applyOuterRing, finalMaskMinX, finalMaskMaxX, finalMaskMinY, finalMaskMaxY);
 
   // Fix M-1: Zero-cell guardrail
   if (validCellCount < 8 && !applyOuterRing) {
@@ -575,12 +588,31 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     finalMaskMaxY = maxY;
     let fbResult = computeGridSampling(true, finalMaskMinX, finalMaskMaxX, finalMaskMinY, finalMaskMaxY);
     gridDensities = fbResult.densities;
+    gridLumas = fbResult.cellLumas;
     validCellCount = fbResult.vCount;
     sumDensity = fbResult.sumD;
+    sumCellLuma = fbResult.sumL;
   }
 
   if (validCellCount < 8) {
     bkgndStrategy = "GATED";
+  }
+
+  // Fix N-A: Luma Metric Switch
+  const useLumaMetric = isHdrScene && !isHallucinated && bkgndStrategy === "OUTER_RING";
+  let bkgndMetricUsed = useLumaMetric ? "LUMA" : "EDGE";
+  let meanLumaAcrossCells = 0;
+  let lumaSdAcrossCells = 0;
+
+  if (useLumaMetric && validCellCount > 0) {
+    meanLumaAcrossCells = sumCellLuma / validCellCount;
+    let sqSumL = 0;
+    for (let i = 0; i < 64; i++) {
+      if (gridLumas[i] !== -1) {
+        sqSumL += (gridLumas[i] - meanLumaAcrossCells) ** 2;
+      }
+    }
+    lumaSdAcrossCells = Math.sqrt(sqSumL / validCellCount);
   }
 
   // Calculate Variance across valid grid cells
@@ -615,6 +647,15 @@ export function processFrame(imageData: ImageData): ProcessingResult {
       background = { state: "warn", tip: "Smooth out white background.", raw: perimeterStdDevLuma };
     } else {
       background = { state: "pass", tip: "White background OK", raw: perimeterStdDevLuma };
+    }
+  } else if (useLumaMetric) {
+    // Fix N-A: Luminance metric
+    if (meanLumaAcrossCells >= 150 || lumaSdAcrossCells >= 40) {
+      background = { state: "fail", tip: "Background too bright or varied.", raw: meanLumaAcrossCells };
+    } else if ((meanLumaAcrossCells >= 100 && meanLumaAcrossCells < 150) || (meanLumaAcrossCells < 100 && lumaSdAcrossCells >= 20 && lumaSdAcrossCells < 40)) {
+      background = { state: "warn", tip: "Consider a plainer background.", raw: meanLumaAcrossCells };
+    } else {
+      background = { state: "pass", tip: "Background OK", raw: meanLumaAcrossCells };
     }
   } else {
     // Phase 1.3/Phase 4: Standard edge-density check for non-white surfaces
@@ -711,6 +752,9 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     
     isHdrScene,
     bkgndStrategy,
+    bkgndMetricUsed,
+    meanLumaAcrossCells,
+    lumaSdAcrossCells,
   };
 
   return { lighting, background, framing, focus, tilt, debug };

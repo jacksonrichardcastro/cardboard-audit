@@ -410,6 +410,10 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
               <div className="flex flex-wrap justify-between mt-1 gap-x-2 gap-y-1">
                   <span>HDR SCENE: {debugData.isHdrScene ? "YES" : "NO"}</span>
                   <span>STRATEGY: {debugData.bkgndStrategy}</span>
+                  <span>METRIC: {debugData.bkgndMetricUsed}</span>
+                  {debugData.bkgndMetricUsed === "LUMA" && (
+                    <span className="w-full text-blue-300">LUMA STAT: m={debugData.meanLumaAcrossCells?.toFixed(1)} sd={debugData.lumaSdAcrossCells?.toFixed(1)}</span>
+                  )}
                   <span>WHT BKGND: {debugData.isWhiteBackground ? "YES" : "NO"}</span>
                   <span>LOW CONTRAST: {debugData.isLowContrast ? "YES" : "NO"}</span>
                   <span>PATH: {debugData.usedColorFallback ? "COLOR" : "EDGE"}</span>
