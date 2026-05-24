@@ -404,6 +404,8 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
                 <div>Score: {debugData.bkgndScore.toFixed(3)}</div>
                 <div className="flex justify-between mt-1">
                   <span>WHT BKGND: {debugData.isWhiteBackground ? "YES" : "NO"}</span>
+                  <span>LOW CONTRAST: {debugData.isLowContrast ? "YES" : "NO"}</span>
+                  <span>F-COUNT: {debugData.colorForegroundCount?.toFixed(0)}</span>
                   <span>LUMA: {debugData.perimeterAvgLuma.toFixed(1)}</span>
                   <span>SD: {debugData.perimeterStdDevLuma.toFixed(1)}</span>
                   <span>SAT: {debugData.perimeterAvgSaturation.toFixed(1)}</span>

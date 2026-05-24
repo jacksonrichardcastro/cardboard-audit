@@ -26,6 +26,8 @@ export interface ProcessingResult {
     perimeterAvgLuma: number;
     perimeterStdDevLuma: number;
     perimeterAvgSaturation: number;
+    isLowContrast: boolean;
+    colorForegroundCount: number;
     fTotalEdges: number;
     fAvgX: number;
     fAvgY: number;
@@ -179,9 +181,13 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   const bkgndScore = meanDensity + (stdDevDensity * 3.0);
 
   // Calculate perimeter luma and saturation stats for Phase 2 (White-Surface Detection)
+  // Also calculate bgMean RGB for Phase 3 (Color Fallback)
   let sumPerimLuma = 0;
   let sqSumPerimLuma = 0;
   let sumPerimSat = 0;
+  let sumPerimR = 0;
+  let sumPerimG = 0;
+  let sumPerimB = 0;
   let perimCount = 0;
   
   for (let y = 0; y < height; y++) {
@@ -201,11 +207,17 @@ export function processFrame(imageData: ImageData): ProcessingResult {
         sumPerimLuma += luma;
         sqSumPerimLuma += luma * luma;
         sumPerimSat += sat;
+        sumPerimR += r;
+        sumPerimG += g;
+        sumPerimB += b;
         perimCount++;
       }
     }
   }
 
+  const bgMeanR = sumPerimR / perimCount;
+  const bgMeanG = sumPerimG / perimCount;
+  const bgMeanB = sumPerimB / perimCount;
   const perimeterAvgLuma = sumPerimLuma / perimCount;
   const perimeterAvgSaturation = sumPerimSat / perimCount;
   // Variance = E[X^2] - E[X]^2
@@ -283,31 +295,98 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   const CENTER_TOLERANCE_X = width * 0.15; // 15% tolerance from center
   const CENTER_TOLERANCE_Y = height * 0.15;
   const MIN_EDGE_DENSITY = 0.45;
+  
+  // Phase 3: Color-Clustering Fallback for Low Contrast
+  const isLowContrast = cardFillRatio > 0.85 || isWhiteBackground;
+  let colorForegroundCount = 0;
+  let usedColorFallback = false;
 
-  if (totalStrongEdges < 100 || boxArea === 0) {
+  if (isLowContrast) {
+    const COLOR_DELTA_THRESHOLD = 45; // Tunable
+    const xColorFg = new Float32Array(width);
+    const yColorFg = new Float32Array(height);
+    
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const i = y * width + x;
+        const r = data[i * 4];
+        const g = data[i * 4 + 1];
+        const b = data[i * 4 + 2];
+        const delta = Math.abs(r - bgMeanR) + Math.abs(g - bgMeanG) + Math.abs(b - bgMeanB);
+        
+        if (delta > COLOR_DELTA_THRESHOLD) {
+          xColorFg[x]++;
+          yColorFg[y]++;
+          colorForegroundCount++;
+        }
+      }
+    }
+
+    if (colorForegroundCount > 100) {
+      // Find new bounds using 1D projection of color foreground
+      let cMinX = width, cMaxX = 0, cMinY = height, cMaxY = 0;
+      const cAvgX = colorForegroundCount / width;
+      const cAvgY = colorForegroundCount / height;
+      const cThreshX = Math.max(cAvgX * 0.5, height * 0.02);
+      const cThreshY = Math.max(cAvgY * 0.5, width * 0.02);
+
+      for (let x = 2; x < width - 2; x++) {
+        const val = (xColorFg[x-2] + xColorFg[x-1] + xColorFg[x] + xColorFg[x+1] + xColorFg[x+2]) / 5;
+        if (val > cThreshX) {
+          if (x < cMinX) cMinX = x;
+          if (x > cMaxX) cMaxX = x;
+        }
+      }
+      for (let y = 2; y < height - 2; y++) {
+        const val = (yColorFg[y-2] + yColorFg[y-1] + yColorFg[y] + yColorFg[y+1] + yColorFg[y+2]) / 5;
+        if (val > cThreshY) {
+          if (y < cMinY) cMinY = y;
+          if (y > cMaxY) cMaxY = y;
+        }
+      }
+
+      minX = cMinX; maxX = cMaxX; minY = cMinY; maxY = cMaxY;
+      usedColorFallback = true;
+    } else {
+      // Edge case: virtually identical colors, collapse the bounding box
+      minX = width; maxX = 0; minY = height; maxY = 0;
+    }
+  }
+
+  // Re-evaluate bounds
+  const finalBoxWidth = Math.max(0, maxX - minX);
+  const finalBoxHeight = Math.max(0, maxY - minY);
+  const finalBoxArea = finalBoxWidth * finalBoxHeight;
+  cardFillRatio = finalBoxArea / numPixels;
+
+  if (finalBoxArea === 0 || (!usedColorFallback && totalStrongEdges < 100)) {
     framing = { state: "warn", tip: "Place card inside the rectangle.", raw: cardFillRatio };
     cardFillRatio = 0;
   } else {
-    const aspectRatio = boxWidth / boxHeight;
-    const boxCenterX = minX + boxWidth / 2;
-    const boxCenterY = minY + boxHeight / 2;
+    const aspectRatio = finalBoxWidth / finalBoxHeight;
+    const boxCenterX = minX + finalBoxWidth / 2;
+    const boxCenterY = minY + finalBoxHeight / 2;
     const frameCenterX = width / 2;
     const frameCenterY = height / 2;
     
-    // Count edges strictly inside the bounding box
-    let edgesInsideBox = 0;
-    for (let y = minY; y <= maxY; y++) {
-      for (let x = minX; x <= maxX; x++) {
-        if (edgeMap[y * width + x]) edgesInsideBox++;
-      }
-    }
-    const edgeDensity = edgesInsideBox / totalStrongEdges;
-
     // Validate properties
     const isValidAspect = aspectRatio >= MIN_ASPECT_RATIO && aspectRatio <= MAX_ASPECT_RATIO;
     const isCenteredX = Math.abs(boxCenterX - frameCenterX) <= CENTER_TOLERANCE_X;
     const isCenteredY = Math.abs(boxCenterY - frameCenterY) <= CENTER_TOLERANCE_Y;
-    const hasEnoughEdges = edgeDensity >= MIN_EDGE_DENSITY;
+    
+    // Only enforce edge density if we DID NOT use the color fallback
+    let hasEnoughEdges = true;
+    let edgeDensity = 0;
+    if (!usedColorFallback) {
+      let edgesInsideBox = 0;
+      for (let y = minY; y <= maxY; y++) {
+        for (let x = minX; x <= maxX; x++) {
+          if (edgeMap[y * width + x]) edgesInsideBox++;
+        }
+      }
+      edgeDensity = edgesInsideBox / totalStrongEdges;
+      hasEnoughEdges = edgeDensity >= MIN_EDGE_DENSITY;
+    }
 
     if (!isValidAspect) {
       framing = { state: "fail", tip: "Card cut off or wrong shape.", raw: aspectRatio };
@@ -395,7 +474,9 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     isWhiteBackground,
     perimeterAvgLuma,
     perimeterStdDevLuma,
-    perimeterAvgSaturation
+    perimeterAvgSaturation,
+    isLowContrast,
+    colorForegroundCount
   };
 
   return { lighting, background, framing, focus, tilt, debug };
