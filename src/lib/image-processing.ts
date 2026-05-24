@@ -33,6 +33,7 @@ export interface ProcessingResult {
     gridCols: number;
     gridRows: number;
     validCellCount: number;
+    isHallucinated: boolean;
     
     fTotalEdges: number;
     fAvgX: number;
@@ -423,8 +424,8 @@ export function processFrame(imageData: ImageData): ProcessingResult {
 
   let background: CheckResult = { state: "pass", tip: "Background OK", raw: bkgndScore };
   
-  // Fix J: Gate BKGND on FRAMING when card is too close (fillRatio > 0.95)
-  if (cardFillRatio > 0.95) {
+  // Fix J + Fix K: Gate BKGND on FRAMING when card is too close (fillRatio > 0.95) ONLY IF not hallucinated
+  if (cardFillRatio > 0.95 && !isHallucinated) {
     background = { state: "gated", tip: "Move camera back to evaluate background.", raw: 0 };
   } else if (isWhiteBackground) {
     // Phase 2: Override edge-density BKGND check for white surfaces
@@ -510,12 +511,14 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     gridCols: GRID_COLS,
     gridRows: GRID_ROWS,
     validCellCount: validCellCount,
+    isHallucinated,
     
     fTotalEdges: totalStrongEdges,
     fAvgX: avgX, fAvgY: avgY,
     fThreshX: threshX, fThreshY: threshY,
     fMinX: minX, fMaxX: maxX,
     fMinY: minY, fMaxY: maxY,
+    fillRatio: cardFillRatio,
   };
 
   return { lighting, background, framing, focus, tilt, debug };

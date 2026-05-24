@@ -387,7 +387,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
           <div>LEVEL: {tilt.raw?.toFixed(2) ?? 'N/A'}</div>
           <div>LIGHTING: {lighting.raw?.toFixed(4) ?? 'N/A'}</div>
           <div>FOCUS: {focus.raw?.toFixed(2) ?? 'N/A'}</div>
-          <div className="mt-1 text-white border-b border-gray-600">BKGND: {background.state === 'gated' ? 'GATED' : (background.raw?.toFixed(4) ?? 'N/A')}</div>
+          <div className="mt-1 text-white border-b border-gray-600">BKGND: {background.state === 'gated' ? 'GATED' : (debugData?.isHallucinated ? `EVAL (Fix D fallback) [${background.raw?.toFixed(4)}]` : (background.raw?.toFixed(4) ?? 'N/A'))}</div>
           {debugData && (
             <>
               <div>BKGND SCORES:</div>
