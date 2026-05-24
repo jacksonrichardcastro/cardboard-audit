@@ -178,7 +178,7 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   
   // BKGND Score penalizes high variance between zones (busy backgrounds like chairs/keyboards)
   // while allowing higher uniform density (cork, wood)
-  const bkgndScore = meanDensity + (stdDevDensity * 2.0);
+  const bkgndScore = meanDensity + (stdDevDensity * 1.5);
 
   // Calculate perimeter luma and saturation stats for Phase 2 (White-Surface Detection)
   // Also calculate bgMean RGB for Phase 3 (Color Fallback)
