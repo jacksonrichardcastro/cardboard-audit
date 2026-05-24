@@ -490,7 +490,7 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   }
 
   // Fix M-2: HDR Scene Detection
-  const isHdrScene = p99Luma > 230 && meanLuma < 110;
+  const isHdrScene = p99Luma > 230 && perimeterAvgLuma < 110;
 
   // 4. Background Check (Phase 4 RESCOPED: Card-Box-Aware Full-Frame Sampling)
   const GRID_COLS = 8;
