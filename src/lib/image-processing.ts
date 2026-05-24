@@ -32,6 +32,7 @@ export interface ProcessingResult {
     gridDensities: number[];
     gridCols: number;
     gridRows: number;
+    validCellCount: number;
     
     fTotalEdges: number;
     fAvgX: number;
@@ -341,10 +342,10 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   let maskMinY = minY;
   let maskMaxY = maxY;
 
-  // Fix E: Overlay-rectangle fallback when detection methods hallucinate full-frame
+  // Fix G: Fall back to a fixed 50% center rectangle when detection hallucinated full-frame
   if (isHallucinated) {
-    const overlayPadX = Math.floor(width * 0.05);
-    const overlayPadY = Math.floor(height * 0.05);
+    const overlayPadX = Math.floor(width * 0.20);
+    const overlayPadY = Math.floor(height * 0.20);
     maskMinX = overlayPadX;
     maskMaxX = width - overlayPadX;
     maskMinY = overlayPadY;
@@ -507,6 +508,7 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     gridDensities: Array.from(gridDensities),
     gridCols: GRID_COLS,
     gridRows: GRID_ROWS,
+    validCellCount: validCellCount,
     
     fTotalEdges: totalStrongEdges,
     fAvgX: avgX, fAvgY: avgY,

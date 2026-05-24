@@ -399,7 +399,11 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
               </div>
               <div className="mt-1 text-[9px] text-yellow-300 border-b border-gray-600 pb-1">
                 <div>Score: {debugData.bkgndScore.toFixed(3)}</div>
-                <div className="flex flex-wrap justify-between mt-1 gap-x-2 gap-y-1">
+                EDGE BOX: {debugData.edgeBox ? `${debugData.edgeBox.w}x${debugData.edgeBox.h}` : 'N/A'}<br/>
+                COLOR BOX: {debugData.colorBox ? `${debugData.colorBox.w}x${debugData.colorBox.h}` : 'N/A'}<br/>
+                VALID CELLS: {debugData.validCellCount !== undefined ? debugData.validCellCount : 'N/A'}/64
+              </div>
+              <div className="flex flex-wrap justify-between mt-1 gap-x-2 gap-y-1">
                   <span>WHT BKGND: {debugData.isWhiteBackground ? "YES" : "NO"}</span>
                   <span>LOW CONTRAST: {debugData.isLowContrast ? "YES" : "NO"}</span>
                   <span>PATH: {debugData.usedColorFallback ? "COLOR" : "EDGE"}</span>
@@ -407,7 +411,6 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
                   <span>LUMA: {debugData.perimeterAvgLuma.toFixed(1)}</span>
                   <span>SD: {debugData.perimeterStdDevLuma.toFixed(1)}</span>
                   <span>SAT: {debugData.perimeterAvgSaturation.toFixed(1)}</span>
-                </div>
               </div>
             </>
           )}
