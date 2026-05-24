@@ -390,21 +390,19 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
           {debugData && (
             <>
               <div>BKGND SCORES:</div>
-              <div className="grid grid-cols-4 gap-x-1 text-[8px]">
-                <span>TL:{debugData.bkgndZones[0].toFixed(2)}</span>
-                <span>TC:{debugData.bkgndZones[1].toFixed(2)}</span>
-                <span>TR:{debugData.bkgndZones[2].toFixed(2)}</span>
-                <span>ML:{debugData.bkgndZones[3].toFixed(2)}</span>
-                <span>MR:{debugData.bkgndZones[4].toFixed(2)}</span>
-                <span>BL:{debugData.bkgndZones[5].toFixed(2)}</span>
-                <span>BC:{debugData.bkgndZones[6].toFixed(2)}</span>
-                <span>BR:{debugData.bkgndZones[7].toFixed(2)}</span>
+              <div className="grid grid-cols-8 gap-x-1 gap-y-1 text-[7px] leading-tight">
+                {debugData.gridDensities.map((density, i) => (
+                  <span key={i} className={density === -1 ? "text-gray-500" : "text-green-300"}>
+                    {density === -1 ? 'X' : density.toFixed(2)}
+                  </span>
+                ))}
               </div>
               <div className="mt-1 text-[9px] text-yellow-300 border-b border-gray-600 pb-1">
                 <div>Score: {debugData.bkgndScore.toFixed(3)}</div>
-                <div className="flex justify-between mt-1">
+                <div className="flex flex-wrap justify-between mt-1 gap-x-2 gap-y-1">
                   <span>WHT BKGND: {debugData.isWhiteBackground ? "YES" : "NO"}</span>
                   <span>LOW CONTRAST: {debugData.isLowContrast ? "YES" : "NO"}</span>
+                  <span>PATH: {debugData.usedColorFallback ? "COLOR" : "EDGE"}</span>
                   <span>F-COUNT: {debugData.colorForegroundCount?.toFixed(0)}</span>
                   <span>LUMA: {debugData.perimeterAvgLuma.toFixed(1)}</span>
                   <span>SD: {debugData.perimeterStdDevLuma.toFixed(1)}</span>
@@ -415,12 +413,16 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
           )}
           <div className="mt-1 text-white border-b border-gray-600">FRAMING: {framing.raw?.toFixed(4) ?? 'N/A'}</div>
           {debugData && (
-            <>
+            <div className="text-[9px]">
               <div>EDGES: {debugData.fTotalEdges}</div>
-              <div>AVG X/Y: {debugData.fAvgX.toFixed(1)} / {debugData.fAvgY.toFixed(1)}</div>
-              <div>THR X/Y: {debugData.fThreshX.toFixed(1)} / {debugData.fThreshY.toFixed(1)}</div>
-              <div>BOX: ({debugData.fMinX},{debugData.fMinY}) to ({debugData.fMaxX},{debugData.fMaxY})</div>
-            </>
+              <div>EDGE BOX: {debugData.edgeBox.w}x{debugData.edgeBox.h} @ ({debugData.edgeBox.x},{debugData.edgeBox.y})</div>
+              {debugData.colorBox ? (
+                <div>COLOR BOX: {debugData.colorBox.w}x{debugData.colorBox.h} @ ({debugData.colorBox.x},{debugData.colorBox.y})</div>
+              ) : (
+                <div>COLOR BOX: NONE</div>
+              )}
+              <div>FINAL BOX: ({debugData.fMinX},{debugData.fMinY}) to ({debugData.fMaxX},{debugData.fMaxY})</div>
+            </div>
           )}
         </div>
         {/* Debug Canvas Thumbnail */}
@@ -457,21 +459,25 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
           </div>
         )}
 
-        {/* Phase 1.3: Visual Debug Overlays for the 8 BKGND Zones */}
-        {debugData && debugData.bkgndRects && (
+        {/* Phase 4: Visual Debug Overlays for the 8x8 Grid */}
+        {debugData && debugData.gridDensities && (
           <div className="absolute inset-0 pointer-events-none z-10">
-            {debugData.bkgndRects.map((rect, i) => (
-              <div 
-                key={i} 
-                className="absolute border border-yellow-400/50 bg-red-500/20" 
-                style={{ 
-                  left: `${rect.x}%`, 
-                  top: `${rect.y}%`, 
-                  width: `${rect.w}%`, 
-                  height: `${rect.h}%` 
-                }} 
-              />
-            ))}
+            {debugData.gridDensities.map((density, i) => {
+              if (density === -1) return null; // Don't highlight skipped cells
+              const col = i % debugData.gridCols;
+              const row = Math.floor(i / debugData.gridCols);
+              const x = (col / debugData.gridCols) * 100;
+              const y = (row / debugData.gridRows) * 100;
+              const w = (1 / debugData.gridCols) * 100;
+              const h = (1 / debugData.gridRows) * 100;
+              return (
+                <div 
+                  key={i} 
+                  className="absolute border border-yellow-400/20 bg-red-500/10" 
+                  style={{ left: `${x}%`, top: `${y}%`, width: `${w}%`, height: `${h}%` }} 
+                />
+              );
+            })}
           </div>
         )}
       </div>

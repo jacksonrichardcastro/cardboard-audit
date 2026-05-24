@@ -13,12 +13,6 @@ export interface ProcessingResult {
   focus: CheckResult;
   tilt: CheckResult; // Fallback visual tilt
   debug: {
-    bgTL: number;
-    bgTR: number;
-    bgBL: number;
-    bgBR: number;
-    bkgndZones: number[];
-    bkgndRects: {x: number, y: number, w: number, h: number}[];
     bkgndMean: number;
     bkgndStdDev: number;
     bkgndScore: number;
@@ -26,8 +20,19 @@ export interface ProcessingResult {
     perimeterAvgLuma: number;
     perimeterStdDevLuma: number;
     perimeterAvgSaturation: number;
+    
+    // Gap 1 Telemetry
     isLowContrast: boolean;
+    usedColorFallback: boolean;
     colorForegroundCount: number;
+    edgeBox: { x: number, y: number, w: number, h: number };
+    colorBox: { x: number, y: number, w: number, h: number } | null;
+    
+    // Phase 4 Telemetry
+    gridDensities: number[];
+    gridCols: number;
+    gridRows: number;
+    
     fTotalEdges: number;
     fAvgX: number;
     fAvgY: number;
@@ -123,65 +128,11 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     }
   }
 
-  // 2. Background Check (Multi-zone perimeter sampling - Phase 1)
-  // Fix 6b: Shrink margin to 3% so it samples the OUTSIDE of the p-4 (4.1%) framing guide, avoiding card overlap
+  // 2. Perimeter Stats (for White-Surface Detection and Phase 3 Color Fallback)
+  // We need this BEFORE framing so we can use isWhiteBackground and bgMeanRGB for color fallback.
   const marginW = Math.floor(width * 0.03);
   const marginH = Math.floor(height * 0.03);
   
-  const zoneCounts = new Float32Array(8);
-  
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      if (edgeMap[y * width + x]) {
-        if (y < marginH) {
-          if (x < marginW) zoneCounts[0]++; // TL
-          else if (x >= width - marginW) zoneCounts[2]++; // TR
-          else zoneCounts[1]++; // TC
-        } else if (y >= height - marginH) {
-          if (x < marginW) zoneCounts[5]++; // BL
-          else if (x >= width - marginW) zoneCounts[7]++; // BR
-          else zoneCounts[6]++; // BC
-        } else {
-          if (x < marginW) zoneCounts[3]++; // ML
-          else if (x >= width - marginW) zoneCounts[4]++; // MR
-        }
-      }
-    }
-  }
-  
-  const cornerArea = marginW * marginH;
-  const tcBcArea = (width - 2 * marginW) * marginH;
-  const mlMrArea = marginW * (height - 2 * marginH);
-  
-  const zoneDensities = new Float32Array([
-    zoneCounts[0] / cornerArea,
-    zoneCounts[1] / tcBcArea,
-    zoneCounts[2] / cornerArea,
-    zoneCounts[3] / mlMrArea,
-    zoneCounts[4] / mlMrArea,
-    zoneCounts[5] / cornerArea,
-    zoneCounts[6] / tcBcArea,
-    zoneCounts[7] / cornerArea
-  ]);
-  
-  let sumDensity = 0;
-  for (let i = 0; i < 8; i++) {
-    sumDensity += zoneDensities[i];
-  }
-  const meanDensity = sumDensity / 8;
-  
-  let sqSumDensity = 0;
-  for (let i = 0; i < 8; i++) {
-    sqSumDensity += (zoneDensities[i] - meanDensity) ** 2;
-  }
-  const stdDevDensity = Math.sqrt(sqSumDensity / 8);
-  
-  // BKGND Score penalizes high variance between zones (busy backgrounds like chairs/keyboards)
-  // while allowing higher uniform density (cork, wood)
-  const bkgndScore = meanDensity + (stdDevDensity * 1.5);
-
-  // Calculate perimeter luma and saturation stats for Phase 2 (White-Surface Detection)
-  // Also calculate bgMean RGB for Phase 3 (Color Fallback)
   let sumPerimLuma = 0;
   let sqSumPerimLuma = 0;
   let sumPerimSat = 0;
@@ -220,41 +171,13 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   const bgMeanB = sumPerimB / perimCount;
   const perimeterAvgLuma = sumPerimLuma / perimCount;
   const perimeterAvgSaturation = sumPerimSat / perimCount;
-  // Variance = E[X^2] - E[X]^2
   const perimeterVarianceLuma = Math.max(0, (sqSumPerimLuma / perimCount) - (perimeterAvgLuma * perimeterAvgLuma));
   const perimeterStdDevLuma = Math.sqrt(perimeterVarianceLuma);
 
-  // Both bright enough AND monochromatic (white)
   const isWhiteBackground = perimeterAvgLuma > 140 && perimeterAvgSaturation < 30;
 
-  let background: CheckResult = { state: "pass", tip: "Background OK", raw: bkgndScore };
-  
-  if (isWhiteBackground) {
-    // Phase 2: Override edge-density BKGND check for white surfaces
-    if (perimeterStdDevLuma >= 25) {
-      background = { state: "fail", tip: "White background too shadowed/uneven.", raw: perimeterStdDevLuma };
-    } else if (perimeterStdDevLuma >= 15) {
-      background = { state: "warn", tip: "Smooth out white background.", raw: perimeterStdDevLuma };
-    } else {
-      background = { state: "pass", tip: "White background OK", raw: perimeterStdDevLuma };
-    }
-  } else {
-    // Phase 1.3: Standard edge-density check for non-white surfaces
-    if (bkgndScore >= 0.60) { 
-      background = { state: "fail", tip: "Background too busy/textured.", raw: bkgndScore };
-    } else if (bkgndScore >= 0.50) {
-      background = { state: "warn", tip: "Consider a plainer background.", raw: bkgndScore };
-    }
-  }
-  
-  // Map corner densities to debug output to satisfy interface
-  const bgTL = zoneDensities[0];
-  const bgTR = zoneDensities[2];
-  const bgBL = zoneDensities[5];
-  const bgBR = zoneDensities[7];
-
-  // 3. Framing Check (Adaptive 1D projection bounding box to filter noise)
-  let minX = width, maxX = 0, minY = height, maxY = 0;
+  // 3. Framing Check (Card Bounding Box Calculation)
+  let edgeMinX = width, edgeMaxX = 0, edgeMinY = height, edgeMaxY = 0;
   let avgX = 0, avgY = 0, threshX = 0, threshY = 0;
   
   if (totalStrongEdges > 100) {
@@ -266,40 +189,35 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     for (let x = 2; x < width - 2; x++) {
       let val = (xEdges[x-2] + xEdges[x-1] + xEdges[x] + xEdges[x+1] + xEdges[x+2]) / 5;
       if (val > threshX) {
-        if (x < minX) minX = x;
-        if (x > maxX) maxX = x;
+        if (x < edgeMinX) edgeMinX = x;
+        if (x > edgeMaxX) edgeMaxX = x;
       }
     }
     
     for (let y = 2; y < height - 2; y++) {
       let val = (yEdges[y-2] + yEdges[y-1] + yEdges[y] + yEdges[y+1] + yEdges[y+2]) / 5;
       if (val > threshY) {
-        if (y < minY) minY = y;
-        if (y > maxY) maxY = y;
+        if (y < edgeMinY) edgeMinY = y;
+        if (y > edgeMaxY) edgeMaxY = y;
       }
     }
   } else {
-    minX = width; maxX = 0; minY = height; maxY = 0;
+    edgeMinX = width; edgeMaxX = 0; edgeMinY = height; edgeMaxY = 0;
   }
 
-  const boxWidth = Math.max(0, maxX - minX);
-  const boxHeight = Math.max(0, maxY - minY);
-  const boxArea = boxWidth * boxHeight;
-  let cardFillRatio = boxArea / numPixels;
+  const edgeBoxWidth = Math.max(0, edgeMaxX - edgeMinX);
+  const edgeBoxHeight = Math.max(0, edgeMaxY - edgeMinY);
+  const edgeBoxArea = edgeBoxWidth * edgeBoxHeight;
+  const edgeCardFillRatio = edgeBoxArea / numPixels;
 
-  let framing: CheckResult = { state: "pass", tip: "Framing OK", raw: cardFillRatio };
-
-  // MVP Validation Layer Constants (Tuned May 23)
-  const MIN_ASPECT_RATIO = 0.45;
-  const MAX_ASPECT_RATIO = 0.95;
-  const CENTER_TOLERANCE_X = width * 0.15; // 15% tolerance from center
-  const CENTER_TOLERANCE_Y = height * 0.15;
-  const MIN_EDGE_DENSITY = 0.45;
-  
   // Phase 3: Color-Clustering Fallback for Low Contrast
-  const isLowContrast = cardFillRatio > 0.85 || isWhiteBackground;
+  // GAP 1 FIX: Lowered threshold from 0.85 to 0.65 to consistently engage fallback on noisy surfaces
+  const isLowContrast = edgeCardFillRatio > 0.65 || isWhiteBackground;
+  
   let colorForegroundCount = 0;
   let usedColorFallback = false;
+  let minX = edgeMinX, maxX = edgeMaxX, minY = edgeMinY, maxY = edgeMaxY;
+  let colorMinX = width, colorMaxX = 0, colorMinY = height, colorMaxY = 0;
 
   if (isLowContrast) {
     const COLOR_DELTA_THRESHOLD = 45; // Tunable
@@ -323,8 +241,6 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     }
 
     if (colorForegroundCount > 100) {
-      // Find new bounds using 1D projection of color foreground
-      let cMinX = width, cMaxX = 0, cMinY = height, cMaxY = 0;
       const cAvgX = colorForegroundCount / width;
       const cAvgY = colorForegroundCount / height;
       const cThreshX = Math.max(cAvgX * 0.5, height * 0.02);
@@ -333,31 +249,38 @@ export function processFrame(imageData: ImageData): ProcessingResult {
       for (let x = 2; x < width - 2; x++) {
         const val = (xColorFg[x-2] + xColorFg[x-1] + xColorFg[x] + xColorFg[x+1] + xColorFg[x+2]) / 5;
         if (val > cThreshX) {
-          if (x < cMinX) cMinX = x;
-          if (x > cMaxX) cMaxX = x;
+          if (x < colorMinX) colorMinX = x;
+          if (x > colorMaxX) colorMaxX = x;
         }
       }
       for (let y = 2; y < height - 2; y++) {
         const val = (yColorFg[y-2] + yColorFg[y-1] + yColorFg[y] + yColorFg[y+1] + yColorFg[y+2]) / 5;
         if (val > cThreshY) {
-          if (y < cMinY) cMinY = y;
-          if (y > cMaxY) cMaxY = y;
+          if (y < colorMinY) colorMinY = y;
+          if (y > colorMaxY) colorMaxY = y;
         }
       }
 
-      minX = cMinX; maxX = cMaxX; minY = cMinY; maxY = cMaxY;
+      minX = colorMinX; maxX = colorMaxX; minY = colorMinY; maxY = colorMaxY;
       usedColorFallback = true;
     } else {
-      // Edge case: virtually identical colors, collapse the bounding box
       minX = width; maxX = 0; minY = height; maxY = 0;
     }
   }
 
-  // Re-evaluate bounds
+  // Final Framing Validation
   const finalBoxWidth = Math.max(0, maxX - minX);
   const finalBoxHeight = Math.max(0, maxY - minY);
   const finalBoxArea = finalBoxWidth * finalBoxHeight;
-  cardFillRatio = finalBoxArea / numPixels;
+  let cardFillRatio = finalBoxArea / numPixels;
+
+  let framing: CheckResult = { state: "pass", tip: "Framing OK", raw: cardFillRatio };
+
+  const MIN_ASPECT_RATIO = 0.45;
+  const MAX_ASPECT_RATIO = 0.95;
+  const CENTER_TOLERANCE_X = width * 0.15;
+  const CENTER_TOLERANCE_Y = height * 0.15;
+  const MIN_EDGE_DENSITY = 0.45;
 
   if (finalBoxArea === 0 || (!usedColorFallback && totalStrongEdges < 100)) {
     framing = { state: "warn", tip: "Place card inside the rectangle.", raw: cardFillRatio };
@@ -369,12 +292,10 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     const frameCenterX = width / 2;
     const frameCenterY = height / 2;
     
-    // Validate properties
     const isValidAspect = aspectRatio >= MIN_ASPECT_RATIO && aspectRatio <= MAX_ASPECT_RATIO;
     const isCenteredX = Math.abs(boxCenterX - frameCenterX) <= CENTER_TOLERANCE_X;
     const isCenteredY = Math.abs(boxCenterY - frameCenterY) <= CENTER_TOLERANCE_Y;
     
-    // Only enforce edge density if we DID NOT use the color fallback
     let hasEnoughEdges = true;
     let edgeDensity = 0;
     if (!usedColorFallback) {
@@ -403,6 +324,102 @@ export function processFrame(imageData: ImageData): ProcessingResult {
       } else if (cardFillRatio < 0.35 || cardFillRatio > 0.75) {
         framing = { state: "warn", tip: "Almost there, adjust distance.", raw: cardFillRatio };
       }
+    }
+  }
+
+  // 4. Background Check (Phase 4 RESCOPED: Card-Box-Aware Full-Frame Sampling)
+  // Mask the card region out of the processing canvas, add 5% margin to avoid card edges
+  const marginMaskX = Math.floor(width * 0.05);
+  const marginMaskY = Math.floor(height * 0.05);
+  const maskMinX = Math.max(0, minX - marginMaskX);
+  const maskMaxX = Math.min(width - 1, maxX + marginMaskX);
+  const maskMinY = Math.max(0, minY - marginMaskY);
+  const maskMaxY = Math.min(height - 1, maxY + marginMaskY);
+  
+  // 8x8 Grid 
+  const GRID_COLS = 8;
+  const GRID_ROWS = 8;
+  const cellWidth = width / GRID_COLS;
+  const cellHeight = height / GRID_ROWS;
+  const cellArea = cellWidth * cellHeight;
+
+  const gridEdgesCount = new Float32Array(64);
+  const gridValidPixels = new Float32Array(64);
+
+  // If card bounding box collapsed, we sample the whole frame.
+  const hasCardBox = finalBoxArea > 0;
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (hasCardBox && x >= maskMinX && x <= maskMaxX && y >= maskMinY && y <= maskMaxY) {
+        // Skip pixels inside the card mask
+        continue;
+      }
+      const col = Math.floor(x / cellWidth);
+      const row = Math.floor(y / cellHeight);
+      const idx = row * GRID_COLS + col;
+      
+      // Safety check for boundaries
+      if (idx >= 0 && idx < 64) {
+        gridValidPixels[idx]++;
+        if (edgeMap[y * width + x]) {
+          gridEdgesCount[idx]++;
+        }
+      }
+    }
+  }
+
+  const gridDensities = new Float32Array(64);
+  let sumDensity = 0;
+  let validCellCount = 0;
+
+  for (let i = 0; i < 64; i++) {
+    // Only consider the cell valid for sampling if at least 25% of it is outside the mask
+    if (gridValidPixels[i] > cellArea * 0.25) {
+      const density = gridEdgesCount[i] / gridValidPixels[i];
+      gridDensities[i] = density;
+      sumDensity += density;
+      validCellCount++;
+    } else {
+      gridDensities[i] = -1; // Mark invalid for telemetry
+    }
+  }
+
+  // Calculate Variance across valid grid cells
+  let bkgndScore = 0;
+  let meanDensity = 0;
+  let stdDevDensity = 0;
+
+  if (validCellCount > 0) {
+    meanDensity = sumDensity / validCellCount;
+    let sqSumDensity = 0;
+    for (let i = 0; i < 64; i++) {
+      if (gridDensities[i] !== -1) {
+        sqSumDensity += (gridDensities[i] - meanDensity) ** 2;
+      }
+    }
+    stdDevDensity = Math.sqrt(sqSumDensity / validCellCount);
+    // BKGND Score formula with 1.5x multiplier
+    bkgndScore = meanDensity + (stdDevDensity * 1.5);
+  }
+
+  let background: CheckResult = { state: "pass", tip: "Background OK", raw: bkgndScore };
+  
+  if (isWhiteBackground) {
+    // Phase 2: Override edge-density BKGND check for white surfaces
+    if (perimeterStdDevLuma >= 25) {
+      background = { state: "fail", tip: "White background too shadowed/uneven.", raw: perimeterStdDevLuma };
+    } else if (perimeterStdDevLuma >= 15) {
+      background = { state: "warn", tip: "Smooth out white background.", raw: perimeterStdDevLuma };
+    } else {
+      background = { state: "pass", tip: "White background OK", raw: perimeterStdDevLuma };
+    }
+  } else {
+    // Phase 1.3/Phase 4: Standard edge-density check for non-white surfaces
+    if (bkgndScore >= 0.60) { 
+      background = { state: "fail", tip: "Background too busy/textured.", raw: bkgndScore };
+    } else if (bkgndScore >= 0.50) {
+      background = { state: "warn", tip: "Consider a plainer background.", raw: bkgndScore };
     }
   }
 
@@ -451,23 +468,6 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   tilt = { state: "pass", tip: "Level", raw: 0 };
 
   const debug = {
-    bgTL, bgTR, bgBL, bgBR,
-    fTotalEdges: totalStrongEdges,
-    fAvgX: avgX, fAvgY: avgY,
-    fThreshX: threshX, fThreshY: threshY,
-    fMinX: minX, fMaxX: maxX,
-    fMinY: minY, fMaxY: maxY,
-    bkgndZones: Array.from(zoneDensities),
-    bkgndRects: [
-      { x: 0, y: 0, w: (marginW/width)*100, h: (marginH/height)*100 }, // TL
-      { x: (marginW/width)*100, y: 0, w: ((width - 2*marginW)/width)*100, h: (marginH/height)*100 }, // TC
-      { x: ((width - marginW)/width)*100, y: 0, w: (marginW/width)*100, h: (marginH/height)*100 }, // TR
-      { x: 0, y: (marginH/height)*100, w: (marginW/width)*100, h: ((height - 2*marginH)/height)*100 }, // ML
-      { x: ((width - marginW)/width)*100, y: (marginH/height)*100, w: (marginW/width)*100, h: ((height - 2*marginH)/height)*100 }, // MR
-      { x: 0, y: ((height - marginH)/height)*100, w: (marginW/width)*100, h: (marginH/height)*100 }, // BL
-      { x: (marginW/width)*100, y: ((height - marginH)/height)*100, w: ((width - 2*marginW)/width)*100, h: (marginH/height)*100 }, // BC
-      { x: ((width - marginW)/width)*100, y: ((height - marginH)/height)*100, w: (marginW/width)*100, h: (marginH/height)*100 }  // BR
-    ],
     bkgndMean: meanDensity,
     bkgndStdDev: stdDevDensity,
     bkgndScore: bkgndScore,
@@ -475,8 +475,24 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     perimeterAvgLuma,
     perimeterStdDevLuma,
     perimeterAvgSaturation,
+    
+    // Gap 1 Telemetry
     isLowContrast,
-    colorForegroundCount
+    usedColorFallback,
+    colorForegroundCount,
+    edgeBox: { x: edgeMinX, y: edgeMinY, w: edgeMaxX - edgeMinX, h: edgeMaxY - edgeMinY },
+    colorBox: usedColorFallback ? { x: colorMinX, y: colorMinY, w: colorMaxX - colorMinX, h: colorMaxY - colorMinY } : null,
+    
+    // Phase 4 Telemetry
+    gridDensities: Array.from(gridDensities),
+    gridCols: GRID_COLS,
+    gridRows: GRID_ROWS,
+    
+    fTotalEdges: totalStrongEdges,
+    fAvgX: avgX, fAvgY: avgY,
+    fThreshX: threshX, fThreshY: threshY,
+    fMinX: minX, fMaxX: maxX,
+    fMinY: minY, fMaxY: maxY,
   };
 
   return { lighting, background, framing, focus, tilt, debug };
