@@ -321,9 +321,10 @@ export function processFrame(imageData: ImageData): ProcessingResult {
       framing = { state: "fail", tip: "Card not clearly detected.", raw: edgeDensity };
       cardFillRatio = 0;
     } else {
-      if (cardFillRatio < 0.25 || cardFillRatio > 0.85) {
+      // Size check (fill ratio of the final box vs whole frame)
+      if (cardFillRatio < 0.25 || cardFillRatio > 0.95) {
         framing = { state: "fail", tip: "Move card closer or further.", raw: cardFillRatio };
-      } else if (cardFillRatio < 0.35 || cardFillRatio > 0.75) {
+      } else if (cardFillRatio < 0.35 || cardFillRatio > 0.85) {
         framing = { state: "warn", tip: "Almost there, adjust distance.", raw: cardFillRatio };
       }
     }
