@@ -51,6 +51,10 @@ export interface ProcessingResult {
     glarePercent: number;
     finalBoxSrc: string;
     bkgndMaskBox: { w: number, h: number };
+    
+    // Fix M Telemetry
+    isHdrScene: boolean;
+    bkgndStrategy: string;
   };
 }
 
@@ -485,76 +489,98 @@ export function processFrame(imageData: ImageData): ProcessingResult {
      finalBoxSrc = "FIX_I_FALLBACK";
   }
 
+  // Fix M-2: HDR Scene Detection
+  const isHdrScene = p99Luma > 230 && meanLuma < 110;
+
   // 4. Background Check (Phase 4 RESCOPED: Card-Box-Aware Full-Frame Sampling)
-  // Fix L: Expand finalBox by 10% on all sides (20% total) for the background mask
-  const cx = minX + finalBoxWidth / 2;
-  const cy = minY + finalBoxHeight / 2;
-  const newMaskWidth = finalBoxWidth * 1.20;
-  const newMaskHeight = finalBoxHeight * 1.20;
-  
-  const finalMaskMinX = Math.max(0, Math.floor(cx - newMaskWidth / 2));
-  const finalMaskMaxX = Math.min(width - 1, Math.floor(cx + newMaskWidth / 2));
-  const finalMaskMinY = Math.max(0, Math.floor(cy - newMaskHeight / 2));
-  const finalMaskMaxY = Math.min(height - 1, Math.floor(cy + newMaskHeight / 2));
-  
-  // 8x8 Grid 
   const GRID_COLS = 8;
   const GRID_ROWS = 8;
   const cellWidth = width / GRID_COLS;
   const cellHeight = height / GRID_ROWS;
   const cellArea = cellWidth * cellHeight;
-
-  const gridEdgesCount = new Float32Array(64);
-  const gridValidPixels = new Float32Array(64);
-
   const hasCardBox = finalBoxArea > 0 && !isHallucinated;
 
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      if (hasCardBox && x >= finalMaskMinX && x <= finalMaskMaxX && y >= finalMaskMinY && y <= finalMaskMaxY) {
-        // Skip pixels inside the card mask
-        continue;
-      }
-      const col = Math.floor(x / cellWidth);
-      const row = Math.floor(y / cellHeight);
-      const idx = row * GRID_COLS + col;
-      
-      // Safety check for boundaries
-      if (idx >= 0 && idx < 64) {
-        gridValidPixels[idx]++;
-        if (edgeMap[y * width + x]) {
-          gridEdgesCount[idx]++;
+  function computeGridSampling(useOuterRing: boolean, maskMinX: number, maskMaxX: number, maskMinY: number, maskMaxY: number) {
+    const pixels = new Float32Array(64);
+    const edges = new Float32Array(64);
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (hasCardBox && x >= maskMinX && x <= maskMaxX && y >= maskMinY && y <= maskMaxY) {
+          continue;
+        }
+        const col = Math.floor(x / cellWidth);
+        const row = Math.floor(y / cellHeight);
+        const idx = row * GRID_COLS + col;
+        if (idx >= 0 && idx < 64) {
+          pixels[idx]++;
+          if (edgeMap[y * width + x]) edges[idx]++;
         }
       }
     }
-  }
-
-  const gridDensities = new Float32Array(64);
-  let sumDensity = 0;
-  let validCellCount = 0;
-
-  for (let i = 0; i < 64; i++) {
-    const col = i % GRID_COLS;
-    const row = Math.floor(i / GRID_COLS);
-    
-    // Fix I: Outer-ring sampling when Fix D triggers
-    let isCellValid = true;
-    if (isHallucinated) {
-      // Only the outer ring is valid: top row, bottom row, left col, right col
-      if (!(row === 0 || row === GRID_ROWS - 1 || col === 0 || col === GRID_COLS - 1)) {
-        isCellValid = false;
+    const densities = new Float32Array(64);
+    densities.fill(-1);
+    let sumD = 0;
+    let vCount = 0;
+    for (let i = 0; i < 64; i++) {
+      const col = i % GRID_COLS;
+      const row = Math.floor(i / GRID_COLS);
+      let isValidPos = true;
+      if (useOuterRing) {
+        if (!(row === 0 || row === GRID_ROWS - 1 || col === 0 || col === GRID_COLS - 1)) {
+          isValidPos = false;
+        }
+      }
+      if (isValidPos && pixels[i] > cellArea * 0.25) {
+        densities[i] = edges[i] / pixels[i];
+        sumD += densities[i];
+        vCount++;
       }
     }
+    return { densities, vCount, sumD };
+  }
 
-    // Only consider the cell valid for sampling if at least 25% of it is outside the mask
-    if (isCellValid && gridValidPixels[i] > cellArea * 0.25) {
-      const density = gridEdgesCount[i] / gridValidPixels[i];
-      gridDensities[i] = density;
-      sumDensity += density;
-      validCellCount++;
-    } else {
-      gridDensities[i] = -1; // Mark invalid for telemetry
-    }
+  let bkgndStrategy = "STANDARD";
+  let applyOuterRing = isHallucinated || isHdrScene;
+  if (applyOuterRing) {
+    bkgndStrategy = "OUTER_RING";
+  }
+
+  let finalMaskMinX = 0, finalMaskMaxX = 0, finalMaskMinY = 0, finalMaskMaxY = 0;
+
+  if (applyOuterRing) {
+    finalMaskMinX = minX;
+    finalMaskMaxX = maxX;
+    finalMaskMinY = minY;
+    finalMaskMaxY = maxY;
+  } else {
+    // Fix L: Expand finalBox by 10% on all sides (20% total)
+    const cx = minX + finalBoxWidth / 2;
+    const cy = minY + finalBoxHeight / 2;
+    const newMaskWidth = finalBoxWidth * 1.20;
+    const newMaskHeight = finalBoxHeight * 1.20;
+    finalMaskMinX = Math.max(0, Math.floor(cx - newMaskWidth / 2));
+    finalMaskMaxX = Math.min(width - 1, Math.floor(cx + newMaskWidth / 2));
+    finalMaskMinY = Math.max(0, Math.floor(cy - newMaskHeight / 2));
+    finalMaskMaxY = Math.min(height - 1, Math.floor(cy + newMaskHeight / 2));
+  }
+
+  let { densities: gridDensities, vCount: validCellCount, sumD: sumDensity } = computeGridSampling(applyOuterRing, finalMaskMinX, finalMaskMaxX, finalMaskMinY, finalMaskMaxY);
+
+  // Fix M-1: Zero-cell guardrail
+  if (validCellCount < 8 && !applyOuterRing) {
+    bkgndStrategy = "OUTER_RING";
+    finalMaskMinX = minX;
+    finalMaskMaxX = maxX;
+    finalMaskMinY = minY;
+    finalMaskMaxY = maxY;
+    let fbResult = computeGridSampling(true, finalMaskMinX, finalMaskMaxX, finalMaskMinY, finalMaskMaxY);
+    gridDensities = fbResult.densities;
+    validCellCount = fbResult.vCount;
+    sumDensity = fbResult.sumD;
+  }
+
+  if (validCellCount < 8) {
+    bkgndStrategy = "GATED";
   }
 
   // Calculate Variance across valid grid cells
@@ -578,8 +604,9 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   let background: CheckResult = { state: "pass", tip: "Background OK", raw: bkgndScore };
   
   // Fix J + Fix K: Gate BKGND on FRAMING when card is too close (fillRatio > 0.95) ONLY IF not hallucinated
-  if (cardFillRatio > 0.95 && !isHallucinated) {
+  if (bkgndStrategy === "GATED" || (cardFillRatio > 0.95 && !isHallucinated)) {
     background = { state: "gated", tip: "Move camera back to evaluate background.", raw: 0 };
+    bkgndStrategy = "GATED";
   } else if (isWhiteBackground) {
     // Phase 2: Override edge-density BKGND check for white surfaces
     if (perimeterStdDevLuma >= 25) {
@@ -681,6 +708,9 @@ export function processFrame(imageData: ImageData): ProcessingResult {
       w: finalMaskMaxX - finalMaskMinX,
       h: finalMaskMaxY - finalMaskMinY
     },
+    
+    isHdrScene,
+    bkgndStrategy,
   };
 
   return { lighting, background, framing, focus, tilt, debug };

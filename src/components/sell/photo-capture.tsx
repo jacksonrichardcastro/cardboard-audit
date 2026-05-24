@@ -408,6 +408,8 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
                 VALID CELLS: {debugData.validCellCount !== undefined ? debugData.validCellCount : 'N/A'}/64
               </div>
               <div className="flex flex-wrap justify-between mt-1 gap-x-2 gap-y-1">
+                  <span>HDR SCENE: {debugData.isHdrScene ? "YES" : "NO"}</span>
+                  <span>STRATEGY: {debugData.bkgndStrategy}</span>
                   <span>WHT BKGND: {debugData.isWhiteBackground ? "YES" : "NO"}</span>
                   <span>LOW CONTRAST: {debugData.isLowContrast ? "YES" : "NO"}</span>
                   <span>PATH: {debugData.usedColorFallback ? "COLOR" : "EDGE"}</span>
