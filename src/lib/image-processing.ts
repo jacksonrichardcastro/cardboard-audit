@@ -174,7 +174,8 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   const perimeterVarianceLuma = Math.max(0, (sqSumPerimLuma / perimCount) - (perimeterAvgLuma * perimeterAvgLuma));
   const perimeterStdDevLuma = Math.sqrt(perimeterVarianceLuma);
 
-  const isWhiteBackground = perimeterAvgLuma > 180 && perimeterAvgSaturation < 15;
+  // Fix F: WHT BKGND threshold relaxation
+  const isWhiteBackground = perimeterAvgLuma > 160 && perimeterAvgSaturation < 22;
 
   // 3. Framing Check (Card Bounding Box Calculation)
   let edgeMinX = width, edgeMaxX = 0, edgeMinY = height, edgeMaxY = 0;
@@ -327,14 +328,33 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     }
   }
 
+  // Fix D: Hallucinated full canvas reject only if BOTH width and height > 90%
+  const isHallucinated = (finalBoxWidth / width) > 0.90 && (finalBoxHeight / height) > 0.90;
+
   // 4. Background Check (Phase 4 RESCOPED: Card-Box-Aware Full-Frame Sampling)
   // Mask the card region out of the processing canvas, add 5% margin to avoid card edges
   const marginMaskX = Math.floor(width * 0.05);
   const marginMaskY = Math.floor(height * 0.05);
-  const maskMinX = Math.max(0, minX - marginMaskX);
-  const maskMaxX = Math.min(width - 1, maxX + marginMaskX);
-  const maskMinY = Math.max(0, minY - marginMaskY);
-  const maskMaxY = Math.min(height - 1, maxY + marginMaskY);
+  
+  let maskMinX = minX;
+  let maskMaxX = maxX;
+  let maskMinY = minY;
+  let maskMaxY = maxY;
+
+  // Fix E: Overlay-rectangle fallback when detection methods hallucinate full-frame
+  if (isHallucinated) {
+    const overlayPadX = Math.floor(width * 0.05);
+    const overlayPadY = Math.floor(height * 0.05);
+    maskMinX = overlayPadX;
+    maskMaxX = width - overlayPadX;
+    maskMinY = overlayPadY;
+    maskMaxY = height - overlayPadY;
+  }
+
+  const finalMaskMinX = Math.max(0, maskMinX - marginMaskX);
+  const finalMaskMaxX = Math.min(width - 1, maskMaxX + marginMaskX);
+  const finalMaskMinY = Math.max(0, maskMinY - marginMaskY);
+  const finalMaskMaxY = Math.min(height - 1, maskMaxY + marginMaskY);
   
   // 8x8 Grid 
   const GRID_COLS = 8;
@@ -346,13 +366,11 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   const gridEdgesCount = new Float32Array(64);
   const gridValidPixels = new Float32Array(64);
 
-  // Fix D: Hallucinated full canvas reject only if BOTH width and height > 90%
-  const isHallucinated = (finalBoxWidth / width) > 0.90 && (finalBoxHeight / height) > 0.90;
-  const hasCardBox = finalBoxArea > 0 && !isHallucinated;
+  const hasCardBox = finalBoxArea > 0 || isHallucinated;
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      if (hasCardBox && x >= maskMinX && x <= maskMaxX && y >= maskMinY && y <= maskMaxY) {
+      if (hasCardBox && x >= finalMaskMinX && x <= finalMaskMaxX && y >= finalMaskMinY && y <= finalMaskMaxY) {
         // Skip pixels inside the card mask
         continue;
       }

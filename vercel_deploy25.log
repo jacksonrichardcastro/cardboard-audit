@@ -1,0 +1,452 @@
+Retrieving project…
+Deploying jacksonrichardcastros-projects/card-bound
+Uploading [--------------------] (0.0B/24.3KB)
+Uploading [=================---] (21.8KB/24.3KB)
+Uploading [====================] (24.3KB/24.3KB)
+  Inspect     https://vercel.com/jacksonrichardcastros-projects/card-bound/FXEkbFSFbtqMGTpahsNHgS7dxn3P
+  Preview     https://card-bound-ps3dze5b6-jacksonrichardcastros-projects.vercel.app
+Building…
+Building…
+Running build in Washington, D.C., USA (East) – iad1
+Build machine configuration: 2 cores, 8 GB
+Retrieving list of deployment files...
+Downloading 14777 deployment files...
+Restored build cache from previous deployment (69QnWywhwruMK8c7F7ctaVzaTzKT)
+Running "vercel build"
+Vercel CLI 54.4.1
+Installing dependencies...
+up to date in 2s
+260 packages are looking for funding
+run `npm fund` for details
+Detected Next.js version: 16.2.4
+Running "npm run build"
+> cardbound-app@0.1.0 build
+> next build
+Applying modifyConfig from Vercel
+▲ Next.js 16.2.4 (Turbopack)
+- Experiments (use with caution):
+· clientTraceMetadata
+Creating an optimized production build ...
+> Build error occurred
+Error: Turbopack build failed with 17 errors:
+./src/lib/image-processing.ts:367:5
+cannot reassign to a variable declared with `const`
+365 |     const overlayPadX = Math.floor(width * 0.05);
+366 |     const overlayPadY = Math.floor(height * 0.05);
+> 367 |     maskMinX = overlayPadX;
+|     ^^^^^^^^
+368 |     maskMaxX = width - overlayPadX;
+369 |     maskMinY = overlayPadY;
+370 |     maskMaxY = height - overlayPadY;
+Ecmascript file had an error
+Import traces:
+Client Component Browser:
+./src/lib/image-processing.ts [Client Component Browser]
+./src/components/sell/photo-capture.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+Client Component SSR:
+./src/lib/image-processing.ts [Client Component SSR]
+./src/components/sell/photo-capture.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+./src/lib/image-processing.ts:368:5
+cannot reassign to a variable declared with `const`
+366 |     const overlayPadY = Math.floor(height * 0.05);
+367 |     maskMinX = overlayPadX;
+> 368 |     maskMaxX = width - overlayPadX;
+|     ^^^^^^^^
+369 |     maskMinY = overlayPadY;
+370 |     maskMaxY = height - overlayPadY;
+371 |   }
+Ecmascript file had an error
+Import traces:
+Client Component Browser:
+./src/lib/image-processing.ts [Client Component Browser]
+./src/components/sell/photo-capture.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+Client Component SSR:
+./src/lib/image-processing.ts [Client Component SSR]
+./src/components/sell/photo-capture.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+./src/lib/image-processing.ts:369:5
+cannot reassign to a variable declared with `const`
+367 |     maskMinX = overlayPadX;
+368 |     maskMaxX = width - overlayPadX;
+> 369 |     maskMinY = overlayPadY;
+|     ^^^^^^^^
+370 |     maskMaxY = height - overlayPadY;
+371 |   }
+372 |
+Ecmascript file had an error
+Import traces:
+Client Component Browser:
+./src/lib/image-processing.ts [Client Component Browser]
+./src/components/sell/photo-capture.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+Client Component SSR:
+./src/lib/image-processing.ts [Client Component SSR]
+./src/components/sell/photo-capture.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+./src/lib/image-processing.ts:370:5
+cannot reassign to a variable declared with `const`
+368 |     maskMaxX = width - overlayPadX;
+369 |     maskMinY = overlayPadY;
+> 370 |     maskMaxY = height - overlayPadY;
+|     ^^^^^^^^
+371 |   }
+372 |
+373 |   const finalMaskMinX = Math.max(0, maskMinX - marginMaskX);
+Ecmascript file had an error
+Import traces:
+Client Component Browser:
+./src/lib/image-processing.ts [Client Component Browser]
+./src/components/sell/photo-capture.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+Client Component SSR:
+./src/lib/image-processing.ts [Client Component SSR]
+./src/components/sell/photo-capture.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+./src/lib/image-processing.ts:379:9
+the name `GRID_COLS` is defined multiple times
+377 |
+378 |   // 8x8 Grid
+> 379 |   const GRID_COLS = 8;
+|         ^^^^^^^^^
+380 |   const GRID_ROWS = 8;
+381 |   const cellWidth = width / GRID_COLS;
+382 |   const cellHeight = height / GRID_ROWS;
+Ecmascript file had an error
+Import traces:
+Client Component Browser:
+./src/lib/image-processing.ts [Client Component Browser]
+./src/components/sell/photo-capture.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+Client Component SSR:
+./src/lib/image-processing.ts [Client Component SSR]
+./src/components/sell/photo-capture.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+./src/lib/image-processing.ts:380:9
+the name `GRID_ROWS` is defined multiple times
+378 |   // 8x8 Grid
+379 |   const GRID_COLS = 8;
+> 380 |   const GRID_ROWS = 8;
+|         ^^^^^^^^^
+381 |   const cellWidth = width / GRID_COLS;
+382 |   const cellHeight = height / GRID_ROWS;
+383 |   const cellArea = cellWidth * cellHeight;
+Ecmascript file had an error
+Import traces:
+Client Component Browser:
+./src/lib/image-processing.ts [Client Component Browser]
+./src/components/sell/photo-capture.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+Client Component SSR:
+./src/lib/image-processing.ts [Client Component SSR]
+./src/components/sell/photo-capture.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+./src/lib/image-processing.ts:383:9
+the name `cellArea` is defined multiple times
+381 |   const cellWidth = width / GRID_COLS;
+382 |   const cellHeight = height / GRID_ROWS;
+> 383 |   const cellArea = cellWidth * cellHeight;
+|         ^^^^^^^^
+384 |
+385 |   const gridEdgesCount = new Float32Array(64);
+386 |   const gridValidPixels = new Float32Array(64);
+Ecmascript file had an error
+Import traces:
+Client Component Browser:
+./src/lib/image-processing.ts [Client Component Browser]
+./src/components/sell/photo-capture.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+Client Component SSR:
+./src/lib/image-processing.ts [Client Component SSR]
+./src/components/sell/photo-capture.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+./src/lib/image-processing.ts:382:9
+the name `cellHeight` is defined multiple times
+380 |   const GRID_ROWS = 8;
+381 |   const cellWidth = width / GRID_COLS;
+> 382 |   const cellHeight = height / GRID_ROWS;
+|         ^^^^^^^^^^
+383 |   const cellArea = cellWidth * cellHeight;
+384 |
+385 |   const gridEdgesCount = new Float32Array(64);
+Ecmascript file had an error
+Import traces:
+Client Component Browser:
+./src/lib/image-processing.ts [Client Component Browser]
+./src/components/sell/photo-capture.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+Client Component SSR:
+./src/lib/image-processing.ts [Client Component SSR]
+./src/components/sell/photo-capture.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+./src/lib/image-processing.ts:381:9
+the name `cellWidth` is defined multiple times
+379 |   const GRID_COLS = 8;
+380 |   const GRID_ROWS = 8;
+> 381 |   const cellWidth = width / GRID_COLS;
+|         ^^^^^^^^^
+382 |   const cellHeight = height / GRID_ROWS;
+383 |   const cellArea = cellWidth * cellHeight;
+384 |
+Ecmascript file had an error
+Import traces:
+Client Component Browser:
+./src/lib/image-processing.ts [Client Component Browser]
+./src/components/sell/photo-capture.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+Client Component SSR:
+./src/lib/image-processing.ts [Client Component SSR]
+./src/components/sell/photo-capture.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+./src/lib/image-processing.ts:385:9
+the name `gridEdgesCount` is defined multiple times
+383 |   const cellArea = cellWidth * cellHeight;
+384 |
+> 385 |   const gridEdgesCount = new Float32Array(64);
+|         ^^^^^^^^^^^^^^
+386 |   const gridValidPixels = new Float32Array(64);
+387 |
+388 |   const hasCardBox = finalBoxArea > 0 || isHallucinated;
+Ecmascript file had an error
+Import traces:
+Client Component Browser:
+./src/lib/image-processing.ts [Client Component Browser]
+./src/components/sell/photo-capture.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+Client Component SSR:
+./src/lib/image-processing.ts [Client Component SSR]
+./src/components/sell/photo-capture.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+./src/lib/image-processing.ts:386:9
+the name `gridValidPixels` is defined multiple times
+384 |
+385 |   const gridEdgesCount = new Float32Array(64);
+> 386 |   const gridValidPixels = new Float32Array(64);
+|         ^^^^^^^^^^^^^^^
+387 |
+388 |   const hasCardBox = finalBoxArea > 0 || isHallucinated;
+389 |
+Ecmascript file had an error
+Import traces:
+Client Component Browser:
+./src/lib/image-processing.ts [Client Component Browser]
+./src/components/sell/photo-capture.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+Client Component SSR:
+./src/lib/image-processing.ts [Client Component SSR]
+./src/components/sell/photo-capture.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+./src/lib/image-processing.ts:355:9
+the name `marginMaskX` is defined multiple times
+353 |   // 4. Background Check (Phase 4 RESCOPED: Card-Box-Aware Full-Frame Sampling)
+354 |   // Mask the card region out of the processing canvas, add 5% margin to avoid card edges
+> 355 |   const marginMaskX = Math.floor(width * 0.05);
+|         ^^^^^^^^^^^
+356 |   const marginMaskY = Math.floor(height * 0.05);
+357 |
+358 |   let maskMinX = minX;
+Ecmascript file had an error
+Import traces:
+Client Component Browser:
+./src/lib/image-processing.ts [Client Component Browser]
+./src/components/sell/photo-capture.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+Client Component SSR:
+./src/lib/image-processing.ts [Client Component SSR]
+./src/components/sell/photo-capture.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+./src/lib/image-processing.ts:356:9
+the name `marginMaskY` is defined multiple times
+354 |   // Mask the card region out of the processing canvas, add 5% margin to avoid card edges
+355 |   const marginMaskX = Math.floor(width * 0.05);
+> 356 |   const marginMaskY = Math.floor(height * 0.05);
+|         ^^^^^^^^^^^
+357 |
+358 |   let maskMinX = minX;
+359 |   let maskMaxX = maxX;
+Ecmascript file had an error
+Import traces:
+Client Component Browser:
+./src/lib/image-processing.ts [Client Component Browser]
+./src/components/sell/photo-capture.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+Client Component SSR:
+./src/lib/image-processing.ts [Client Component SSR]
+./src/components/sell/photo-capture.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+./src/lib/image-processing.ts:359:7
+the name `maskMaxX` is defined multiple times
+357 |
+358 |   let maskMinX = minX;
+> 359 |   let maskMaxX = maxX;
+|       ^^^^^^^^
+360 |   let maskMinY = minY;
+361 |   let maskMaxY = maxY;
+362 |
+Ecmascript file had an error
+Import traces:
+Client Component Browser:
+./src/lib/image-processing.ts [Client Component Browser]
+./src/components/sell/photo-capture.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+Client Component SSR:
+./src/lib/image-processing.ts [Client Component SSR]
+./src/components/sell/photo-capture.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+./src/lib/image-processing.ts:361:7
+the name `maskMaxY` is defined multiple times
+359 |   let maskMaxX = maxX;
+360 |   let maskMinY = minY;
+> 361 |   let maskMaxY = maxY;
+|       ^^^^^^^^
+362 |
+363 |   // Fix E: Overlay-rectangle fallback when detection methods hallucinate full-frame
+364 |   if (isHallucinated) {
+Ecmascript file had an error
+Import traces:
+Client Component Browser:
+./src/lib/image-processing.ts [Client Component Browser]
+./src/components/sell/photo-capture.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+Client Component SSR:
+./src/lib/image-processing.ts [Client Component SSR]
+./src/components/sell/photo-capture.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+./src/lib/image-processing.ts:358:7
+the name `maskMinX` is defined multiple times
+356 |   const marginMaskY = Math.floor(height * 0.05);
+357 |
+> 358 |   let maskMinX = minX;
+|       ^^^^^^^^
+359 |   let maskMaxX = maxX;
+360 |   let maskMinY = minY;
+361 |   let maskMaxY = maxY;
+Ecmascript file had an error
+Import traces:
+Client Component Browser:
+./src/lib/image-processing.ts [Client Component Browser]
+./src/components/sell/photo-capture.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+Client Component SSR:
+./src/lib/image-processing.ts [Client Component SSR]
+./src/components/sell/photo-capture.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+./src/lib/image-processing.ts:360:7
+the name `maskMinY` is defined multiple times
+358 |   let maskMinX = minX;
+359 |   let maskMaxX = maxX;
+> 360 |   let maskMinY = minY;
+|       ^^^^^^^^
+361 |   let maskMaxY = maxY;
+362 |
+363 |   // Fix E: Overlay-rectangle fallback when detection methods hallucinate full-frame
+Ecmascript file had an error
+Import traces:
+Client Component Browser:
+./src/lib/image-processing.ts [Client Component Browser]
+./src/components/sell/photo-capture.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Client Component Browser]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+Client Component SSR:
+./src/lib/image-processing.ts [Client Component SSR]
+./src/components/sell/photo-capture.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Client Component SSR]
+./src/app/sell/new/client-page.tsx [Server Component]
+./src/app/sell/new/page.tsx [Server Component]
+at <unknown> (./src/lib/image-processing.ts:367:5)
+at <unknown> (./src/lib/image-processing.ts:368:5)
+at <unknown> (./src/lib/image-processing.ts:369:5)
+at <unknown> (./src/lib/image-processing.ts:370:5)
+at <unknown> (./src/lib/image-processing.ts:379:9)
+at <unknown> (./src/lib/image-processing.ts:380:9)
+at <unknown> (./src/lib/image-processing.ts:383:9)
+at <unknown> (./src/lib/image-processing.ts:382:9)
+at <unknown> (./src/lib/image-processing.ts:381:9)
+at <unknown> (./src/lib/image-processing.ts:385:9)
+at <unknown> (./src/lib/image-processing.ts:386:9)
+at <unknown> (./src/lib/image-processing.ts:355:9)
+at <unknown> (./src/lib/image-processing.ts:356:9)
+at <unknown> (./src/lib/image-processing.ts:359:7)
+at <unknown> (./src/lib/image-processing.ts:361:7)
+at <unknown> (./src/lib/image-processing.ts:358:7)
+at <unknown> (./src/lib/image-processing.ts:360:7)
+Error: Command "npm run build" exited with 1
+{
+  "id": "dpl_FXEkbFSFbtqMGTpahsNHgS7dxn3P",
+  "url": "https://card-bound-ps3dze5b6-jacksonrichardcastros-projects.vercel.app",
+  "inspectorUrl": "https://vercel.com/jacksonrichardcastros-projects/card-bound/FXEkbFSFbtqMGTpahsNHgS7dxn3P",
+  "readyState": "ERROR",
+  "target": null,
+  "deploymentApiUrl": "https://api.vercel.com/v13/deployments/dpl_FXEkbFSFbtqMGTpahsNHgS7dxn3P",
+  "error": {
+    "name": "BUILD_ERROR",
+    "message": "Command \"npm run build\" exited with 1"
+  }
+}
