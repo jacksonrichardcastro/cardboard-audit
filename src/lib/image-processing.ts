@@ -213,7 +213,7 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   const perimeterStdDevLuma = Math.sqrt(perimeterVarianceLuma);
 
   // Both bright enough AND monochromatic (white)
-  const isWhiteBackground = perimeterAvgLuma > 140 && perimeterAvgSaturation < 25;
+  const isWhiteBackground = perimeterAvgLuma > 140 && perimeterAvgSaturation < 30;
 
   let background: CheckResult = { state: "pass", tip: "Background OK", raw: bkgndScore };
   
