@@ -579,8 +579,8 @@ export function processFrame(imageData: ImageData): ProcessingResult {
 
   let { densities: gridDensities, cellLumas: gridLumas, vCount: validCellCount, sumD: sumDensity, sumL: sumCellLuma } = computeGridSampling(applyOuterRing, finalMaskMinX, finalMaskMaxX, finalMaskMinY, finalMaskMaxY);
 
-  // Fix M-1: Zero-cell guardrail
-  if (validCellCount < 8 && !applyOuterRing) {
+  // Fix M-1 / O-1: Zero-cell guardrail (16 cells)
+  if (validCellCount < 16 && !applyOuterRing) {
     bkgndStrategy = "OUTER_RING";
     finalMaskMinX = minX;
     finalMaskMaxX = maxX;
@@ -659,11 +659,25 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     }
   } else {
     // Phase 1.3/Phase 4: Standard edge-density check for non-white surfaces
-    // Fix C: Mean density logic changed to AND with variance, thresholds raised
-    if (meanDensity >= 0.55 || bkgndScore >= 0.60) { 
+    // Fix O-2: Tighten EDGE thresholds when STRATEGY=OUTER_RING
+    let greenThresh = 0.50;
+    let redThresh = 0.60;
+    let meanYellowThresh = 0.45;
+    let meanRedThresh = 0.55;
+
+    if (bkgndStrategy === "OUTER_RING") {
+      greenThresh = 0.35;
+      redThresh = 0.50;
+      meanYellowThresh = 0.35;
+      meanRedThresh = 0.50;
+    }
+
+    if (meanDensity >= meanRedThresh || bkgndScore >= redThresh) { 
       background = { state: "fail", tip: "Background too busy/textured.", raw: Math.max(meanDensity, bkgndScore) };
-    } else if (meanDensity >= 0.45 || bkgndScore >= 0.50) {
+    } else if (meanDensity >= meanYellowThresh || bkgndScore >= greenThresh) {
       background = { state: "warn", tip: "Consider a plainer background.", raw: Math.max(meanDensity, bkgndScore) };
+    } else {
+      background = { state: "pass", tip: "Background OK", raw: Math.max(meanDensity, bkgndScore) };
     }
   }
 
