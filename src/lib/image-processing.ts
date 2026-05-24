@@ -492,8 +492,8 @@ export function processFrame(imageData: ImageData): ProcessingResult {
      finalBoxSrc = "FIX_I_FALLBACK";
   }
 
-  // Fix M-2: HDR Scene Detection
-  const isHdrScene = p99Luma > 230 && perimeterAvgLuma < 110;
+  // Fix M-2: HDR Scene Detection (using perimeterAvgLuma)
+  const isHdrScene = p99Luma > 220 && perimeterAvgLuma < 110;
 
   // 4. Background Check (Phase 4 RESCOPED: Card-Box-Aware Full-Frame Sampling)
   const GRID_COLS = 8;
@@ -649,10 +649,10 @@ export function processFrame(imageData: ImageData): ProcessingResult {
       background = { state: "pass", tip: "White background OK", raw: perimeterStdDevLuma };
     }
   } else if (useLumaMetric) {
-    // Fix N-A: Luminance metric
-    if (meanLumaAcrossCells >= 150 || lumaSdAcrossCells >= 40) {
+    // Fix N-A / N-B: Luminance metric
+    if (meanLumaAcrossCells >= 150 || lumaSdAcrossCells >= 45) {
       background = { state: "fail", tip: "Background too bright or varied.", raw: meanLumaAcrossCells };
-    } else if ((meanLumaAcrossCells >= 100 && meanLumaAcrossCells < 150) || (meanLumaAcrossCells < 100 && lumaSdAcrossCells >= 20 && lumaSdAcrossCells < 40)) {
+    } else if ((meanLumaAcrossCells >= 100 && meanLumaAcrossCells < 150) || (meanLumaAcrossCells < 100 && lumaSdAcrossCells >= 30 && lumaSdAcrossCells < 45)) {
       background = { state: "warn", tip: "Consider a plainer background.", raw: meanLumaAcrossCells };
     } else {
       background = { state: "pass", tip: "Background OK", raw: meanLumaAcrossCells };
