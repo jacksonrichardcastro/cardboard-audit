@@ -49,6 +49,7 @@ export interface ProcessingResult {
     // HDR Investigation Phase 1
     hdrBox: { x: number, y: number, w: number, h: number } | null;
     glarePercent: number;
+    finalBoxSrc: string;
   };
 }
 
@@ -399,6 +400,24 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     }
   }
 
+  // --- HDR Investigation Phase 2: Promote HDR BOX ---
+  let finalBoxSrc = usedColorFallback ? "COLOR" : "EDGE";
+  
+  if (hdrBox) {
+    const hdrW = hdrBox.w;
+    const hdrH = hdrBox.h;
+    const isCollapse = hdrW < width * 0.1 || hdrH < height * 0.1;
+    const isSaturate = hdrW > width * 0.9 && hdrH > height * 0.9;
+    
+    if (!isCollapse && !isSaturate) {
+       minX = hdrBox.x;
+       maxX = hdrBox.x + hdrBox.w;
+       minY = hdrBox.y;
+       maxY = hdrBox.y + hdrBox.h;
+       finalBoxSrc = "HDR";
+    }
+  }
+
   // Final Framing Validation
   const finalBoxWidth = Math.max(0, maxX - minX);
   const finalBoxHeight = Math.max(0, maxY - minY);
@@ -461,6 +480,9 @@ export function processFrame(imageData: ImageData): ProcessingResult {
 
   // Fix D: Hallucinated full canvas reject only if BOTH width and height > 90%
   const isHallucinated = (finalBoxWidth / width) > 0.90 && (finalBoxHeight / height) > 0.90;
+  if (isHallucinated) {
+     finalBoxSrc = "FIX_I_FALLBACK";
+  }
 
   // 4. Background Check (Phase 4 RESCOPED: Card-Box-Aware Full-Frame Sampling)
   // Mask the card region out of the processing canvas, add 5% margin to avoid card edges
@@ -651,6 +673,7 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     // HDR Investigation Phase 1
     hdrBox,
     glarePercent,
+    finalBoxSrc,
   };
 
   return { lighting, background, framing, focus, tilt, debug };
