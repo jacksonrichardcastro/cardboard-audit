@@ -1,4 +1,4 @@
-export type CheckState = "pass" | "warn" | "fail" | "idle";
+export type CheckState = "pass" | "warn" | "fail" | "idle" | "gated";
 
 export interface CheckResult {
   state: CheckState;
@@ -423,7 +423,10 @@ export function processFrame(imageData: ImageData): ProcessingResult {
 
   let background: CheckResult = { state: "pass", tip: "Background OK", raw: bkgndScore };
   
-  if (isWhiteBackground) {
+  // Fix J: Gate BKGND on FRAMING when card is too close (fillRatio > 0.95)
+  if (cardFillRatio > 0.95) {
+    background = { state: "gated", tip: "Move camera back to evaluate background.", raw: 0 };
+  } else if (isWhiteBackground) {
     // Phase 2: Override edge-density BKGND check for white surfaces
     if (perimeterStdDevLuma >= 25) {
       background = { state: "fail", tip: "White background too shadowed/uneven.", raw: perimeterStdDevLuma };

@@ -300,7 +300,8 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
     const colorClass = 
       check.state === 'pass' ? 'bg-green-500' :
       check.state === 'warn' ? 'bg-yellow-500' :
-      check.state === 'fail' ? 'bg-red-500' : 'bg-gray-500';
+      check.state === 'fail' ? 'bg-red-500' : 
+      check.state === 'gated' ? 'bg-gray-500 border border-gray-400' : 'bg-gray-500';
       
     return (
       <div className="flex flex-col items-center group relative cursor-pointer w-16">
@@ -315,7 +316,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
 
   const isAnyFail = [tilt, framing, lighting, focus, background].some(c => c.state === 'fail');
   const isAnyWarn = [tilt, framing, lighting, focus, background].some(c => c.state === 'warn');
-  const isAnyIdle = [tilt, framing, lighting, focus, background].some(c => c.state === 'idle');
+  const isAnyIdle = [tilt, framing, lighting, focus, background].some(c => c.state === 'idle' || c.state === 'gated');
   
   const captureButtonClass = isAnyFail || isAnyIdle ? 'bg-muted text-muted-foreground opacity-50 cursor-not-allowed' :
                              isAnyWarn ? 'bg-yellow-500 hover:bg-yellow-600 text-yellow-950' : 
@@ -386,7 +387,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
           <div>LEVEL: {tilt.raw?.toFixed(2) ?? 'N/A'}</div>
           <div>LIGHTING: {lighting.raw?.toFixed(4) ?? 'N/A'}</div>
           <div>FOCUS: {focus.raw?.toFixed(2) ?? 'N/A'}</div>
-          <div className="mt-1 text-white border-b border-gray-600">BKGND: {background.raw?.toFixed(4) ?? 'N/A'}</div>
+          <div className="mt-1 text-white border-b border-gray-600">BKGND: {background.state === 'gated' ? 'GATED' : (background.raw?.toFixed(4) ?? 'N/A')}</div>
           {debugData && (
             <>
               <div>BKGND SCORES:</div>
