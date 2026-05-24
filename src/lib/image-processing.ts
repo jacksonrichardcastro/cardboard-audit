@@ -50,6 +50,7 @@ export interface ProcessingResult {
     hdrBox: { x: number, y: number, w: number, h: number } | null;
     glarePercent: number;
     finalBoxSrc: string;
+    bkgndMaskBox: { w: number, h: number };
   };
 }
 
@@ -485,14 +486,16 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   }
 
   // 4. Background Check (Phase 4 RESCOPED: Card-Box-Aware Full-Frame Sampling)
-  // Mask the card region out of the processing canvas, add 5% margin to avoid card edges
-  const marginMaskX = Math.floor(width * 0.05);
-  const marginMaskY = Math.floor(height * 0.05);
+  // Fix L: Expand finalBox by 10% on all sides (20% total) for the background mask
+  const cx = minX + finalBoxWidth / 2;
+  const cy = minY + finalBoxHeight / 2;
+  const newMaskWidth = finalBoxWidth * 1.20;
+  const newMaskHeight = finalBoxHeight * 1.20;
   
-  const finalMaskMinX = Math.max(0, minX - marginMaskX);
-  const finalMaskMaxX = Math.min(width - 1, maxX + marginMaskX);
-  const finalMaskMinY = Math.max(0, minY - marginMaskY);
-  const finalMaskMaxY = Math.min(height - 1, maxY + marginMaskY);
+  const finalMaskMinX = Math.max(0, Math.floor(cx - newMaskWidth / 2));
+  const finalMaskMaxX = Math.min(width - 1, Math.floor(cx + newMaskWidth / 2));
+  const finalMaskMinY = Math.max(0, Math.floor(cy - newMaskHeight / 2));
+  const finalMaskMaxY = Math.min(height - 1, Math.floor(cy + newMaskHeight / 2));
   
   // 8x8 Grid 
   const GRID_COLS = 8;
@@ -674,6 +677,10 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     hdrBox,
     glarePercent,
     finalBoxSrc,
+    bkgndMaskBox: {
+      w: finalMaskMaxX - finalMaskMinX,
+      h: finalMaskMaxY - finalMaskMinY
+    },
   };
 
   return { lighting, background, framing, focus, tilt, debug };
