@@ -174,7 +174,7 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   const perimeterVarianceLuma = Math.max(0, (sqSumPerimLuma / perimCount) - (perimeterAvgLuma * perimeterAvgLuma));
   const perimeterStdDevLuma = Math.sqrt(perimeterVarianceLuma);
 
-  const isWhiteBackground = perimeterAvgLuma > 140 && perimeterAvgSaturation < 30;
+  const isWhiteBackground = perimeterAvgLuma > 180 && perimeterAvgSaturation < 15;
 
   // 3. Framing Check (Card Bounding Box Calculation)
   let edgeMinX = width, edgeMaxX = 0, edgeMinY = height, edgeMaxY = 0;
@@ -346,8 +346,8 @@ export function processFrame(imageData: ImageData): ProcessingResult {
   const gridEdgesCount = new Float32Array(64);
   const gridValidPixels = new Float32Array(64);
 
-  // If card bounding box collapsed, we sample the whole frame.
-  const hasCardBox = finalBoxArea > 0;
+  // If card bounding box collapsed OR hallucinates full canvas (>88%), sample whole frame
+  const hasCardBox = finalBoxArea > 0 && (finalBoxArea / numPixels) <= 0.88;
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
@@ -416,10 +416,11 @@ export function processFrame(imageData: ImageData): ProcessingResult {
     }
   } else {
     // Phase 1.3/Phase 4: Standard edge-density check for non-white surfaces
-    if (bkgndScore >= 0.60) { 
-      background = { state: "fail", tip: "Background too busy/textured.", raw: bkgndScore };
-    } else if (bkgndScore >= 0.50) {
-      background = { state: "warn", tip: "Consider a plainer background.", raw: bkgndScore };
+    // Fix B: Uniformly-busy scenes missed by variance-across-cells are caught by mean density
+    if (meanDensity > 0.25 || bkgndScore >= 0.60) { 
+      background = { state: "fail", tip: "Background too busy/textured.", raw: Math.max(meanDensity, bkgndScore) };
+    } else if (meanDensity > 0.15 || bkgndScore >= 0.50) {
+      background = { state: "warn", tip: "Consider a plainer background.", raw: Math.max(meanDensity, bkgndScore) };
     }
   }
 
