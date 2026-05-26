@@ -5,9 +5,11 @@ import { Lock, Star } from "lucide-react";
 import { setGrailListing } from "@/app/actions/profile";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { getPossessiveName } from "@/lib/utils/formatters";
 
 export interface BinderGridProps {
   isOwner?: boolean;
+  sellerName?: string;
   collectionValueCents?: number | null;
   // This prop designates which listing is the user's grail
   grailListingId?: number | null;
@@ -22,7 +24,7 @@ export interface BinderGridProps {
   }[];
 }
 
-export function BinderGrid({ isOwner, collectionValueCents, grailListingId, listings }: BinderGridProps) {
+export function BinderGrid({ isOwner, sellerName, collectionValueCents, grailListingId, listings }: BinderGridProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -64,20 +66,6 @@ export function BinderGrid({ isOwner, collectionValueCents, grailListingId, list
 
   return (
     <div className="space-y-8">
-      {/* Binder Header & Collection Value (Private by default) */}
-      <div className="flex items-center justify-between border-b border-white/10 pb-4">
-        <div>
-          <h2 className="text-xl font-bold text-white">Online Binder</h2>
-          <p className="text-sm text-zinc-500">Curated Collection Showcase</p>
-        </div>
-        <div className="flex items-center gap-2 px-4 py-2 bg-zinc-900 rounded-lg border border-white/5">
-          <Lock className="w-4 h-4 text-zinc-500" />
-          <span className="text-sm font-semibold text-zinc-400">
-            {isPrivate ? "Private Value" : `$${((collectionValueCents || 0) / 100).toLocaleString()}`}
-          </span>
-        </div>
-      </div>
-
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
         {displayListings.map((listing, idx) => {
           const isGrail = listing.id === grailListing.id;
@@ -117,6 +105,15 @@ export function BinderGrid({ isOwner, collectionValueCents, grailListingId, list
                     : 'border-white/10 bg-black group-hover:border-white/20'
                 }`}
               >
+                {/* Top-edge sweep ribbon for Grail */}
+                {isGrail && (
+                  <div className="absolute top-0 left-0 w-full bg-gradient-to-r from-transparent via-[#D4AF37]/90 to-transparent text-black text-center py-1 z-30 backdrop-blur-sm">
+                    <span className="text-[9px] md:text-[10px] font-bold tracking-widest uppercase font-[family-name:var(--font-display)] drop-shadow-md">
+                      {getPossessiveName(sellerName || 'Seller', isOwner)} Grail
+                    </span>
+                  </div>
+                )}
+                
                 <img
                   src={photoUrl}
                   alt={listing.title}
@@ -124,15 +121,6 @@ export function BinderGrid({ isOwner, collectionValueCents, grailListingId, list
                   loading="lazy"
                 />
               </div>
-
-              {/* Grail Subtitle Label */}
-              {isGrail && (
-                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black border border-[#D4AF37] px-3 py-1 rounded-sm shadow-[0_4px_10px_rgba(0,0,0,0.5)] z-20">
-                  <span className="text-[10px] font-bold tracking-widest text-[#D4AF37] uppercase">
-                    Alex's Grail
-                  </span>
-                </div>
-              )}
 
               {/* Card Metadata */}
               <div className={`mt-4 px-1 space-y-1 ${isGrail ? 'mt-6 text-center' : ''}`}>

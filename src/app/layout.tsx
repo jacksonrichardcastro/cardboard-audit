@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Outfit } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -7,6 +7,11 @@ import { SiteHeader } from "@/components/layout/site-header";
 
 const inter = Inter({
   variable: "--font-sans",
+  subsets: ["latin"],
+});
+
+const outfit = Outfit({
+  variable: "--font-display",
   subsets: ["latin"],
 });
 
@@ -24,7 +29,7 @@ export default function RootLayout({
     <ClerkProvider afterSignOutUrl="/">
       <html
         lang="en"
-        className={`${inter.variable} h-screen antialiased dark`}
+        className={`${inter.variable} ${outfit.variable} h-screen antialiased dark`}
         suppressHydrationWarning
       >
         <body className="min-h-screen flex flex-col font-sans">

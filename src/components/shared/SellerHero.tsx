@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Mail } from "lucide-react";
+import Link from "next/link";
 
 interface BadgeConfig {
   id: string;
@@ -23,11 +24,13 @@ interface SellerHeroProps {
   avatarUrl?: string | null;
   headerStyle?: string | null;
   bannerImageUrl?: string | null;
+  isOwner?: boolean;
+  sellerId?: string;
   // Passing these so we can render mock cards in the background shelf
   heroCards?: { id: string; url: string }[];
 }
 
-export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerImageUrl, heroCards = [] }: SellerHeroProps) {
+export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerImageUrl, isOwner, sellerId, heroCards = [] }: SellerHeroProps) {
   // Placeholder images for the hero shelf background
   const defaultHeroCards = Array.from({ length: 8 }).map((_, i) => ({
     id: `hero-card-${i}`,
@@ -91,12 +94,19 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
       {/* Profile Details */}
       <div className="relative z-10 mt-16 md:mt-20 flex flex-col items-center text-center px-4">
         <div className="flex items-center gap-3 mb-2">
-          <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight uppercase">
+          <h1 className="text-2xl md:text-3xl font-light font-[family-name:var(--font-display)] text-white tracking-[0.2em] uppercase">
             {name}
           </h1>
           <Badge variant="secondary" className="bg-[#7C3AED]/20 text-[#7C3AED] hover:bg-[#7C3AED]/30 border border-[#7C3AED]/50 rounded-sm font-semibold tracking-wider text-xs px-2 py-0.5 uppercase">
             Text Profile
           </Badge>
+          <Link 
+            href={isOwner ? "/messages" : `/messages/new?to=${sellerId}`}
+            className="p-1.5 rounded-full bg-[#7C3AED]/10 text-[#7C3AED] hover:bg-[#7C3AED]/20 hover:text-white transition-colors border border-[#7C3AED]/30"
+            title={isOwner ? "My Messages" : `Message ${name}`}
+          >
+            <Mail className="w-4 h-4" />
+          </Link>
         </div>
         
         {bio ? (
@@ -105,7 +115,7 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
           </p>
         ) : (
           <p className="text-sm md:text-base text-zinc-400 font-medium max-w-2xl tracking-wide mb-8">
-            Expert Collector | PSA 10 Specialist | Trax Trusted Seller | Curating Rarity
+            Expert Collector &bull; PSA 10 Specialist &bull; Trax Trusted Seller &bull; Curating Rarity
           </p>
         )}
 
