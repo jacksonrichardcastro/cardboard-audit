@@ -25,12 +25,23 @@ async function main() {
     console.log("Upserting stub seller details...");
     await db.insert(sellers).values({
       userId: MOCK_SELLER_ID,
-      businessName: "Cardbound Premium Store",
+      handle: "alexthegrader",
+      displayName: "Alex 'The Grader' Chen",
+      bio: "Expert Collector | PSA 10 Specialist | Trax Trusted Seller since 2018 | Curating Rarity",
+      locationCity: "New York, NY",
+      businessName: "Alex The Grader",
       description: "Official prototype vendor mock.",
       identityVerified: true,
       applicationStatus: "APPROVED",
       stripeConnectAccountId: "acct_stubbed_verified",
-    }).onConflictDoNothing({ target: sellers.userId });
+    }).onConflictDoUpdate({ 
+      target: sellers.userId, 
+      set: { 
+        handle: "alexthegrader",
+        displayName: "Alex 'The Grader' Chen",
+        bio: "Expert Collector | PSA 10 Specialist | Trax Trusted Seller since 2018 | Curating Rarity" 
+      } 
+    });
 
     console.log("Mock seller profile configured stably.");
 
@@ -73,7 +84,14 @@ async function main() {
           kind: "front",
           sortOrder: 0,
           storagePath: item.photoUrl,
-        });
+        }).onConflictDoNothing();
+      }
+
+      // Set the first listing as the Grail for testing
+      if (inserted === 0 && listingId) {
+        await db.update(sellers)
+          .set({ grailListingId: listingId })
+          .where(eq(sellers.userId, MOCK_SELLER_ID));
       }
 
       inserted++;

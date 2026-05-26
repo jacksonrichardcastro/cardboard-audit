@@ -5,9 +5,15 @@ import { sellers, listings } from "@/lib/db/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { Metadata } from "next";
 import Link from "next/link";
+import { ProfileHeader } from "@/components/shared/ProfileHeader";
+import { SellerHero } from "@/components/shared/SellerHero";
+import { ActiveListingsGrid } from "@/components/storefront/ActiveListingsGrid";
+import { BinderGrid } from "@/components/shared/BinderGrid";
+import { auth } from "@clerk/nextjs/server";
 
 interface Props {
   params: Promise<{ handle: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
@@ -39,8 +45,13 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 }
 
 export default async function SellerStorePage(props: Props) {
+  const { userId } = await auth();
   const params = await props.params;
+  const searchParams = await props.searchParams;
   const handleLower = params.handle.toLowerCase();
+  
+  // Default to collection tab if none specified
+  const currentTab = searchParams.tab || "collection"; 
 
   if (RESERVED_HANDLES.has(handleLower)) {
     notFound();
@@ -68,97 +79,95 @@ export default async function SellerStorePage(props: Props) {
     ))
     .orderBy(desc(listings.createdAt));
 
-  const memberSince = seller.createdAt.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const isOwner = seller.userId === userId;
+  const grailId = seller.grailListingId || (activeListings.length > 0 ? activeListings[0].id : null);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Profile Header Block */}
-      <div className="border-b border-white/10 bg-card/30">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-16 flex flex-col items-center text-center">
-          {seller.profilePhotoUrl ? (
-            <img src={seller.profilePhotoUrl} alt="Profile" className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover mb-6 border-4 border-background" />
-          ) : (
-            <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-violet-600 flex items-center justify-center text-5xl md:text-6xl font-bold mb-6 border-4 border-background">
-              {(seller.displayName || seller.businessName).charAt(0).toUpperCase()}
+    <div className="min-h-screen bg-black text-white selection:bg-[#7C3AED]/30">
+      <ProfileHeader />
+      
+      <SellerHero 
+        name={seller.displayName || seller.businessName}
+        handle={seller.handle || ''}
+        bio={seller.bio}
+        avatarUrl={seller.profilePhotoUrl}
+        // Passing the listings photos to the background shelf if they exist
+        heroCards={activeListings.slice(0, 8).map(l => ({ 
+          id: l.id.toString(), 
+          url: (l.photos && l.photos[0]) ? l.photos[0] : 'https://placehold.co/300x400/1a1a1a/333333?text=PSA+10' 
+        }))}
+      />
+
+      <main className="max-w-7xl mx-auto px-4 md:px-8 pb-24">
+        
+        {/* Navigation Tabs Row */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-white/10 mb-8 mt-4 gap-4">
+          <nav className="flex items-center gap-6 overflow-x-auto pb-[-1px] scrollbar-hide">
+            <Link 
+              href={`/${seller.handle}?tab=collection`}
+              className={`pb-4 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${currentTab === 'collection' ? 'border-white text-white' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+            >
+              Collection
+            </Link>
+            <Link 
+              href={`/${seller.handle}?tab=active-listings`}
+              className={`pb-4 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${currentTab === 'active-listings' ? 'border-white text-white' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+            >
+              Active Listings
+            </Link>
+            <Link 
+              href={`/${seller.handle}?tab=ratings`}
+              className={`pb-4 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${currentTab === 'ratings' ? 'border-white text-white' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+            >
+              Ratings
+            </Link>
+            <Link 
+              href={`/${seller.handle}?tab=blog`}
+              className={`pb-4 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${currentTab === 'blog' ? 'border-white text-white' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+            >
+              Blog
+            </Link>
+          </nav>
+          
+          <div className="pb-4 flex items-center">
+            <span className="text-xs md:text-sm font-medium text-zinc-400">
+              Trusted by <span className="text-white">12,500+</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Tab Content Areas */}
+        <div className="min-h-[400px]">
+          {currentTab === "collection" && (
+            <BinderGrid 
+              isOwner={isOwner}
+              listings={activeListings} 
+              grailListingId={grailId}
+              collectionValueCents={isOwner ? 2450000 : 0} // Uses a hardcoded mock value for owner just for V1 prototype until tracker is integrated
+            />
+          )}
+
+          {currentTab === "active-listings" && (
+            <ActiveListingsGrid 
+              isOwner={isOwner}
+              grailListingId={grailId}
+              listings={activeListings} 
+            />
+          )}
+
+          {currentTab === "ratings" && (
+            <div className="text-center py-24 bg-zinc-950/50 rounded-xl border border-white/5">
+              <p className="text-lg text-zinc-500">Ratings coming soon.</p>
             </div>
           )}
-          
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">
-            {seller.displayName || seller.businessName}
-          </h1>
-          <p className="text-lg text-muted-foreground mb-4">@{seller.handle}</p>
-          
-          {seller.bio && (
-            <p className="max-w-xl text-foreground mb-6">{seller.bio}</p>
+
+          {currentTab === "blog" && (
+            <div className="text-center py-24 bg-zinc-950/50 rounded-xl border border-white/5">
+              <p className="text-lg text-zinc-500">Blog posts coming soon.</p>
+            </div>
           )}
-          
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            {seller.locationCity && (
-              <span>{seller.locationCity}{seller.locationState ? `, ${seller.locationState}` : ''}</span>
-            )}
-            {seller.locationCity && <span>•</span>}
-            <span>Member since {memberSince}</span>
-          </div>
         </div>
-      </div>
-
-      {/* Listings Grid */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-12">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-bold tracking-tight">Active Listings</h2>
-          <span className="bg-primary/20 text-primary py-1 px-3 rounded-full text-sm font-medium">
-            {activeListings.length} {activeListings.length === 1 ? 'card' : 'cards'}
-          </span>
-        </div>
-
-        {activeListings.length === 0 ? (
-          <div className="text-center py-24 bg-card/30 rounded-xl border border-white/10">
-            <p className="text-lg text-muted-foreground">No active listings right now. Check back soon.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {activeListings.map((listing) => {
-              const photoUrl = (Array.isArray(listing.photos) && listing.photos.length > 0 && listing.photos[0] !== null) ? listing.photos[0] : 'https://placehold.co/400x550';
-              
-              return (
-                <Link 
-                  key={listing.id} 
-                  href={`/listings/${listing.id}`} 
-                  className="block"
-                >
-                  <div className="rounded-md overflow-hidden bg-card border border-border/50 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-150 cursor-pointer">
-                    <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-neutral-900">
-                      <img
-                        src={photoUrl}
-                        alt={listing.title}
-                        className="absolute inset-0 h-full w-full object-cover"
-                        loading="lazy"
-                        draggable={false}
-                        onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).style.visibility = "hidden";
-                        }}
-                      />
-                    </div>
-                    <div className="p-2 space-y-1">
-                      <h3 className="text-sm font-medium line-clamp-1 text-foreground" title={listing.title}>
-                        {listing.title}
-                      </h3>
-                      <div className="flex items-center justify-between">
-                        <p className="text-base font-semibold text-foreground">
-                          ${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </p>
-                        <p className="text-xs text-muted-foreground truncate ml-2">
-                          {listing.grade ? `${listing.gradingCompany} ${listing.grade}` : listing.condition}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              )
-            })}
-          </div>
-        )}
-      </div>
+      </main>
     </div>
   );
 }

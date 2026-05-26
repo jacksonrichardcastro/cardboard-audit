@@ -28,6 +28,7 @@ export const sellers = pgTable("sellers", {
   photoGuidelinesAcceptedAt: timestamp("photo_guidelines_accepted_at"),
   approvedAt: timestamp("approved_at"),
   rejectionReason: text("rejection_reason"),
+  grailListingId: integer("grail_listing_id"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => ({
   handleIdx: unique("sellers_handle_idx").on(table.handle),
