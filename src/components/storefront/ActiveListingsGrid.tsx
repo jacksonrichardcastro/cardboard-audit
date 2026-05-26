@@ -53,7 +53,7 @@ export function ActiveListingsGrid({ isOwner, grailListingId, listings }: Active
           : 'https://placehold.co/400x550';
         
         return (
-          <div key={listing.id} className="group relative rounded-xl overflow-hidden bg-[#111111] border border-white/5 hover:border-white/10 hover:-translate-y-1 transition-all duration-300">
+          <div key={listing.id} className={`group relative rounded-xl overflow-hidden bg-[#111111] border border-white/5 hover:border-white/10 hover:-translate-y-1 transition-all duration-300 w-[65%] mx-auto ${grailListingId === listing.id ? 'scale-110 md:scale-[1.35] md:z-10' : ''}`}>
             
             {/* MVP Grail Toggle for Owners */}
             {isOwner && (
@@ -75,7 +75,7 @@ export function ActiveListingsGrid({ isOwner, grailListingId, listings }: Active
             )}
 
             <Link href={`/listings/${listing.id}`} className="block">
-              <div className="relative aspect-[3/4] w-full overflow-hidden bg-black">
+              <div className="relative aspect-[5/7] w-full overflow-hidden bg-black">
                 <img
                   src={photoUrl}
                   alt={listing.title}

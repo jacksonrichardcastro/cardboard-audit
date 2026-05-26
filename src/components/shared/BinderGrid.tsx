@@ -76,7 +76,7 @@ export function BinderGrid({ isOwner, sellerName, collectionValueCents, grailLis
           return (
             <div 
               key={listing.id} 
-              className={`relative flex flex-col group ${isGrail ? 'md:scale-110 md:z-10 mx-2' : ''}`}
+              className={`relative flex flex-col group w-[65%] mx-auto ${isGrail ? 'scale-110 md:scale-[1.35] md:z-10' : ''}`}
             >
               
               {/* MVP Grail Toggle for Owners */}
@@ -99,7 +99,7 @@ export function BinderGrid({ isOwner, sellerName, collectionValueCents, grailLis
               )}
 
               {/* V16 Grail Centerpiece Styling */}
-              <div className={`relative aspect-[3/4] w-full rounded-lg overflow-hidden border transition-all duration-300 ${
+              <div className={`relative aspect-[5/7] w-full rounded-lg overflow-hidden border transition-all duration-300 ${
                   isGrail 
                     ? 'border-[#D4AF37] shadow-[0_0_30px_rgba(212,175,55,0.3)] bg-gradient-to-b from-[#D4AF37]/20 to-black' 
                     : 'border-white/10 bg-black group-hover:border-white/20'

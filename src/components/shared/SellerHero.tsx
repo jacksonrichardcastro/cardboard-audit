@@ -115,7 +115,7 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
           </p>
         ) : (
           <p className="text-xs md:text-sm text-zinc-400 font-medium max-w-2xl tracking-wide mb-4 md:mb-6">
-            Expert Collector &bull; PSA 10 Specialist &bull; Trax Trusted Seller &bull; Curating Rarity
+            Expert Collector | PSA 10 Specialist | Trax Trusted Seller since 2018 | Curating Rarity
           </p>
         )}
 
