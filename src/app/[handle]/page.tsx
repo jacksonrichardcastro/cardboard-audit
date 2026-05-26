@@ -107,10 +107,10 @@ export default async function SellerStorePage(props: Props) {
         }))}
       />
 
-      <main className="max-w-7xl mx-auto px-4 md:px-8 pb-24">
+      <main className="max-w-7xl mx-auto px-4 md:px-8 pb-12">
         
         {/* Navigation Tabs Row */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-white/10 mb-8 mt-4 gap-4 relative">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-white/10 mb-6 mt-0 gap-4 relative">
           <nav className="flex items-center gap-6 overflow-x-auto pb-[-1px] scrollbar-hide relative z-10">
             <Link 
               href={`/${seller.handle}?tab=collection`}

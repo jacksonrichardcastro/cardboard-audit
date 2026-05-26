@@ -40,29 +40,29 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
   const displayCards = heroCards.length > 0 ? heroCards : defaultHeroCards;
 
   return (
-    <div className="relative w-full bg-black pt-4 pb-12 flex flex-col items-center">
+    <div className="relative w-full bg-black pt-0 pb-6 md:pb-8 flex flex-col items-center">
       {/* Ambient Radial Glow Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-[600px] bg-[#7C3AED]/20 blur-[120px] rounded-full opacity-50" />
       </div>
 
       {/* Hero Card Shelf or Banner */}
-      <div className="relative w-full max-w-7xl mx-auto px-4 md:px-8 mt-6">
+      <div className="relative w-full max-w-7xl mx-auto px-4 md:px-8 mt-2">
         {headerStyle === 'banner' && bannerImageUrl ? (
-          <div className="relative h-48 md:h-64 w-full flex overflow-hidden rounded-xl border border-white/10 shadow-2xl bg-zinc-900">
+          <div className="relative h-36 md:h-48 w-full flex overflow-hidden rounded-xl border border-white/10 shadow-2xl bg-zinc-900">
             {/* Subtle bottom shelf glow to match the original gradient effect overlapping the avatar */}
             <div className="absolute bottom-0 left-0 w-full h-1/3 bg-gradient-to-t from-[#7C3AED]/40 to-transparent pointer-events-none z-10" />
             <img src={bannerImageUrl} alt={`${name} Banner`} className="absolute inset-0 w-full h-full object-cover" />
           </div>
         ) : (
-          <div className="relative h-48 md:h-64 w-full flex justify-center gap-2 md:gap-4 overflow-hidden rounded-xl border border-white/10 bg-black/50 p-4 md:p-6 shadow-2xl backdrop-blur-sm">
+          <div className="relative h-36 md:h-48 w-full flex justify-center gap-2 md:gap-4 overflow-hidden rounded-xl border border-white/10 bg-black/50 p-4 md:p-6 shadow-2xl backdrop-blur-sm">
             {/* Subtle bottom shelf glow */}
             <div className="absolute bottom-0 left-0 w-full h-1/3 bg-gradient-to-t from-[#7C3AED]/40 to-transparent pointer-events-none" />
             
             {displayCards.slice(0, 8).map((card, i) => (
               <div 
                 key={card.id} 
-                className={`relative flex-shrink-0 w-28 md:w-40 aspect-[3/4] rounded-lg border border-white/10 overflow-hidden shadow-xl transform transition-transform duration-500 hover:-translate-y-4 hover:z-10`}
+                className={`relative flex-shrink-0 w-24 md:w-32 aspect-[3/4] rounded-lg border border-white/10 overflow-hidden shadow-xl transform transition-transform duration-500 hover:-translate-y-4 hover:z-10`}
                 style={{
                   // Creating a slight fan/curve effect if desired, but strictly horizontal as requested
                   transform: `translateY(${Math.abs(i - 3.5) * 4}px)`,
@@ -81,10 +81,10 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
             <img 
               src={avatarUrl} 
               alt={name} 
-              className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-black shadow-2xl bg-zinc-900" 
+              className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-4 border-black shadow-2xl bg-zinc-900" 
             />
           ) : (
-            <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-black shadow-2xl bg-zinc-800 flex items-center justify-center text-3xl md:text-5xl font-bold text-white">
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-black shadow-2xl bg-zinc-800 flex items-center justify-center text-2xl md:text-3xl font-bold text-white">
               {name.charAt(0).toUpperCase()}
             </div>
           )}
@@ -92,9 +92,9 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
       </div>
 
       {/* Profile Details */}
-      <div className="relative z-10 mt-16 md:mt-20 flex flex-col items-center text-center px-4">
+      <div className="relative z-10 mt-10 md:mt-12 flex flex-col items-center text-center px-4">
         <div className="flex items-center gap-3 mb-2">
-          <h1 className="text-2xl md:text-3xl font-light font-[family-name:var(--font-display)] text-white tracking-[0.2em] uppercase">
+          <h1 className="text-xl md:text-2xl font-light font-[family-name:var(--font-display)] text-white tracking-[0.2em] uppercase">
             {name}
           </h1>
           <Badge variant="secondary" className="bg-[#7C3AED]/20 text-[#7C3AED] hover:bg-[#7C3AED]/30 border border-[#7C3AED]/50 rounded-sm font-semibold tracking-wider text-xs px-2 py-0.5 uppercase">
@@ -110,28 +110,28 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
         </div>
         
         {bio ? (
-          <p className="text-sm md:text-base text-zinc-400 font-medium max-w-2xl tracking-wide mb-8">
+          <p className="text-xs md:text-sm text-zinc-400 font-medium max-w-2xl tracking-wide mb-4 md:mb-6">
             {bio}
           </p>
         ) : (
-          <p className="text-sm md:text-base text-zinc-400 font-medium max-w-2xl tracking-wide mb-8">
+          <p className="text-xs md:text-sm text-zinc-400 font-medium max-w-2xl tracking-wide mb-4 md:mb-6">
             Expert Collector &bull; PSA 10 Specialist &bull; Trax Trusted Seller &bull; Curating Rarity
           </p>
         )}
 
         {/* Prestige Emblems Row (Exactly 5, single row) */}
-        <div className="flex flex-wrap items-center justify-center gap-4 md:gap-8 max-w-4xl mx-auto">
+        <div className="flex flex-wrap items-center justify-center gap-3 md:gap-6 max-w-4xl mx-auto">
           {PRESTIGE_BADGES.map((badge) => (
             <div key={badge.id} className="flex flex-col items-center gap-3">
               {badge.imgSrc ? (
                 // Future Asset Injection Point
-                <div className="w-16 h-16 md:w-24 md:h-24 relative hover:scale-110 transition-transform duration-300 drop-shadow-2xl">
+                <div className="w-14 h-14 md:w-16 md:h-16 relative hover:scale-110 transition-transform duration-300 drop-shadow-2xl">
                   <img src={badge.imgSrc} alt={badge.label} className="w-full h-full object-contain" />
                 </div>
               ) : (
                 // V16 Placeholder Styling (3D tactile feel mockup)
-                <div className={`w-16 h-16 md:w-24 md:h-24 rounded-lg flex items-center justify-center border-2 shadow-[0_10px_20px_rgba(0,0,0,0.5),inset_0_2px_4px_rgba(255,255,255,0.2)] hover:scale-110 transition-transform duration-300 ${badge.fallbackColor} transform rotate-3`}>
-                   <CheckCircle2 className="w-8 h-8 md:w-12 md:h-12 opacity-80" />
+                <div className={`w-14 h-14 md:w-16 md:h-16 rounded-lg flex items-center justify-center border-2 shadow-[0_10px_20px_rgba(0,0,0,0.5),inset_0_2px_4px_rgba(255,255,255,0.2)] hover:scale-110 transition-transform duration-300 ${badge.fallbackColor} transform rotate-3`}>
+                   <CheckCircle2 className="w-6 h-6 md:w-8 md:h-8 opacity-80" />
                 </div>
               )}
               <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-zinc-500">
