@@ -91,6 +91,8 @@ export default async function SellerStorePage(props: Props) {
         handle={seller.handle || ''}
         bio={seller.bio}
         avatarUrl={seller.profilePhotoUrl}
+        headerStyle={seller.headerStyle}
+        bannerImageUrl={seller.bannerImageUrl}
         // Passing the listings photos to the background shelf if they exist
         heroCards={activeListings.slice(0, 8).map(l => ({ 
           id: l.id.toString(), 

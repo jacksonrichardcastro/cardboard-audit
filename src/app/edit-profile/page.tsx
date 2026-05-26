@@ -32,6 +32,8 @@ export default async function EditProfilePage() {
               bio: seller.bio,
               locationCity: seller.locationCity,
               profilePhotoUrl: seller.profilePhotoUrl,
+              headerStyle: seller.headerStyle,
+              bannerImageUrl: seller.bannerImageUrl,
             }} 
           />
         </div>

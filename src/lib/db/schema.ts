@@ -15,6 +15,8 @@ export const sellers = pgTable("sellers", {
   displayName: varchar("display_name", { length: 100 }),
   bio: varchar("bio", { length: 160 }),
   profilePhotoUrl: text("profile_photo_url"),
+  headerStyle: varchar("header_style", { length: 20 }).notNull().default("cards"), // "cards" or "banner"
+  bannerImageUrl: text("banner_image_url"),
   locationCity: varchar("location_city", { length: 100 }),
   locationState: varchar("location_state", { length: 50 }),
   description: text("description"),

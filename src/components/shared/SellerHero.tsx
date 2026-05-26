@@ -21,11 +21,13 @@ interface SellerHeroProps {
   handle: string;
   bio?: string | null;
   avatarUrl?: string | null;
+  headerStyle?: string | null;
+  bannerImageUrl?: string | null;
   // Passing these so we can render mock cards in the background shelf
   heroCards?: { id: string; url: string }[];
 }
 
-export function SellerHero({ name, handle, bio, avatarUrl, heroCards = [] }: SellerHeroProps) {
+export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerImageUrl, heroCards = [] }: SellerHeroProps) {
   // Placeholder images for the hero shelf background
   const defaultHeroCards = Array.from({ length: 8 }).map((_, i) => ({
     id: `hero-card-${i}`,
@@ -41,26 +43,34 @@ export function SellerHero({ name, handle, bio, avatarUrl, heroCards = [] }: Sel
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-[600px] bg-[#7C3AED]/20 blur-[120px] rounded-full opacity-50" />
       </div>
 
-      {/* Hero Card Shelf */}
+      {/* Hero Card Shelf or Banner */}
       <div className="relative w-full max-w-7xl mx-auto px-4 md:px-8 mt-6">
-        <div className="relative h-48 md:h-64 w-full flex justify-center gap-2 md:gap-4 overflow-hidden rounded-xl border border-white/10 bg-black/50 p-4 md:p-6 shadow-2xl backdrop-blur-sm">
-          {/* Subtle bottom shelf glow */}
-          <div className="absolute bottom-0 left-0 w-full h-1/3 bg-gradient-to-t from-[#7C3AED]/40 to-transparent pointer-events-none" />
-          
-          {displayCards.slice(0, 8).map((card, i) => (
-            <div 
-              key={card.id} 
-              className={`relative flex-shrink-0 w-28 md:w-40 aspect-[3/4] rounded-lg border border-white/10 overflow-hidden shadow-xl transform transition-transform duration-500 hover:-translate-y-4 hover:z-10`}
-              style={{
-                // Creating a slight fan/curve effect if desired, but strictly horizontal as requested
-                transform: `translateY(${Math.abs(i - 3.5) * 4}px)`,
-                opacity: 1 - Math.abs(i - 3.5) * 0.1
-              }}
-            >
-              <img src={card.url} alt="Hero Card" className="absolute inset-0 w-full h-full object-cover" />
-            </div>
-          ))}
-        </div>
+        {headerStyle === 'banner' && bannerImageUrl ? (
+          <div className="relative h-48 md:h-64 w-full flex overflow-hidden rounded-xl border border-white/10 shadow-2xl bg-zinc-900">
+            {/* Subtle bottom shelf glow to match the original gradient effect overlapping the avatar */}
+            <div className="absolute bottom-0 left-0 w-full h-1/3 bg-gradient-to-t from-[#7C3AED]/40 to-transparent pointer-events-none z-10" />
+            <img src={bannerImageUrl} alt={`${name} Banner`} className="absolute inset-0 w-full h-full object-cover" />
+          </div>
+        ) : (
+          <div className="relative h-48 md:h-64 w-full flex justify-center gap-2 md:gap-4 overflow-hidden rounded-xl border border-white/10 bg-black/50 p-4 md:p-6 shadow-2xl backdrop-blur-sm">
+            {/* Subtle bottom shelf glow */}
+            <div className="absolute bottom-0 left-0 w-full h-1/3 bg-gradient-to-t from-[#7C3AED]/40 to-transparent pointer-events-none" />
+            
+            {displayCards.slice(0, 8).map((card, i) => (
+              <div 
+                key={card.id} 
+                className={`relative flex-shrink-0 w-28 md:w-40 aspect-[3/4] rounded-lg border border-white/10 overflow-hidden shadow-xl transform transition-transform duration-500 hover:-translate-y-4 hover:z-10`}
+                style={{
+                  // Creating a slight fan/curve effect if desired, but strictly horizontal as requested
+                  transform: `translateY(${Math.abs(i - 3.5) * 4}px)`,
+                  opacity: 1 - Math.abs(i - 3.5) * 0.1
+                }}
+              >
+                <img src={card.url} alt="Hero Card" className="absolute inset-0 w-full h-full object-cover" />
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Profile Avatar (overlapping the shelf) */}
         <div className="absolute left-1/2 bottom-0 translate-y-1/2 -translate-x-1/2 z-20">

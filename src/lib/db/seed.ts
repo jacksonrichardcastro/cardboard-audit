@@ -34,16 +34,54 @@ async function main() {
       identityVerified: true,
       applicationStatus: "APPROVED",
       stripeConnectAccountId: "acct_stubbed_verified",
+      headerStyle: "cards",
     }).onConflictDoUpdate({ 
       target: sellers.userId, 
       set: { 
         handle: "alexthegrader",
         displayName: "Alex 'The Grader' Chen",
-        bio: "Expert Collector | PSA 10 Specialist | Trax Trusted Seller since 2018 | Curating Rarity" 
+        bio: "Expert Collector | PSA 10 Specialist | Trax Trusted Seller since 2018 | Curating Rarity",
+        headerStyle: "cards"
       } 
     });
 
     console.log("Mock seller profile configured stably.");
+
+    const MOCK_SELLER_ID_2 = "mock-seller-banner";
+
+    // 2b. Add a second test seller with banner header style
+    console.log("Upserting stub user 2 (banner test)...");
+    await db.insert(users).values({
+      id: MOCK_SELLER_ID_2,
+      email: "banner@mock-seller.com",
+      role: "seller",
+    }).onConflictDoNothing({ target: users.id });
+
+    await db.insert(sellers).values({
+      userId: MOCK_SELLER_ID_2,
+      handle: "banner_test",
+      displayName: "Banner Test Shop",
+      bio: "Testing the new banner header option.",
+      locationCity: "Austin, TX",
+      businessName: "Banner Test",
+      description: "Banner test shop.",
+      identityVerified: true,
+      applicationStatus: "APPROVED",
+      stripeConnectAccountId: "acct_stubbed_banner",
+      headerStyle: "banner",
+      bannerImageUrl: "https://placehold.co/1500x400/1a1a1a/7C3AED?text=Banner+Test",
+    }).onConflictDoUpdate({ 
+      target: sellers.userId, 
+      set: { 
+        handle: "banner_test",
+        displayName: "Banner Test Shop",
+        bio: "Testing the new banner header option.",
+        headerStyle: "banner",
+        bannerImageUrl: "https://placehold.co/1500x400/1a1a1a/7C3AED?text=Banner+Test",
+      } 
+    });
+
+    console.log("Banner test seller profile configured stably.");
 
     // 3. Migrate local mock data arrays natively into the db listings matrix
     console.log("Deploying robust explicit listing boundaries...");

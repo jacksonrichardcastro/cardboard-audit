@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { Lock, Star } from "lucide-react";
 import { setGrailListing } from "@/app/actions/profile";
