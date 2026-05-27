@@ -32,6 +32,7 @@ export async function getRecommendedListings(userId: string | null, limit: numbe
       sport: listings.sport,
       gradeTier: listings.gradeTier,
       era: listings.era,
+      listingType: listings.listingType,
       createdAt: listings.createdAt,
       sellerId: listings.sellerId,
       photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE card_id = ${listings.cardId}), '[]'::json)`,

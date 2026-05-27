@@ -41,7 +41,11 @@ export default async function Home(props: Props) {
     priceCents: d.priceCents,
     photoUrl: (Array.isArray(d.photos) && d.photos.length > 0 && d.photos[0] !== null) ? d.photos[0] : 'https://placehold.co/400x550',
     sellerBusinessName: d.sellerName,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    sport: d.sport || "",
+    listingType: d.listingType || "BUY_IT_NOW",
+    gradeTier: d.gradeTier || "Raw / Ungraded",
+    era: d.era || "Modern (2010+)"
   }));
 
   // "Recently added" - sorted natively via DB query ordering (first 16)
@@ -63,7 +67,11 @@ export default async function Home(props: Props) {
     priceCents: d.priceCents,
     photoUrl: (Array.isArray(d.photos) && d.photos.length > 0 && d.photos[0] !== null) ? d.photos[0] : 'https://placehold.co/400x550',
     sellerBusinessName: d.sellerName,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    sport: d.sport || "",
+    listingType: d.listingType || "BUY_IT_NOW",
+    gradeTier: d.gradeTier || "Raw / Ungraded",
+    era: d.era || "Modern (2010+)"
   }));
 
   const hasPreferences = !!(prefs && prefs.sportCategories && prefs.sportCategories.length > 0);
