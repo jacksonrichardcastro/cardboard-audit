@@ -34,7 +34,7 @@ export function ActiveListingsGrid({ isOwner, listings }: ActiveListingsGridProp
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+    <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 gap-2 md:gap-3">
       {listings.map((listing) => {
         const photoUrl = (Array.isArray(listing.photos) && listing.photos.length > 0 && listing.photos[0] !== null) 
           ? listing.photos[0] 
@@ -52,15 +52,15 @@ export function ActiveListingsGrid({ isOwner, listings }: ActiveListingsGridProp
                   loading="lazy"
                 />
               </div>
-              <div className="p-3">
-                <h3 className="text-xs md:text-sm font-medium line-clamp-1 text-zinc-300 mb-2">
+              <div className="p-2">
+                <h3 className="text-[10px] md:text-xs font-medium line-clamp-1 text-zinc-300 mb-1">
                   {listing.title}
                 </h3>
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-sm md:text-base font-bold text-white">
+                <div className="flex items-center justify-between mb-1.5">
+                  <p className="text-xs md:text-sm font-bold text-white">
                     ${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </p>
-                  <p className="text-[10px] md:text-xs text-zinc-500 truncate ml-2">
+                  <p className="text-[9px] md:text-[10px] text-zinc-500 truncate ml-1.5">
                     {listing.grade ? `${listing.gradingCompany} ${listing.grade}` : listing.condition}
                   </p>
                 </div>
@@ -68,11 +68,11 @@ export function ActiveListingsGrid({ isOwner, listings }: ActiveListingsGridProp
             </Link>
             
             {/* STRICT V16 CONFIRMATION: BIN + Offer Flow (No "Bid Now") */}
-            <div className="grid grid-cols-2 gap-2 px-3 pb-3">
-              <Button size="sm" className="w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-semibold">
+            <div className="grid grid-cols-2 gap-1.5 px-2 pb-2">
+              <Button className="h-6 w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-[9px] md:text-[10px] font-semibold px-1 rounded">
                 Buy Now
               </Button>
-              <Button size="sm" variant="outline" className="w-full border-white/10 bg-white/5 hover:bg-white/10 text-white text-xs font-semibold">
+              <Button variant="outline" className="h-6 w-full border-white/10 bg-white/5 hover:bg-white/10 text-white text-[9px] md:text-[10px] font-semibold px-1 rounded">
                 Make Offer
               </Button>
             </div>
