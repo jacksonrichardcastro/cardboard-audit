@@ -25,7 +25,7 @@ async function main() {
       displayName: "Alex 'The Grader' Chen",
       bio: "Expert Collector | PSA 10 Specialist | Trax Trusted Seller since 2018 | Curating Rarity",
       businessName: "Alex The Grader",
-      avatarUrl: "/mock/avatar_alex_chen.png",
+      profilePhotoUrl: "/mock/avatar_alex_chen.png",
       kycStatus: "unverified",
       badges: ["ambassador", "verified", "founding"],
     }).onConflictDoUpdate({ target: profiles.userId, set: { handle: "alexthegrader" } });
@@ -69,7 +69,7 @@ async function main() {
       displayName: "Alex 'The Grader' Chen",
       bio: "Expert Collector | PSA 10 Specialist | Trax Trusted Seller since 2018 | Curating Rarity",
       businessName: "Storefront Test Shop",
-      avatarUrl: "/mock/avatar_alex_chen.png",
+      profilePhotoUrl: "/mock/avatar_alex_chen.png",
       headerStyle: "cards",
       kycStatus: "verified",
       stripeConnectAccountId: "acct_verified_seller",

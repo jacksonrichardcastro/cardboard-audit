@@ -42,7 +42,7 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
   const displayCardsRaw = heroCards.length > 0 ? heroCards : defaultHeroCards;
   // Ensure we have enough cards to force an overflow and symmetric edge bleed
   // We need around 10-12 cards to overflow a 1280px container symmetrically
-  const displayCards = [...displayCardsRaw, ...displayCardsRaw, ...displayCardsRaw].slice(0, 14);
+  const displayCards = [...displayCardsRaw, ...displayCardsRaw, ...displayCardsRaw].slice(0, 12);
 
   return (
     <div className="relative w-full bg-black pt-0 pb-6 md:pb-8 flex flex-col items-center">
