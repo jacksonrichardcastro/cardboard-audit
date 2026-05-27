@@ -23,7 +23,7 @@ async function main() {
       userId: BUYER_ID,
       handle: "alexthegrader",
       displayName: "Alex 'The Grader' Chen",
-      bio: "Expert Collector | PSA 10 Specialist | Trax Trusted Seller since 2018 | Curating Rarity",
+      bio: "Expert Collector | PSA 10 Specialist | Trusted Seller Since 2018 | Curating Rarity",
       businessName: "Alex The Grader",
       profilePhotoUrl: "/mock/avatar_alex_chen.png",
       kycStatus: "unverified",
@@ -68,13 +68,13 @@ async function main() {
       userId: SELLER_ID,
       handle: "storefront_test",
       displayName: "Alex 'The Grader' Chen",
-      bio: "Expert Collector | PSA 10 Specialist | Trax Trusted Seller since 2018 | Curating Rarity",
+      bio: "Expert Collector | PSA 10 Specialist | Trusted Seller Since 2018 | Curating Rarity",
       businessName: "Storefront Test Shop",
       profilePhotoUrl: "/mock/avatar_alex_chen.png",
       headerStyle: "cards",
       kycStatus: "verified",
       stripeConnectAccountId: "acct_verified_seller",
-      badges: ["founding", "certified", "verified"],
+      badges: ["founding", "verified", "ambassador"],
     }).onConflictDoUpdate({ target: profiles.userId, set: { handle: "storefront_test" } });
 
     // Insert 60 cards, and 55 listings

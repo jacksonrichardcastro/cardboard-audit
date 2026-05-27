@@ -111,8 +111,10 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
           <h1 className="text-xl md:text-2xl font-light font-[family-name:var(--font-display)] text-white tracking-[0.2em] uppercase">
             {name}
           </h1>
-          <Badge variant="secondary" className="bg-[#7C3AED]/20 text-[#7C3AED] hover:bg-[#7C3AED]/30 border border-[#7C3AED]/50 rounded-sm font-semibold tracking-wider text-xs px-2 py-0.5 uppercase">
-            Text Profile
+          {/* V1 Hardcoded presence indicator. Future: Support Online/Away/Offline states with corresponding dot colors (green/yellow/gray) */}
+          <Badge variant="secondary" className="flex items-center gap-1.5 bg-[#7C3AED]/20 text-[#7C3AED] hover:bg-[#7C3AED]/30 border border-[#7C3AED]/50 rounded-sm font-semibold tracking-wider text-xs px-2 py-0.5 uppercase">
+            <span className="w-1.5 h-1.5 bg-green-500 rounded-full inline-block"></span>
+            Online
           </Badge>
           <Link 
             href={isOwner ? "/messages" : `/messages/new?to=${sellerId}`}
@@ -129,7 +131,7 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
           </p>
         ) : (
           <p className="text-xs md:text-sm text-zinc-400 font-medium max-w-2xl tracking-wide mb-4 md:mb-6">
-            Expert Collector | PSA 10 Specialist | Trax Trusted Seller since 2018 | Curating Rarity
+            Expert Collector | PSA 10 Specialist | Trusted Seller Since 2018 | Curating Rarity
           </p>
         )}
 
