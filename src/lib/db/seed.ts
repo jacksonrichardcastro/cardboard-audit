@@ -25,7 +25,8 @@ async function main() {
       displayName: "Alex 'The Grader' Chen",
       bio: "Expert Collector | PSA 10 Specialist | Trax Trusted Seller since 2018 | Curating Rarity",
       businessName: "Alex The Grader",
-      headerStyle: "cards",
+      kycStatus: "unverified",
+      badges: ["ambassador", "verified", "founding"],
     }).onConflictDoUpdate({ target: profiles.userId, set: { handle: "alexthegrader" } });
 
     // Insert some cards for buyer
@@ -64,8 +65,8 @@ async function main() {
     await db.insert(profiles).values({
       userId: SELLER_ID,
       handle: "storefront_test",
-      displayName: "Storefront Exemplar",
-      bio: "High volume seller with active listings",
+      displayName: "Alex 'The Grader' Chen",
+      bio: "Expert Collector | PSA 10 Specialist | Trax Trusted Seller since 2018 | Curating Rarity",
       businessName: "Storefront Test Shop",
       headerStyle: "cards",
       kycStatus: "verified",

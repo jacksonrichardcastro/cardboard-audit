@@ -144,7 +144,7 @@ export default async function SellerStorePage(props: Props) {
     heroCardsData = binderCards;
   }
 
-  const formattedHeroCards = heroCardsData.slice(0, 8).map(item => ({
+  const formattedHeroCards = heroCardsData.slice(0, 12).map(item => ({
     id: item.id.toString(),
     url: (item.photos && item.photos[0]) ? item.photos[0] : 'https://placehold.co/300x400/1a1a1a/333333?text=PSA+10'
   }));

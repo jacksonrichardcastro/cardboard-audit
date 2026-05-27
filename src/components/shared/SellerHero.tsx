@@ -34,7 +34,7 @@ interface SellerHeroProps {
 
 export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerImageUrl, isOwner, sellerId, heroCards = [], customizerNode, badges = [] }: SellerHeroProps) {
   // Placeholder images for the hero shelf background
-  const defaultHeroCards = Array.from({ length: 8 }).map((_, i) => ({
+  const defaultHeroCards = Array.from({ length: 12 }).map((_, i) => ({
     id: `hero-card-${i}`,
     url: 'https://placehold.co/300x400/1a1a1a/333333?text=PSA+10'
   }));
@@ -58,24 +58,27 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
             <img src={bannerImageUrl} alt={`${name} Banner`} className="absolute inset-0 w-full h-full object-cover" />
           </div>
         ) : (
-          <div className="relative h-40 md:h-52 w-full flex justify-center gap-2 md:gap-4 overflow-hidden rounded-xl border border-white/10 bg-black/50 p-4 md:p-6 shadow-2xl backdrop-blur-sm">
+          <div className="relative h-40 md:h-52 w-full overflow-hidden rounded-xl border border-white/10 bg-black/50 shadow-2xl backdrop-blur-sm">
             {customizerNode}
             {/* Subtle bottom shelf glow */}
-            <div className="absolute bottom-0 left-0 w-full h-1/3 bg-gradient-to-t from-[#7C3AED]/40 to-transparent pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-full h-1/3 bg-gradient-to-t from-[#7C3AED]/40 to-transparent pointer-events-none z-0" />
             
-            {displayCards.slice(0, 8).map((card, i) => (
-              <div 
-                key={card.id} 
-                className={`relative flex-shrink-0 w-20 md:w-28 aspect-[5/7] rounded-lg border border-white/10 overflow-hidden shadow-xl transform transition-transform duration-500 hover:-translate-y-4 hover:z-10`}
-                style={{
-                  // Creating a slight fan/curve effect if desired, but strictly horizontal as requested
-                  transform: `translateY(${Math.abs(i - 3.5) * 4}px)`,
-                  opacity: 1 - Math.abs(i - 3.5) * 0.1
-                }}
-              >
-                <img src={card.url} alt="Hero Card" className="absolute inset-0 w-full h-full object-cover" />
-              </div>
-            ))}
+            {/* Scrollable Container */}
+            <div className="relative z-10 w-full h-full flex items-center gap-2 md:gap-4 overflow-x-auto snap-x snap-mandatory px-4 md:px-12 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              {displayCards.slice(0, 12).map((card, i) => (
+                <div 
+                  key={card.id} 
+                  className="relative flex-shrink-0 w-20 md:w-28 aspect-[5/7] rounded-lg border border-white/10 overflow-hidden shadow-xl transform transition-transform duration-500 hover:-translate-y-4 hover:z-10 snap-center"
+                  style={{
+                    // Creating a slight fan/curve effect if desired, but strictly horizontal as requested
+                    transform: `translateY(${Math.abs(i - 5.5) * 2}px)`,
+                    opacity: 1 - Math.abs(i - 5.5) * 0.05
+                  }}
+                >
+                  <img src={card.url} alt="Hero Card" className="absolute inset-0 w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
