@@ -93,7 +93,7 @@ export function FiltersDrawer() {
   const activeLocalCount = ['sport', 'listing_type', 'grade', 'price', 'era'].filter(k => localParams.has(k)).length;
 
   const renderChips = () => {
-    const chips = [];
+    const chips: { key: string; value: string; label: string }[] = [];
     ['sport', 'listing_type', 'grade', 'price', 'era'].forEach(k => {
       const v = localParams.get(k);
       if (v) chips.push({ key: k, value: v, label: getLabelForValue(k, v) });

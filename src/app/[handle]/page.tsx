@@ -18,7 +18,7 @@ import { like, lte, gte, between } from "drizzle-orm";
 
 interface Props {
   params: Promise<{ handle: string }>;
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<Record<string, string | undefined>>;
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {

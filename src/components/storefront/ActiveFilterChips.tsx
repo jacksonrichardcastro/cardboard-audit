@@ -31,7 +31,7 @@ export function ActiveFilterChips() {
     return value;
   };
 
-  const activeFilters = [];
+  const activeFilters: { key: string; value: string; label: string }[] = [];
   const keys = ['sport', 'listing_type', 'grade', 'price', 'era'];
   for (const k of keys) {
     const v = searchParams.get(k);
