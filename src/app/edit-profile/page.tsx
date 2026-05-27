@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { sellers } from "@/lib/db/schema";
+import { profiles } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { EditProfileForm } from "./EditProfileForm";
 
@@ -12,7 +12,7 @@ export default async function EditProfilePage() {
     redirect("/sign-in");
   }
 
-  const [seller] = await db.select().from(sellers).where(eq(sellers.userId, userId)).limit(1);
+  const [seller] = await db.select().from(profiles).where(eq(profiles.userId, userId)).limit(1);
 
   if (!seller) {
     redirect("/"); // Not a seller yet

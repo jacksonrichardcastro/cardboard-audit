@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { sellers, sellerApprovalQueue } from "@/lib/db/schema";
+import { profiles, sellerApprovalQueue } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -9,12 +9,12 @@ import { formatDistanceToNow } from "date-fns";
 export default async function AdminSellersPage() {
   const pendingSellers = await db
     .select({
-      seller: sellers,
+      seller: profiles,
       queue: sellerApprovalQueue,
     })
-    .from(sellers)
-    .innerJoin(sellerApprovalQueue, eq(sellers.userId, sellerApprovalQueue.sellerId))
-    .where(eq(sellers.approvalStatus, "pending_review"))
+    .from(profiles)
+    .innerJoin(sellerApprovalQueue, eq(profiles.userId, sellerApprovalQueue.sellerId))
+    .where(eq(profiles.approvalStatus, "pending_review"))
     .orderBy(sellerApprovalQueue.submittedAt); // default ascending
 
   return (

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { db, withUserContext } from "@/lib/db";
-import { orders, users, listings, sellers } from "@/lib/db/schema";
+import { orders, users, listings, profiles } from "@/lib/db/schema";
 
 describe("P0-5 Scenario 3: Cross-Tenant RLS Isolation", () => {
   beforeAll(async () => {
@@ -13,7 +13,7 @@ describe("P0-5 Scenario 3: Cross-Tenant RLS Isolation", () => {
         { id: "user_owner", email: "owner@test.local", role: "seller" },
       ]).onConflictDoNothing();
 
-      await tx.insert(sellers).values([
+      await tx.insert(profiles).values([
         {
           userId: "user_owner",
           businessName: "Owner Shop",

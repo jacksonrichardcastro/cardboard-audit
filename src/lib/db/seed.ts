@@ -1,141 +1,167 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { users, sellers, listings, listingPhotos } from "./schema";
+import { users, profiles, cards, listings, itemPhotos } from "./schema";
 import { eq } from "drizzle-orm";
 import { env } from "@/env";
-import { mockListings } from "../mock/listings"; // Use existing mock arrays to dynamically power the Drizzle seed script natively
+import { mockListings } from "../mock/listings"; 
 
 async function main() {
-  console.log("Initializing database seed sequence...");
+  console.log("Initializing database seed sequence for Phase 2...");
   const queryClient = postgres(env.DATABASE_URL);
   const db = drizzle(queryClient);
 
   try {
-    const MOCK_SELLER_ID = "mock-seller-1";
-
-    // 1. Idempotent Upsert for the Mock User
-    console.log("Upserting stub user...");
+    // 1. Buyer: alexthegrader
+    const BUYER_ID = "buyer-alex";
     await db.insert(users).values({
-      id: MOCK_SELLER_ID,
-      email: "shop@mock-seller.com",
-      role: "seller",
-    }).onConflictDoNothing({ target: users.id });
+      id: BUYER_ID,
+      email: "buyer@mock.com",
+      accountType: "buyer",
+    }).onConflictDoUpdate({ target: users.id, set: { accountType: "buyer" } });
 
-    // 2. Idempotent Upsert for the Mock Seller linking valid Stripe configs
-    console.log("Upserting stub seller details...");
-    await db.insert(sellers).values({
-      userId: MOCK_SELLER_ID,
+    await db.insert(profiles).values({
+      userId: BUYER_ID,
       handle: "alexthegrader",
       displayName: "Alex 'The Grader' Chen",
       bio: "Expert Collector | PSA 10 Specialist | Trax Trusted Seller since 2018 | Curating Rarity",
-      locationCity: "New York, NY",
       businessName: "Alex The Grader",
-      description: "Official prototype vendor mock.",
-      identityVerified: true,
-      applicationStatus: "APPROVED",
-      stripeConnectAccountId: "acct_stubbed_verified",
       headerStyle: "cards",
-    }).onConflictDoUpdate({ 
-      target: sellers.userId, 
-      set: { 
-        handle: "alexthegrader",
-        displayName: "Alex 'The Grader' Chen",
-        bio: "Expert Collector | PSA 10 Specialist | Trax Trusted Seller since 2018 | Curating Rarity",
-        headerStyle: "cards"
-      } 
-    });
+    }).onConflictDoUpdate({ target: profiles.userId, set: { handle: "alexthegrader" } });
 
-    console.log("Mock seller profile configured stably.");
-
-    const MOCK_SELLER_ID_2 = "mock-seller-banner";
-
-    // 2b. Add a second test seller with banner header style
-    console.log("Upserting stub user 2 (banner test)...");
-    await db.insert(users).values({
-      id: MOCK_SELLER_ID_2,
-      email: "banner@mock-seller.com",
-      role: "seller",
-    }).onConflictDoNothing({ target: users.id });
-
-    await db.insert(sellers).values({
-      userId: MOCK_SELLER_ID_2,
-      handle: "banner_test",
-      displayName: "Banner Test Shop",
-      bio: "Testing the new banner header option.",
-      locationCity: "Austin, TX",
-      businessName: "Banner Test",
-      description: "Banner test shop.",
-      identityVerified: true,
-      applicationStatus: "APPROVED",
-      stripeConnectAccountId: "acct_stubbed_banner",
-      headerStyle: "banner",
-      bannerImageUrl: "https://placehold.co/1500x400/1a1a1a/7C3AED?text=Banner+Test",
-    }).onConflictDoUpdate({ 
-      target: sellers.userId, 
-      set: { 
-        handle: "banner_test",
-        displayName: "Banner Test Shop",
-        bio: "Testing the new banner header option.",
-        headerStyle: "banner",
-        bannerImageUrl: "https://placehold.co/1500x400/1a1a1a/7C3AED?text=Banner+Test",
-      } 
-    });
-
-    console.log("Banner test seller profile configured stably.");
-
-    // 3. Migrate local mock data arrays natively into the db listings matrix
-    console.log("Deploying robust explicit listing boundaries...");
-    let inserted = 0;
-    for (const item of mockListings) {
-      // Clean parsing explicit string limits dynamically back into schema fields
-      const parsedSet = item.set || "Base Set";
-      
-      const insertPayload = {
+    // Insert some cards for buyer
+    let grailCardId = null;
+    for (let i = 0; i < 5; i++) {
+      const item = mockListings[i % mockListings.length];
+      const [newCard] = await db.insert(cards).values({
+        ownerId: BUYER_ID,
         title: item.title,
-        sellerId: MOCK_SELLER_ID,
         category: item.category,
         subcategory: item.subcategory || "Other",
         condition: item.condition,
         gradingCompany: item.gradingCompany,
         grade: item.grade,
-        description: item.description || "Mint condition stored completely flawlessly natively.",
-        priceCents: item.priceCents,
-        status: "ACTIVE", 
-      };
+        description: item.description || "Mint condition",
+      }).returning({ id: cards.id });
 
-      // Utilize DB native boundaries tracking unique constraint exactly
-      const [newListing] = await db.insert(listings).values(insertPayload)
-        .onConflictDoNothing({ target: [listings.title, listings.sellerId] })
-        .returning({ id: listings.id });
+      if (item.photoUrl) {
+        await db.insert(itemPhotos).values({ cardId: newCard.id, kind: "front", sortOrder: 0, storagePath: item.photoUrl });
+      }
       
-      let listingId;
-      if (newListing) {
-        listingId = newListing.id;
-      } else {
-        const [existing] = await db.select({ id: listings.id }).from(listings).where(eq(listings.title, item.title)).limit(1);
-        if (existing) listingId = existing.id;
+      if (i === 0) grailCardId = newCard.id;
+    }
+    if (grailCardId) {
+      await db.update(profiles).set({ grailCardId }).where(eq(profiles.userId, BUYER_ID));
+    }
+
+    // 2. Seller: storefront_test
+    const SELLER_ID = "seller-storefront";
+    await db.insert(users).values({
+      id: SELLER_ID,
+      email: "seller@mock.com",
+      accountType: "seller",
+    }).onConflictDoUpdate({ target: users.id, set: { accountType: "seller" } });
+
+    await db.insert(profiles).values({
+      userId: SELLER_ID,
+      handle: "storefront_test",
+      displayName: "Storefront Exemplar",
+      bio: "High volume seller with active listings",
+      businessName: "Storefront Test Shop",
+      headerStyle: "cards",
+      kycStatus: "verified",
+      stripeConnectAccountId: "acct_verified_seller",
+    }).onConflictDoUpdate({ target: profiles.userId, set: { handle: "storefront_test" } });
+
+    // Insert 60 cards, and 55 listings
+    let insertedListings = 0;
+    let sellerGrailCardId = null;
+    let extendedListings = [...mockListings, ...mockListings, ...mockListings, ...mockListings].slice(0, 60);
+
+    for (let i = 0; i < extendedListings.length; i++) {
+      const item = extendedListings[i];
+      const isSlab = i % 3 === 0; // Fake some as slabs
+      
+      const [newCard] = await db.insert(cards).values({
+        ownerId: SELLER_ID,
+        title: item.title + ` #${i}`, // Ensure unique titles
+        category: item.category,
+        subcategory: item.subcategory || "Other",
+        condition: item.condition,
+        gradingCompany: item.gradingCompany || (isSlab ? "PSA" : null),
+        grade: item.grade || (isSlab ? "10" : null),
+        description: item.description,
+      }).returning({ id: cards.id });
+
+      if (item.photoUrl) {
+        await db.insert(itemPhotos).values({ cardId: newCard.id, kind: "front", sortOrder: 0, storagePath: item.photoUrl });
       }
 
-      if (listingId && item.photoUrl) {
-        await db.insert(listingPhotos).values({
-          listingId,
-          kind: "front",
-          sortOrder: 0,
-          storagePath: item.photoUrl,
-        }).onConflictDoNothing();
-      }
+      if (i === 0) sellerGrailCardId = newCard.id;
 
-      // Set the first listing as the Grail for testing
-      if (inserted === 0 && listingId) {
-        await db.update(sellers)
-          .set({ grailListingId: listingId })
-          .where(eq(sellers.userId, MOCK_SELLER_ID));
+      // Create a listing for the first 55 cards
+      if (i < 55) {
+        await db.insert(listings).values({
+          sellerId: SELLER_ID,
+          cardId: newCard.id,
+          title: item.title + ` #${i}`,
+          category: item.category,
+          subcategory: item.subcategory || "Other",
+          condition: item.condition,
+          gradingCompany: item.gradingCompany || (isSlab ? "PSA" : null),
+          grade: item.grade || (isSlab ? "10" : null),
+          description: item.description,
+          priceCents: Math.floor(Math.random() * 500000) + 1000, // random price between $10 and $5000
+          status: "ACTIVE",
+        });
+        insertedListings++;
       }
-
-      inserted++;
     }
     
-    console.log(`Success! Inserted ${inserted} active mocked listings correctly avoiding endpoints!`);
+    if (sellerGrailCardId) {
+      await db.update(profiles).set({ grailCardId: sellerGrailCardId }).where(eq(profiles.userId, SELLER_ID));
+    }
+
+    // 3. Private Binder Seller
+    const PRIVATE_ID = "seller-private";
+    await db.insert(users).values({
+      id: PRIVATE_ID,
+      email: "private@mock.com",
+      accountType: "seller",
+    }).onConflictDoUpdate({ target: users.id, set: { accountType: "seller" } });
+
+    await db.insert(profiles).values({
+      userId: PRIVATE_ID,
+      handle: "private_binder",
+      displayName: "Private Collector",
+      businessName: "Private Vault",
+      headerStyle: "cards",
+      kycStatus: "verified",
+      binderPrivate: true,
+      stripeConnectAccountId: "acct_private_seller",
+    }).onConflictDoUpdate({ target: profiles.userId, set: { handle: "private_binder" } });
+
+    for (let i = 0; i < 5; i++) {
+      const item = mockListings[i % mockListings.length];
+      const [newCard] = await db.insert(cards).values({
+        ownerId: PRIVATE_ID,
+        title: item.title + " (Private)",
+        category: item.category,
+        subcategory: item.subcategory || "Other",
+        condition: item.condition,
+      }).returning({ id: cards.id });
+
+      await db.insert(listings).values({
+        sellerId: PRIVATE_ID,
+        cardId: newCard.id,
+        title: item.title + " (Private)",
+        category: item.category,
+        condition: item.condition,
+        priceCents: 5000,
+        status: "ACTIVE",
+      });
+    }
+
+    console.log(`Success! Inserted ${insertedListings} active listings for Storefront Seller!`);
 
   } catch (error) {
     console.error("Critical error firing Database Seed sequence:", error);

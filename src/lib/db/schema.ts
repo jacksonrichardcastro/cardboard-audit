@@ -4,11 +4,12 @@ import { relations, sql } from "drizzle-orm";
 export const users = pgTable("users", {
   id: varchar("id", { length: 255 }).primaryKey(), // Clerk user ID
   email: varchar("email", { length: 255 }).notNull(),
-  role: varchar("role", { length: 50 }).notNull().default("buyer"), // buyer, seller, admin
+  role: varchar("role", { length: 50 }).notNull().default("buyer"), // legacy role field
+  accountType: varchar("account_type", { length: 20 }).notNull().default("buyer"), // buyer, seller
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const sellers = pgTable("sellers", {
+export const profiles = pgTable("profiles", {
   userId: varchar("user_id", { length: 255 }).primaryKey().references(() => users.id),
   businessName: varchar("business_name", { length: 255 }).notNull(),
   handle: varchar("handle", { length: 40 }),
@@ -30,11 +31,14 @@ export const sellers = pgTable("sellers", {
   photoGuidelinesAcceptedAt: timestamp("photo_guidelines_accepted_at"),
   approvedAt: timestamp("approved_at"),
   rejectionReason: text("rejection_reason"),
-  grailListingId: integer("grail_listing_id"),
+  grailListingId: integer("grail_listing_id"), // Deprecated in favor of grailCardId, kept for migration
+  grailCardId: integer("grail_card_id"),
+  binderPrivate: boolean("binder_private").notNull().default(false),
+  headerCustomizationIds: json("header_customization_ids").default([]),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => ({
-  handleIdx: unique("sellers_handle_idx").on(table.handle),
-  stripeConnectAccountIdIdx: unique("sellers_stripe_connect_account_id_idx").on(table.stripeConnectAccountId)
+  handleIdx: unique("profiles_handle_idx").on(table.handle),
+  stripeConnectAccountIdIdx: unique("profiles_stripe_connect_account_id_idx").on(table.stripeConnectAccountId)
 }));
 
 export const sellerApprovalQueue = pgTable("seller_approval_queue", {
@@ -44,9 +48,31 @@ export const sellerApprovalQueue = pgTable("seller_approval_queue", {
   reviewerNotes: text("reviewer_notes"),
 });
 
+export const cards = pgTable("cards", {
+  id: serial("id").primaryKey(),
+  ownerId: varchar("owner_id", { length: 255 }).notNull().references(() => users.id),
+  title: varchar("title", { length: 255 }).notNull(),
+  category: varchar("category", { length: 100 }).notNull(),
+  subcategory: varchar("subcategory", { length: 100 }),
+  set: varchar("set", { length: 100 }),
+  year: varchar("year", { length: 50 }),
+  cardNumber: varchar("card_number", { length: 100 }),
+  condition: varchar("condition", { length: 100 }).notNull(),
+  gradingCompany: varchar("grading_company", { length: 100 }),
+  grade: varchar("grade", { length: 50 }),
+  description: text("description"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  deletedAt: timestamp("deleted_at"),
+}, (table) => ({
+  ownerIdx: index("card_owner_idx").on(table.ownerId),
+}));
+
 export const listings = pgTable("listings", {
   id: serial("id").primaryKey(),
   sellerId: varchar("seller_id", { length: 255 }).notNull().references(() => users.id),
+  cardId: integer("card_id").notNull().references(() => cards.id, { onDelete: "cascade" }),
+  // Some fields copied for fast querying/historical preservation during sale
   title: varchar("title", { length: 255 }).notNull(),
   category: varchar("category", { length: 100 }).notNull(), // Sports, TCG, Graded
   subcategory: varchar("subcategory", { length: 100 }), // Pokemon, Baseball, etc.
@@ -178,13 +204,30 @@ export const payouts = pgTable("payouts", {
 
 // Relations definitions (optional but highly recommended for Drizzle Query API)
 export const usersRelations = relations(users, ({ one, many }) => ({
-  sellerProfile: one(sellers, {
+  profile: one(profiles, {
     fields: [users.id],
-    references: [sellers.userId],
+    references: [profiles.userId],
   }),
+  cards: many(cards),
   listings: many(listings),
   ordersAsBuyer: many(orders, { relationName: "buyer" }),
   ordersAsSeller: many(orders, { relationName: "seller" }),
+}));
+
+export const profilesRelations = relations(profiles, ({ one }) => ({
+  user: one(users, {
+    fields: [profiles.userId],
+    references: [users.id]
+  })
+}));
+
+export const cardsRelations = relations(cards, ({ one, many }) => ({
+  owner: one(users, {
+    fields: [cards.ownerId],
+    references: [users.id],
+  }),
+  photos: many(itemPhotos),
+  listings: many(listings)
 }));
 
 export const ordersRelations = relations(orders, ({ one, many }) => ({
@@ -205,6 +248,13 @@ export const ordersRelations = relations(orders, ({ one, many }) => ({
   transitions: many(stateTransitions),
 }));
 
+export const listingsRelations = relations(listings, ({ one }) => ({
+  card: one(cards, {
+    fields: [listings.cardId],
+    references: [cards.id]
+  })
+}));
+
 export const stateTransitionsRelations = relations(stateTransitions, ({ one }) => ({
   order: one(orders, {
     fields: [stateTransitions.orderId],
@@ -223,9 +273,9 @@ export const disputesRelations = relations(disputes, ({ one }) => ({
   }),
 }));
 
-export const listingPhotos = pgTable("listing_photos", {
+export const itemPhotos = pgTable("item_photos", {
   id: serial("id").primaryKey(),
-  listingId: integer("listing_id").notNull().references(() => listings.id, { onDelete: "cascade" }),
+  cardId: integer("card_id").notNull().references(() => cards.id, { onDelete: "cascade" }),
   kind: varchar("kind", { length: 50 }).notNull(), // front, back, angle
   sortOrder: integer("sort_order").notNull().default(0),
   storagePath: text("storage_path").notNull(),
@@ -234,8 +284,8 @@ export const listingPhotos = pgTable("listing_photos", {
   capturedAt: timestamp("captured_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => ({
-  listingIdx: index("idx_listing_photos_listing_id").on(table.listingId),
-  listingSortIdx: index("idx_listing_photos_listing_id_sort").on(table.listingId, table.sortOrder),
+  cardIdx: index("idx_item_photos_card_id").on(table.cardId),
+  cardSortIdx: index("idx_item_photos_card_id_sort").on(table.cardId, table.sortOrder),
 }));
 
 export const listingReviews = pgTable("listing_reviews", {

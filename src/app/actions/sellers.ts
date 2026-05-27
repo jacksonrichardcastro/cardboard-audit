@@ -1,7 +1,7 @@
 "use server";
 
 import { withUserContext } from "@/lib/db";
-import { sellers } from "@/lib/db/schema";
+import { profiles } from "@/lib/db/schema";
 import { auth } from "@clerk/nextjs/server";
 import { stripe } from "@/lib/stripe";
 
@@ -17,13 +17,13 @@ export async function createSellerApplication(payload: { businessName: string; d
   // 1. Drizzle DB Upsert Application State
   // 1. Drizzle DB Upsert Application State
   await withUserContext(userId, async (tx) => {
-    await tx.insert(sellers).values({
+    await tx.insert(profiles).values({
       userId,
       businessName: payload.businessName,
       description: payload.description,
       applicationStatus: "PENDING",
     }).onConflictDoUpdate({
-      target: sellers.userId,
+      target: profiles.userId,
       set: {
          businessName: payload.businessName,
          description: payload.description,

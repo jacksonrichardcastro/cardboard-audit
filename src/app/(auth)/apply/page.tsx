@@ -66,7 +66,7 @@ export default function ApplyPage() {
           </div>
           <CardTitle className="text-3xl font-bold tracking-tight">Open Your Store</CardTitle>
           <CardDescription className="text-muted-foreground/80 pt-1 text-base">
-            CardBound is an exclusive, vetted marketplace protecting both buyers and sellers. Complete your profile to apply.
+            CardBound is an exclusive, vetted marketplace protecting both buyers and profiles. Complete your profile to apply.
           </CardDescription>
         </CardHeader>
         <CardContent>

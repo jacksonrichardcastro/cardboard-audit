@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { db, withUserContext } from "@/lib/db";
 import * as Sentry from "@sentry/nextjs";
-import { orders, stateTransitions, listings, sellers, webhookEvents } from "@/lib/db/schema";
+import { orders, stateTransitions, listings, profiles, webhookEvents } from "@/lib/db/schema";
 import { inArray, eq } from "drizzle-orm";
 import { env } from "@/env";
 import { stripe } from "@/lib/stripe";
@@ -90,9 +90,9 @@ export async function POST(req: Request) {
       const identityUserId = sessionPayload.metadata?.userId;
       if (identityUserId) {
         await db
-          .update(sellers)
+          .update(profiles)
           .set({ identityVerified: true })
-          .where(eq(sellers.userId, identityUserId));
+          .where(eq(profiles.userId, identityUserId));
       }
       return new NextResponse(null, { status: 200 });
     }
@@ -107,9 +107,9 @@ export async function POST(req: Request) {
       }
       
       await db
-        .update(sellers)
+        .update(profiles)
         .set({ kycStatus: newStatus })
-        .where(eq(sellers.stripeConnectAccountId, account.id));
+        .where(eq(profiles.stripeConnectAccountId, account.id));
       
       return new NextResponse(null, { status: 200 });
     }
@@ -120,9 +120,9 @@ export async function POST(req: Request) {
       const accountId = event.account;
       if (accountId) {
         await db
-          .update(sellers)
+          .update(profiles)
           .set({ kycStatus: "incomplete" })
-          .where(eq(sellers.stripeConnectAccountId, accountId));
+          .where(eq(profiles.stripeConnectAccountId, accountId));
       }
       return new NextResponse(null, { status: 200 });
     }
@@ -166,11 +166,11 @@ async function handleCheckoutCompleted(event: Stripe.Event) {
       id: listings.id,
       priceCents: listings.priceCents,
       sellerId: listings.sellerId,
-      sellerStripeId: sellers.stripeConnectAccountId,
-      feeTier: sellers.feeTier,
+      sellerStripeId: profiles.stripeConnectAccountId,
+      feeTier: profiles.feeTier,
     })
     .from(listings)
-    .innerJoin(sellers, eq(listings.sellerId, sellers.userId))
+    .innerJoin(profiles, eq(listings.sellerId, profiles.userId))
     .where(inArray(listings.id, listingIds));
 
   if (dbItems.length !== listingIds.length) {

@@ -1,6 +1,6 @@
 import { eq, desc, ilike, and, gte, lte, sql } from "drizzle-orm";
 import { withUserContext } from "@/lib/db";
-import { listings, sellers, listingPhotos } from "@/lib/db/schema";
+import { listings, profiles, itemPhotos } from "@/lib/db/schema";
 import { unstable_cache } from "next/cache";
 
 export async function getTrendingListings(params?: {
@@ -29,11 +29,11 @@ export async function getTrendingListings(params?: {
             condition: listings.condition,
             category: listings.category,
             createdAt: listings.createdAt,
-            photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM listing_photos WHERE listing_id = ${listings.id}), '[]'::json)`,
-            sellerName: sellers.businessName,
+            photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE card_id = ${listings.cardId}), '[]'::json)`,
+            sellerName: profiles.businessName,
           })
           .from(listings)
-          .innerJoin(sellers, eq(listings.sellerId, sellers.userId))
+          .innerJoin(profiles, eq(listings.sellerId, profiles.userId))
           .where(filters.length > 0 ? and(...filters) : undefined)
           .orderBy(desc(listings.createdAt))
           .limit(32);
@@ -65,13 +65,13 @@ export async function getListingById(id: number) {
         grade: listings.grade,
         description: listings.description,
         priceCents: listings.priceCents,
-        photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM listing_photos WHERE listing_id = ${listings.id}), '[]'::json)`,
+        photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE card_id = ${listings.cardId}), '[]'::json)`,
         sellerId: listings.sellerId,
-        sellerName: sellers.businessName,
-        sellerVerified: sellers.identityVerified,
+        sellerName: profiles.businessName,
+        sellerVerified: profiles.identityVerified,
       })
       .from(listings)
-      .innerJoin(sellers, eq(listings.sellerId, sellers.userId))
+      .innerJoin(profiles, eq(listings.sellerId, profiles.userId))
       .where(and(eq(listings.id, id), eq(listings.status, "ACTIVE")))
       .limit(1);
       return record;

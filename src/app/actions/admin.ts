@@ -1,7 +1,7 @@
 "use server";
 
 import { db, withUserContext } from "@/lib/db";
-import { sellers, users } from "@/lib/db/schema";
+import { profiles, users } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 
@@ -14,16 +14,16 @@ export async function getPendingSellers() {
   // P1-4: Resolving dynamically live-pending queues overriding mock invariants
   return await withUserContext(userId, async (tx) => {
     return await tx.select({
-       userId: sellers.userId,
-       businessName: sellers.businessName,
-       description: sellers.description,
-       identityVerified: sellers.identityVerified,
-       createdAt: sellers.createdAt,
+       userId: profiles.userId,
+       businessName: profiles.businessName,
+       description: profiles.description,
+       identityVerified: profiles.identityVerified,
+       createdAt: profiles.createdAt,
        email: users.email
-    }).from(sellers)
-      .innerJoin(users, eq(sellers.userId, users.id))
-      .where(eq(sellers.applicationStatus, "PENDING"))
-      .orderBy(desc(sellers.createdAt));
+    }).from(profiles)
+      .innerJoin(users, eq(profiles.userId, users.id))
+      .where(eq(profiles.applicationStatus, "PENDING"))
+      .orderBy(desc(profiles.createdAt));
   });
 }
 
@@ -33,7 +33,7 @@ export async function approveSeller(sellerId: string) {
   if (role !== "admin" || !userId) throw new Error("Unauthorized Administrative Context");
 
   const sellerRecord = await withUserContext(userId, async (tx) => {
-    const [record] = await tx.select().from(sellers).where(eq(sellers.userId, sellerId)).limit(1);
+    const [record] = await tx.select().from(profiles).where(eq(profiles.userId, sellerId)).limit(1);
     return record;
   });
   
@@ -42,9 +42,9 @@ export async function approveSeller(sellerId: string) {
   }
 
   await withUserContext(userId, async (tx) => {
-    await tx.update(sellers)
+    await tx.update(profiles)
       .set({ applicationStatus: "APPROVED" })
-      .where(eq(sellers.userId, sellerId));
+      .where(eq(profiles.userId, sellerId));
   });
     
   return { success: true };

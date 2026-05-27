@@ -2,39 +2,60 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
-import { sellers, listings } from "@/lib/db/schema";
+import { profiles, listings, cards } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
-export async function setGrailListing(listingId: number) {
+export async function setGrailCard(cardId: number) {
   const { userId } = await auth();
   if (!userId) {
     throw new Error("Unauthorized");
   }
 
   // Verify the seller actually owns this listing
-  const [listing] = await db
-    .select()
-    .from(listings)
-    .where(and(eq(listings.id, listingId), eq(listings.sellerId, userId)))
-    .limit(1);
+  const card = await db.query.cards.findFirst({
+    where: and(
+      eq(cards.id, cardId),
+      eq(cards.ownerId, userId)
+    ),
+  });
 
-  if (!listing) {
-    throw new Error("Listing not found or you do not have permission to set it as a grail.");
+  if (!card) {
+    throw new Error("Card not found or you don't have permission to set it as a grail.");
   }
 
   // Update the seller's grail
   await db
-    .update(sellers)
-    .set({ grailListingId: listingId })
-    .where(eq(sellers.userId, userId));
+    .update(profiles)
+    .set({ grailCardId: cardId })
+    .where(eq(profiles.userId, userId));
 
   // Try to find the seller's handle to revalidate their profile page
-  const [seller] = await db.select({ handle: sellers.handle }).from(sellers).where(eq(sellers.userId, userId)).limit(1);
-  if (seller?.handle) {
-    revalidatePath(`/${seller.handle}`);
+  const [profile] = await db.select({ handle: profiles.handle }).from(profiles).where(eq(profiles.userId, userId)).limit(1);
+  if (profile?.handle) {
+    revalidatePath(`/${profile.handle}`);
   }
 
+  return { success: true };
+}
+
+export async function updateHeaderCustomization(cardIds: number[]) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+  
+  if (cardIds.length > 8) {
+    throw new Error("You can only feature up to 8 cards.");
+  }
+
+  await db
+    .update(profiles)
+    .set({ headerCustomizationIds: cardIds })
+    .where(eq(profiles.userId, userId));
+
+  const [profile] = await db.select({ handle: profiles.handle }).from(profiles).where(eq(profiles.userId, userId)).limit(1);
+  if (profile?.handle) {
+    revalidatePath(`/${profile.handle}`);
+  }
   return { success: true };
 }
 
@@ -45,7 +66,7 @@ export async function updateSellerProfile(data: { bio?: string; locationCity?: s
   }
 
   await db
-    .update(sellers)
+    .update(profiles)
     .set({
       bio: data.bio,
       locationCity: data.locationCity,
@@ -53,9 +74,9 @@ export async function updateSellerProfile(data: { bio?: string; locationCity?: s
       headerStyle: data.headerStyle,
       bannerImageUrl: data.bannerImageUrl,
     })
-    .where(eq(sellers.userId, userId));
+    .where(eq(profiles.userId, userId));
 
-  const [seller] = await db.select({ handle: sellers.handle }).from(sellers).where(eq(sellers.userId, userId)).limit(1);
+  const [seller] = await db.select({ handle: profiles.handle }).from(profiles).where(eq(profiles.userId, userId)).limit(1);
   if (seller?.handle) {
     revalidatePath(`/${seller.handle}`);
   }

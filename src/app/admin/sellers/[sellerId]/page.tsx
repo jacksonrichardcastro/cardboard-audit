@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { sellers, sellerApprovalQueue } from "@/lib/db/schema";
+import { profiles, sellerApprovalQueue } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { clerkClient } from "@clerk/nextjs/server";
 import { notFound } from "next/navigation";
@@ -12,7 +12,7 @@ export default async function SellerReviewPage(props: { params: Promise<{ seller
   const params = await props.params;
   const sellerId = params.sellerId;
 
-  const [seller] = await db.select().from(sellers).where(eq(sellers.userId, sellerId)).limit(1);
+  const [seller] = await db.select().from(profiles).where(eq(profiles.userId, sellerId)).limit(1);
   if (!seller) return notFound();
 
   const [queueEntry] = await db.select().from(sellerApprovalQueue).where(eq(sellerApprovalQueue.sellerId, sellerId)).limit(1);

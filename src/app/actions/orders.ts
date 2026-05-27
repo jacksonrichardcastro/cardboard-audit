@@ -2,7 +2,7 @@
 
 import { eq, desc, asc, inArray, and, sql } from "drizzle-orm";
 import { withUserContext, db } from "@/lib/db";
-import { orders, stateTransitions, sellers, users, listings, listingPhotos } from "@/lib/db/schema";
+import { orders, stateTransitions, profiles, users, listings, itemPhotos } from "@/lib/db/schema";
 import { auth } from "@clerk/nextjs/server";
 import { headers } from "next/headers";
 import { env } from "@/env";
@@ -22,13 +22,13 @@ export async function getOrderWithLedger(orderId: number) {
         priceCents: orders.priceCentsAtSale,
         shippingCents: orders.shippingCents,
         taxCents: orders.taxCents,
-        sellerHandle: sellers.businessName,
+        sellerHandle: profiles.businessName,
         buyerEmail: users.email,
         buyerId: orders.buyerId,
         sellerId: orders.sellerId,
       })
       .from(orders)
-      .innerJoin(sellers, eq(orders.sellerId, sellers.userId))
+      .innerJoin(profiles, eq(orders.sellerId, profiles.userId))
       .innerJoin(users, eq(orders.buyerId, users.id))
       .where(eq(orders.id, orderId))
       .limit(1);
@@ -76,12 +76,12 @@ export async function getBuyerOrders() {
         totalCents: orders.totalCents,
         createdAt: orders.createdAt,
         listingTitle: listings.title,
-        listingImage: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM listing_photos WHERE listing_id = ${listings.id}), '[]'::json)`,
-        sellerName: sellers.businessName,
+        listingImage: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE listing_id = ${listings.id}), '[]'::json)`,
+        sellerName: profiles.businessName,
       })
       .from(orders)
       .innerJoin(listings, eq(orders.listingId, listings.id))
-      .innerJoin(sellers, eq(orders.sellerId, sellers.userId))
+      .innerJoin(profiles, eq(orders.sellerId, profiles.userId))
       .where(eq(orders.buyerId, userId))
       .orderBy(desc(orders.createdAt));
     });
@@ -190,11 +190,11 @@ export async function createCheckoutSessionAction(listingIds: number[]) {
       id: listings.id,
       title: listings.title,
       priceCents: listings.priceCents,
-      sellerStripeId: sellers.stripeConnectAccountId,
+      sellerStripeId: profiles.stripeConnectAccountId,
       sellerId: listings.sellerId,
     })
     .from(listings)
-    .innerJoin(sellers, eq(listings.sellerId, sellers.userId))
+    .innerJoin(profiles, eq(listings.sellerId, profiles.userId))
     .where(and(inArray(listings.id, listingIds), eq(listings.status, "ACTIVE")));
 
   if (dbItems.length !== listingIds.length) {

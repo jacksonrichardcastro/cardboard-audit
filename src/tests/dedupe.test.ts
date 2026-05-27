@@ -48,7 +48,7 @@ function buildInsertChain(returningRows: Array<{ id: string }>) {
 }
 
 // Chain for the update call used by the identity.verified branch:
-// db.update(sellers).set(...).where(...). We don't care about the result.
+// db.update(profiles).set(...).where(...). We don't care about the result.
 function buildUpdateChain() {
   const where = vi.fn().mockResolvedValue(undefined);
   const set = vi.fn().mockReturnValue({ where });
@@ -57,7 +57,7 @@ function buildUpdateChain() {
 }
 
 vi.mock("@/lib/db", () => {
-  // First call: insert into webhookEvents. Second call: update sellers.
+  // First call: insert into webhookEvents. Second call: update profiles.
   // We swap the insert mock per-test via (globalThis as any).__dbInsert.
   const updateChain = buildUpdateChain();
   return {

@@ -1,5 +1,5 @@
 import { withUserContext } from "@/lib/db";
-import { orders, stateTransitions, sellers, payouts } from "@/lib/db/schema";
+import { orders, stateTransitions, profiles, payouts } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { calculateNetPayout } from "@/lib/payout-math";
 import { stripe } from "@/lib/stripe";
@@ -52,10 +52,10 @@ export async function processBuyerReceipt(
 
     const [sellerRecord] = await tx
       .select({
-        stripeConnectAccountId: sellers.stripeConnectAccountId,
+        stripeConnectAccountId: profiles.stripeConnectAccountId,
       })
-      .from(sellers)
-      .where(eq(sellers.userId, order.sellerId))
+      .from(profiles)
+      .where(eq(profiles.userId, order.sellerId))
       .limit(1);
 
     return { order, sellerRecord };

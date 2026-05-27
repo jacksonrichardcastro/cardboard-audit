@@ -2,7 +2,7 @@
 
 import { eq, desc, ilike, and, gte, lte } from "drizzle-orm";
 import { db, withUserContext } from "@/lib/db";
-import { listings, sellers } from "@/lib/db/schema";
+import { listings, profiles } from "@/lib/db/schema";
 import { unstable_cache, revalidateTag } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 
@@ -20,8 +20,8 @@ export async function createListing(payload: {
   if (!userId) throw new Error("Unauthorized");
 
   const [sellerRecord] = await withUserContext(userId, async (tx) => {
-      return await tx.select({ status: sellers.applicationStatus })
-        .from(sellers).where(eq(sellers.userId, userId)).limit(1);
+      return await tx.select({ status: profiles.applicationStatus })
+        .from(profiles).where(eq(profiles.userId, userId)).limit(1);
   });
 
   if (!sellerRecord || sellerRecord.status !== "APPROVED") {

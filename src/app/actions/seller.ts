@@ -2,7 +2,7 @@
 
 import { eq, desc } from "drizzle-orm";
 import { db, withUserContext } from "@/lib/db";
-import { orders, listings, users, sellers } from "@/lib/db/schema";
+import { orders, listings, users, profiles } from "@/lib/db/schema";
 import { auth } from "@clerk/nextjs/server";
 
 export async function getSellerInventory() {

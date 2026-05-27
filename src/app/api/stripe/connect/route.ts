@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
-import { sellers } from "@/lib/db/schema";
+import { profiles } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { env } from "@/env";
 import { stripe } from "@/lib/stripe";
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     if (!rl.ok) return tooManyRequests(rl);
 
     // 1. Fetch current seller profile
-    const [seller] = await db.select().from(sellers).where(eq(sellers.userId, userId));
+    const [seller] = await db.select().from(profiles).where(eq(profiles.userId, userId));
     
     if (!seller) {
       return new NextResponse("Seller profile not found", { status: 404 });
@@ -50,9 +50,9 @@ export async function POST(req: Request) {
       accountId = account.id;
 
       // Persist to DB securely
-      await db.update(sellers)
+      await db.update(profiles)
         .set({ stripeConnectAccountId: accountId })
-        .where(eq(sellers.userId, userId));
+        .where(eq(profiles.userId, userId));
     }
 
     // 3. Generate the magic connect link allowing the user to KYC

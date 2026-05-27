@@ -21,7 +21,7 @@ export default function BreaksPage() {
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground max-w-lg mx-auto">
-            Live-stream pack and box breaks from vetted sellers. Bid in real time on every slot. Built for the rip.
+            Live-stream pack and box breaks from vetted profiles. Bid in real time on every slot. Built for the rip.
           </p>
         </CardContent>
         <CardFooter className="flex justify-center pt-6 pb-12">

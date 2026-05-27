@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { listingDrafts, sellers } from "@/lib/db/schema";
+import { listingDrafts, profiles } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
@@ -11,8 +11,8 @@ export default async function DraftsPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
-  const seller = await db.query.sellers.findFirst({
-    where: eq(sellers.userId, userId),
+  const seller = await db.query.profiles.findFirst({
+    where: eq(profiles.userId, userId),
   });
 
   if (!seller || seller.applicationStatus !== "approved") {

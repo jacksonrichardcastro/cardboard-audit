@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { sellers } from "@/lib/db/schema";
+import { profiles } from "@/lib/db/schema";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { stripe } from "@/lib/stripe";
@@ -17,7 +17,7 @@ export async function createStripeConnectAccount() {
   // Sync user locally to ensure FKs are satisfied
   await syncUserFromClerk();
 
-  const [seller] = await db.select().from(sellers).where(eq(sellers.userId, userId)).limit(1);
+  const [seller] = await db.select().from(profiles).where(eq(profiles.userId, userId)).limit(1);
   if (!seller) throw new Error("Seller profile not found");
 
   let accountId = seller.stripeConnectAccountId;
@@ -35,7 +35,7 @@ export async function createStripeConnectAccount() {
     });
     
     accountId = account.id;
-    await db.update(sellers).set({ stripeConnectAccountId: accountId }).where(eq(sellers.userId, userId));
+    await db.update(profiles).set({ stripeConnectAccountId: accountId }).where(eq(profiles.userId, userId));
   }
 
   const headersList = await headers();

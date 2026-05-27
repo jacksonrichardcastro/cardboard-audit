@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { listingDrafts, sellers } from "@/lib/db/schema";
+import { listingDrafts, profiles } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
@@ -13,8 +13,8 @@ export async function createDraft(initialData: any = {}) {
   }
 
   // Ensure seller profile exists and is approved (per Phase 4 gate, but re-checked here)
-  const seller = await db.query.sellers.findFirst({
-    where: eq(sellers.userId, userId),
+  const seller = await db.query.profiles.findFirst({
+    where: eq(profiles.userId, userId),
   });
 
   if (!seller || seller.applicationStatus !== "approved") {

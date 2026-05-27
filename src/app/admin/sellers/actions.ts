@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { sellers, sellerApprovalQueue } from "@/lib/db/schema";
+import { profiles, sellerApprovalQueue } from "@/lib/db/schema";
 import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -13,9 +13,9 @@ export async function approveSellerAction(sellerId: string) {
   if (role !== "admin") throw new Error("Unauthorized");
 
   await db.transaction(async (tx) => {
-    await tx.update(sellers)
+    await tx.update(profiles)
       .set({ approvalStatus: "approved", approvedAt: new Date() })
-      .where(eq(sellers.userId, sellerId));
+      .where(eq(profiles.userId, sellerId));
       
     await tx.update(sellerApprovalQueue)
       .set({ reviewedAt: new Date() })
@@ -36,9 +36,9 @@ export async function rejectSellerAction(sellerId: string, reason: string) {
   }
 
   await db.transaction(async (tx) => {
-    await tx.update(sellers)
+    await tx.update(profiles)
       .set({ approvalStatus: "rejected", rejectionReason: reason })
-      .where(eq(sellers.userId, sellerId));
+      .where(eq(profiles.userId, sellerId));
       
     await tx.update(sellerApprovalQueue)
       .set({ reviewedAt: new Date(), reviewerNotes: reason })
