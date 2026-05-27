@@ -41,7 +41,7 @@ export function ActiveListingsGrid({ isOwner, listings }: ActiveListingsGridProp
           : 'https://placehold.co/400x550';
         
         return (
-          <div key={listing.id} className={`group relative rounded-xl overflow-hidden bg-[#111111] border border-white/5 hover:border-white/10 hover:-translate-y-1 transition-all duration-300 mx-auto w-[65%]`}>
+          <div key={listing.id} className={`group relative rounded-xl overflow-hidden bg-[#111111] border border-white/5 hover:border-white/10 hover:-translate-y-1 transition-all duration-300 mx-auto w-full`}>
 
             <Link href={`/listings/${listing.id}`} className="block">
               <div className="relative aspect-[5/7] w-full overflow-hidden bg-black">

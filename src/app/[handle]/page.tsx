@@ -144,7 +144,9 @@ export default async function SellerStorePage(props: Props) {
     heroCardsData = binderCards;
   }
 
-  const formattedHeroCards = heroCardsData.slice(0, 19).map(item => ({
+  // Since the grid needs to start with Sports, activeListings starts with Sports.
+  // To make the header strip start with Pokemon, we offset by 1.
+  const formattedHeroCards = heroCardsData.slice(1, 20).map(item => ({
     id: item.id.toString(),
     url: (item.photos && item.photos[0]) ? item.photos[0] : 'https://placehold.co/300x400/1a1a1a/333333?text=PSA+10'
   }));

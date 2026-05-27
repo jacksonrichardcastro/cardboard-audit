@@ -43,6 +43,7 @@ async function main() {
         gradingCompany: item.gradingCompany,
         grade: item.grade,
         description: item.description || "Mint condition",
+        createdAt: new Date(Date.now() - i * 1000),
       }).returning({ id: cards.id });
 
       if (item.photoUrl) {
@@ -94,6 +95,7 @@ async function main() {
         gradingCompany: item.gradingCompany || (isSlab ? "PSA" : null),
         grade: item.grade || (isSlab ? "10" : null),
         description: item.description,
+        createdAt: new Date(Date.now() - i * 1000),
       }).returning({ id: cards.id });
 
       if (item.photoUrl) {
@@ -116,6 +118,7 @@ async function main() {
           description: item.description,
           priceCents: Math.floor(Math.random() * 500000) + 1000, // random price between $10 and $5000
           status: "ACTIVE",
+          createdAt: new Date(Date.now() - i * 1000),
         });
         insertedListings++;
       }

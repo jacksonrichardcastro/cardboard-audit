@@ -1,0 +1,23 @@
+
+> cardbound-app@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.4 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.41:3000
+- Environments: .env.local
+✓ Ready in 286ms
+- Experiments (use with caution):
+  · clientTraceMetadata
+
+Clerk: Refreshing the session token resulted in an infinite redirect loop. This usually means that your Clerk instance keys do not match - make sure to copy the correct publishable and secret keys from the Clerk dashboard.
+⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET /alexthegrader 200 in 1119ms (next.js: 503ms, proxy.ts: 11ms, application-code: 605ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://apt-tick-26.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:3216)
+ GET /storefront_test 200 in 920ms (next.js: 5ms, proxy.ts: 6ms, application-code: 909ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://apt-tick-26.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:12:3216)
+✓ Compiled in 739ms
+✓ Compiled in 460ms
+✓ Compiled in 1738ms
+✓ Compiled in 1647ms
+✓ Compiled in 718ms
