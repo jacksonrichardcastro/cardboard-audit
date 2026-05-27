@@ -132,7 +132,7 @@ export default async function Home(props: Props) {
 
         <div className="flex flex-col md:flex-row gap-8">
           {/* Persistent Desktop Sidebar */}
-          <div className="hidden md:block w-64 shrink-0">
+          <div className="hidden md:block w-40 shrink-0">
             <FilterSidebar />
           </div>
 

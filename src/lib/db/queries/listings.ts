@@ -80,7 +80,7 @@ export async function getTrendingListings(params?: {
           .limit(32);
         });
       },
-      ['trending-listings', JSON.stringify(params || {})],
+      ['trending-listings-v2', JSON.stringify(params || {})],
       { revalidate: 60, tags: ['listings'] }
     );
 

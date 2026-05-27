@@ -31,3 +31,164 @@ Clerk: Refreshing the session token resulted in an infinite redirect loop. This 
   Reload env: .env.local
 ✓ Compiled in 1752ms
 ✓ Compiled in 739ms
+ GET / 200 in 1272ms (next.js: 510ms, proxy.ts: 13ms, application-code: 749ms)
+⨯ Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your middleware or proxy file exists at ./src/middleware.(ts|js) or proxy.(ts|js)
+- clerkMiddleware() is used in your Next.js middleware or proxy file.
+- Your middleware or proxy matcher is configured to match this route or page.
+- If you are using the src directory, make sure the middleware or proxy file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+    at async SellerStorePage (src/app/[handle]/page.tsx:61:22)
+  59 |
+  60 | export default async function SellerStorePage(props: Props) {
+> 61 |   const { userId } = await auth();
+     |                      ^
+  62 |   const params = await props.params;
+  63 |   const searchParams = await props.searchParams;
+  64 |   const handleLower = params.handle.toLowerCase(); {
+  digest: '2840357639'
+}
+⨯ Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your middleware or proxy file exists at ./src/middleware.(ts|js) or proxy.(ts|js)
+- clerkMiddleware() is used in your Next.js middleware or proxy file.
+- Your middleware or proxy matcher is configured to match this route or page.
+- If you are using the src directory, make sure the middleware or proxy file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+    at async SiteHeader (src/components/layout/site-header.tsx:11:22)
+   9 |
+  10 | export async function SiteHeader() {
+> 11 |   const { userId } = await auth();
+     |                      ^
+  12 |   const isSignedIn = !!userId;
+  13 |
+  14 |   return ( {
+  digest: '1460058213'
+}
+⨯ Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your middleware or proxy file exists at ./src/middleware.(ts|js) or proxy.(ts|js)
+- clerkMiddleware() is used in your Next.js middleware or proxy file.
+- Your middleware or proxy matcher is configured to match this route or page.
+- If you are using the src directory, make sure the middleware or proxy file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+    at async SellerStorePage (src/app/[handle]/page.tsx:61:22)
+  59 |
+  60 | export default async function SellerStorePage(props: Props) {
+> 61 |   const { userId } = await auth();
+     |                      ^
+  62 |   const params = await props.params;
+  63 |   const searchParams = await props.searchParams;
+  64 |   const handleLower = params.handle.toLowerCase(); {
+  digest: '2840357639'
+}
+⨯ Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your middleware or proxy file exists at ./src/middleware.(ts|js) or proxy.(ts|js)
+- clerkMiddleware() is used in your Next.js middleware or proxy file.
+- Your middleware or proxy matcher is configured to match this route or page.
+- If you are using the src directory, make sure the middleware or proxy file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+    at async SiteHeader (src/components/layout/site-header.tsx:11:22)
+   9 |
+  10 | export async function SiteHeader() {
+> 11 |   const { userId } = await auth();
+     |                      ^
+  12 |   const isSignedIn = !!userId;
+  13 |
+  14 |   return ( {
+  digest: '1460058213'
+}
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (https://apt-tick-26.clerk.accounts.dev/npm/@clerk/clerk-js@6.12.1/dist/clerk.browser.js:12:3220)
+⨯ Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your middleware or proxy file exists at ./src/middleware.(ts|js) or proxy.(ts|js)
+- clerkMiddleware() is used in your Next.js middleware or proxy file.
+- Your middleware or proxy matcher is configured to match this route or page.
+- If you are using the src directory, make sure the middleware or proxy file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+    at async SellerStorePage (src/app/[handle]/page.tsx:61:22)
+  59 |
+  60 | export default async function SellerStorePage(props: Props) {
+> 61 |   const { userId } = await auth();
+     |                      ^
+  62 |   const params = await props.params;
+  63 |   const searchParams = await props.searchParams;
+  64 |   const handleLower = params.handle.toLowerCase(); {
+  digest: '2840357639'
+}
+⨯ Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your middleware or proxy file exists at ./src/middleware.(ts|js) or proxy.(ts|js)
+- clerkMiddleware() is used in your Next.js middleware or proxy file.
+- Your middleware or proxy matcher is configured to match this route or page.
+- If you are using the src directory, make sure the middleware or proxy file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+    at async SiteHeader (src/components/layout/site-header.tsx:11:22)
+   9 |
+  10 | export async function SiteHeader() {
+> 11 |   const { userId } = await auth();
+     |                      ^
+  12 |   const isSignedIn = !!userId;
+  13 |
+  14 |   return ( {
+  digest: '1460058213'
+}
+ GET /apple-touch-icon-precomposed.png 500 in 499ms (next.js: 176ms, application-code: 324ms)
+ GET /apple-touch-icon.png 500 in 501ms (next.js: 141ms, application-code: 360ms)
+ GET /apple-touch-icon-precomposed.png 500 in 208ms (next.js: 4ms, application-code: 204ms)
+⨯ Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your middleware or proxy file exists at ./src/middleware.(ts|js) or proxy.(ts|js)
+- clerkMiddleware() is used in your Next.js middleware or proxy file.
+- Your middleware or proxy matcher is configured to match this route or page.
+- If you are using the src directory, make sure the middleware or proxy file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+    at async SellerStorePage (src/app/[handle]/page.tsx:61:22)
+  59 |
+  60 | export default async function SellerStorePage(props: Props) {
+> 61 |   const { userId } = await auth();
+     |                      ^
+  62 |   const params = await props.params;
+  63 |   const searchParams = await props.searchParams;
+  64 |   const handleLower = params.handle.toLowerCase(); {
+  digest: '2840357639'
+}
+⨯ Error: Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+- Your middleware or proxy file exists at ./src/middleware.(ts|js) or proxy.(ts|js)
+- clerkMiddleware() is used in your Next.js middleware or proxy file.
+- Your middleware or proxy matcher is configured to match this route or page.
+- If you are using the src directory, make sure the middleware or proxy file is inside of it.
+
+For more details, see https://clerk.com/err/auth-middleware
+
+    at async SiteHeader (src/components/layout/site-header.tsx:11:22)
+   9 |
+  10 | export async function SiteHeader() {
+> 11 |   const { userId } = await auth();
+     |                      ^
+  12 |   const isSignedIn = !!userId;
+  13 |
+  14 |   return ( {
+  digest: '1460058213'
+}
+ GET /apple-touch-icon.png 500 in 84ms (next.js: 2ms, application-code: 81ms)
+ GET /tracker 200 in 112ms (next.js: 82ms, proxy.ts: 12ms, application-code: 18ms)
+○ Compiling /for-you ...
+ GET / 200 in 123ms (next.js: 10ms, proxy.ts: 17ms, application-code: 96ms)
+ GET /for-you 200 in 1040ms (next.js: 938ms, proxy.ts: 9ms, application-code: 92ms)
+ GET /for-you 200 in 7.7s (next.js: 7.6s, proxy.ts: 11ms, application-code: 71ms)
+ GET / 200 in 194ms (next.js: 35ms, proxy.ts: 45ms, application-code: 114ms)
+ GET /for-you 200 in 124ms (next.js: 10ms, proxy.ts: 25ms, application-code: 89ms)
+ GET / 200 in 174ms (next.js: 36ms, proxy.ts: 44ms, application-code: 94ms)
+✓ Compiled in 558ms
+✓ Compiled in 468ms
+ GET / 200 in 471ms (next.js: 22ms, proxy.ts: 17ms, application-code: 433ms)

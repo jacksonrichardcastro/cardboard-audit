@@ -11,7 +11,7 @@ interface FilterSectionProps {
   children: React.ReactNode;
 }
 
-function FilterSection({ title, defaultExpanded = true, children }: FilterSectionProps) {
+function FilterSection({ title, defaultExpanded = false, children }: FilterSectionProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   return (
     <div className="border-b border-white/10 py-4">

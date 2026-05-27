@@ -11,15 +11,15 @@ interface FilterSectionProps {
   children: React.ReactNode;
 }
 
-function FilterSection({ title, defaultExpanded = true, children }: FilterSectionProps) {
+function FilterSection({ title, defaultExpanded = false, children }: FilterSectionProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   return (
     <div className="border-b border-white/10 py-4">
       <button 
-        className="flex w-full items-center justify-between text-sm font-semibold text-white hover:text-zinc-300 transition-colors"
+        className="flex w-full items-center gap-4 text-sm font-semibold text-white hover:text-zinc-300 transition-colors text-left"
         onClick={() => setExpanded(!expanded)}
       >
-        {title}
+        <span className="flex-1">{title}</span>
         {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
       </button>
       {expanded && <div className="mt-4 flex flex-col gap-2">{children}</div>}
