@@ -9,6 +9,10 @@ import { listings } from "@/lib/db/schema";
 import { eq, count } from "drizzle-orm";
 import { FiltersDrawer } from "@/components/storefront/FiltersDrawer";
 import { ActiveFilterChips } from "@/components/storefront/ActiveFilterChips";
+import { auth } from "@clerk/nextjs/server";
+import { getRecommendedListings } from "@/lib/recommendations/score";
+import { getUserPreferences } from "@/app/actions/preferences";
+import { ForYouClient } from "@/components/recommendations/ForYouClient";
 
 interface Props {
   searchParams: Promise<Record<string, string | undefined>>;
@@ -43,8 +47,28 @@ export default async function Home(props: Props) {
   // "Recently added" - sorted natively via DB query ordering (first 16)
   const recentListings = listingsData.slice(0, 16);
 
-  // "Recommended for you" - stable slice of the next 16 items to guarantee zero overlap
-  const recommendedListings = listingsData.slice(16, 32);
+  // Recommendations Engine integration
+  const { userId } = await auth();
+  const prefs = await getUserPreferences();
+  const rawRecommended = await getRecommendedListings(userId, 20);
+  
+  const recommendedMapped = rawRecommended.map((d: any) => ({
+    id: d.id,
+    title: d.title,
+    category: d.category as any,
+    subcategory: "Other",
+    condition: d.condition,
+    grade: d.grade || undefined,
+    gradingCompany: d.gradingCompany,
+    priceCents: d.priceCents,
+    photoUrl: (Array.isArray(d.photos) && d.photos.length > 0 && d.photos[0] !== null) ? d.photos[0] : 'https://placehold.co/400x550',
+    sellerBusinessName: d.sellerName,
+    createdAt: new Date().toISOString()
+  }));
+
+  const hasPreferences = !!(prefs && prefs.sportCategories && prefs.sportCategories.length > 0);
+  const isPersonalized = userId && hasPreferences;
+  const isSkipState = userId && !hasPreferences;
 
   const LAUNCH_DATE = new Date('2026-05-31T00:00:00Z');
   const now = new Date();
@@ -112,18 +136,25 @@ export default async function Home(props: Props) {
 
             {/* Horizontal Dashboard Rails */}
             <CardRail 
-              title={dbListings.length > 0 ? "Results" : "No Results"} 
+              title={dbListings.length > 0 ? "Trending" : "No Results"} 
               listings={recentListings} 
               seeAllHref="#" 
             />
             
-            {recommendedListings.length > 0 && (
-              <CardRail 
-                title="Recommended for you" 
-                listings={recommendedListings} 
-                seeAllHref="#" 
-              />
-            )}
+            <div className="pt-8">
+              {isSkipState && (
+                <div className="mb-4">
+                  <ForYouClient />
+                </div>
+              )}
+              {recommendedMapped.length > 0 && (
+                <CardRail 
+                  title={isPersonalized ? "Recommended for You" : "Featured Listings"} 
+                  listings={recommendedMapped} 
+                  seeAllHref="/for-you" 
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>

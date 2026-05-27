@@ -1,7 +1,7 @@
 
 
 import Link from "next/link";
-import { Menu } from "lucide-react";
+import { Menu, Flame } from "lucide-react";
 import { auth } from "@clerk/nextjs/server";
 import { NavAuthControls } from "./nav-auth-controls";
 import { Button } from "@/components/ui/button";
@@ -27,10 +27,11 @@ export async function SiteHeader() {
           </Link>
           <nav className="hidden md:flex items-center gap-2">
             <Link
-              href="/trending"
-              className="px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              href="/for-you"
+              className="px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground flex items-center gap-1.5"
             >
-              Trending
+              <Flame className="w-4 h-4 text-violet-600 fill-violet-600" />
+              {isSignedIn ? "For You" : "Hot"}
             </Link>
             <Link
               href="/tracker"
@@ -68,8 +69,9 @@ export async function SiteHeader() {
               <SheetContent side="right">
                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                 <div className="flex flex-col gap-6 pt-6">
-                  <Link href="/trending" className="text-sm font-medium">
-                    Trending
+                  <Link href="/for-you" className="text-sm font-medium flex items-center gap-1.5">
+                    <Flame className="w-4 h-4 text-violet-600 fill-violet-600" />
+                    {isSignedIn ? "For You" : "Hot"}
                   </Link>
                   <Link href="/tracker" className="text-sm font-medium inline-flex items-center gap-2">
                     Tracker

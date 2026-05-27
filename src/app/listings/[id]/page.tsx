@@ -6,6 +6,9 @@ import { notFound } from "next/navigation";
 import { BuyNowButton } from "@/components/storefront/buy-now-button";
 import { CardRail } from "@/components/storefront/card-rail";
 import { getListingById, getTrendingListings } from "@/lib/db/queries/listings";
+import { db } from "@/lib/db";
+import { viewHistory } from "@/lib/db/schema";
+import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import Image from "next/image"; // Will use img securely with static Next boundaries as specified earlier to bypass proxy issues if any, but since they are in public/, we can use img
 
@@ -19,6 +22,16 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   const dbItem = await getListingById(listingId);
   
   if (!dbItem) return notFound();
+
+  // View tracking
+  const { userId } = await auth();
+  if (userId) {
+    try {
+      await db.insert(viewHistory).values({ userId, listingId });
+    } catch (err) {
+      console.error("Failed to track view:", err);
+    }
+  }
 
   // Map to common structure cleanly
   const item = {
