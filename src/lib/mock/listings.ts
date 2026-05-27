@@ -17,7 +17,98 @@ export type MockListing = {
 };
 
 export const mockListings: MockListing[] = [
-  // --- RECOMMENDED FOR YOU (Oldest 16, Indices 16-31 in UI) ---
+  // --- RECENTLY ADDED (Newest 16, Indices 0-15 in UI) ---
+  {
+    id: 100,
+    title: "2018 Panini Prizm Silver Prizm Luka Doncic",
+    category: "Sports",
+    subcategory: "Basketball",
+    condition: "Gem Mint",
+    gradingCompany: "PSA",
+    grade: "10",
+    priceCents: 280000,
+    photoUrl: "/mock/card_luka_doncic.png",
+    sellerBusinessName: "Alex The Grader",
+    createdAt: "2026-05-26T10:00:00Z"
+  },
+  {
+    id: 101,
+    title: "2023 Topps Chrome Update Sapphire Aaron Judge",
+    category: "Sports",
+    subcategory: "Baseball",
+    condition: "Gem Mint",
+    gradingCompany: "PSA",
+    grade: "10",
+    priceCents: 500000,
+    photoUrl: "/mock/card_aaron_judge.png",
+    sellerBusinessName: "Storefront Test Shop",
+    createdAt: "2026-05-26T09:20:00Z"
+  },
+  {
+    id: 102,
+    title: "2015 Upper Deck Connor McDavid Young Guns",
+    category: "Sports",
+    subcategory: "Hockey",
+    condition: "Gem Mint",
+    gradingCompany: "PSA",
+    grade: "10",
+    priceCents: 13000000,
+    photoUrl: "/mock/card_connor_mcdavid.png",
+    sellerBusinessName: "Alex The Grader",
+    createdAt: "2026-05-26T08:15:00Z"
+  },
+  {
+    id: 103,
+    title: "2009 Bowman Chrome Mike Trout",
+    category: "Sports",
+    subcategory: "Baseball",
+    condition: "Gem Mint",
+    gradingCompany: "BGS",
+    grade: "9.5",
+    priceCents: 3000000,
+    photoUrl: "/mock/card_mike_trout.png",
+    sellerBusinessName: "Storefront Test Shop",
+    createdAt: "2026-05-26T08:00:00Z"
+  },
+  {
+    id: 104,
+    title: "1999 Pokemon Base Set Charizard Holo",
+    category: "Graded",
+    subcategory: "Pokemon",
+    condition: "Gem Mint",
+    gradingCompany: "PSA",
+    grade: "10",
+    priceCents: 35000000,
+    photoUrl: "/mock/card_charizard.png",
+    sellerBusinessName: "Alex The Grader",
+    createdAt: "2026-05-26T07:30:00Z"
+  },
+  {
+    id: 105,
+    title: "1986 Fleer Michael Jordan Rookie #57",
+    category: "Sports",
+    subcategory: "Basketball",
+    condition: "Gem Mint",
+    gradingCompany: "PSA",
+    grade: "10",
+    priceCents: 20000000,
+    photoUrl: "/mock/card_jordan.png",
+    sellerBusinessName: "Storefront Test Shop",
+    createdAt: "2026-05-26T07:00:00Z"
+  },
+  {
+    id: 106,
+    title: "2000 Playoff Contenders Tom Brady Rookie Ticket Auto",
+    category: "Sports",
+    subcategory: "Football",
+    condition: "Mint",
+    gradingCompany: "BGS",
+    grade: "9",
+    priceCents: 300000000,
+    photoUrl: "/mock/card_brady.png",
+    sellerBusinessName: "Alex The Grader",
+    createdAt: "2026-05-26T06:45:00Z"
+  },
   // 100% POKEMON WITH ACCURATE IMAGES AND VARIED PRICES
   {
     id: 1,
