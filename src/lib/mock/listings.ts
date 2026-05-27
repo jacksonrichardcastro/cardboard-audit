@@ -109,6 +109,19 @@ export const mockListings: MockListing[] = [
     sellerBusinessName: "Alex The Grader",
     createdAt: "2026-05-26T06:45:00Z"
   },
+  {
+    id: 107,
+    title: "2014 Panini Prizm World Cup Lionel Messi",
+    category: "Sports",
+    subcategory: "Soccer",
+    condition: "Gem Mint",
+    gradingCompany: "PSA",
+    grade: "10",
+    priceCents: 5000000,
+    photoUrl: "/mock/card_messi.png",
+    sellerBusinessName: "Storefront Test Shop",
+    createdAt: "2026-05-26T06:30:00Z"
+  },
   // 100% POKEMON WITH ACCURATE IMAGES AND VARIED PRICES
   {
     id: 1,
