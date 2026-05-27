@@ -86,7 +86,7 @@ export default async function SellerStorePage(props: Props) {
       grade: listings.grade,
       gradingCompany: listings.gradingCompany,
       condition: listings.condition,
-      photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE card_id = ${listings.cardId}), '[]'::json)`,
+      photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE item_photos.card_id = listings.card_id), '[]'::json)`,
     })
     .from(listings)
     .where(and(
@@ -103,7 +103,7 @@ export default async function SellerStorePage(props: Props) {
       grade: cards.grade,
       gradingCompany: cards.gradingCompany,
       condition: cards.condition,
-      photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE card_id = ${cards.id}), '[]'::json)`,
+      photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE item_photos.card_id = cards.id), '[]'::json)`,
     })
     .from(cards)
     .where(eq(cards.ownerId, seller.userId))
