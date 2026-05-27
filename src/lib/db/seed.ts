@@ -46,7 +46,11 @@ async function main() {
         createdAt: new Date(Date.now() - i * 1000),
       }).returning({ id: cards.id });
 
-      if (item.photoUrl) {
+      if (item.photoUrls) {
+        for (let j = 0; j < item.photoUrls.length; j++) {
+          await db.insert(itemPhotos).values({ cardId: newCard.id, kind: "front", sortOrder: j, storagePath: item.photoUrls[j] });
+        }
+      } else if (item.photoUrl) {
         await db.insert(itemPhotos).values({ cardId: newCard.id, kind: "front", sortOrder: 0, storagePath: item.photoUrl });
       }
       
@@ -98,7 +102,11 @@ async function main() {
         createdAt: new Date(Date.now() - i * 1000),
       }).returning({ id: cards.id });
 
-      if (item.photoUrl) {
+      if (item.photoUrls) {
+        for (let j = 0; j < item.photoUrls.length; j++) {
+          await db.insert(itemPhotos).values({ cardId: newCard.id, kind: "front", sortOrder: j, storagePath: item.photoUrls[j] });
+        }
+      } else if (item.photoUrl) {
         await db.insert(itemPhotos).values({ cardId: newCard.id, kind: "front", sortOrder: 0, storagePath: item.photoUrl });
       }
 
