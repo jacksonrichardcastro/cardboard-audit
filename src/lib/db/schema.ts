@@ -35,6 +35,7 @@ export const profiles = pgTable("profiles", {
   grailCardId: integer("grail_card_id"),
   binderPrivate: boolean("binder_private").notNull().default(false),
   headerCustomizationIds: json("header_customization_ids").default([]),
+  badges: json("badges").$type<string[]>().default([]),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => ({
   handleIdx: unique("profiles_handle_idx").on(table.handle),

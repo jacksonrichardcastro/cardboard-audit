@@ -70,6 +70,7 @@ async function main() {
       headerStyle: "cards",
       kycStatus: "verified",
       stripeConnectAccountId: "acct_verified_seller",
+      badges: ["founding", "certified", "verified"],
     }).onConflictDoUpdate({ target: profiles.userId, set: { handle: "storefront_test" } });
 
     // Insert 60 cards, and 55 listings

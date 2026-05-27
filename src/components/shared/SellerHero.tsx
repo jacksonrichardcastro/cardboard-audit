@@ -10,11 +10,11 @@ interface BadgeConfig {
 }
 
 const PRESTIGE_BADGES: BadgeConfig[] = [
-  { id: "founding", label: "Founding Seller", fallbackColor: "bg-slate-800 border-slate-600 text-slate-300" },
-  { id: "gold", label: "Gold Medal", fallbackColor: "bg-amber-900/40 border-amber-500/50 text-amber-500" },
-  { id: "certified", label: "Certified Badge", fallbackColor: "bg-purple-900/40 border-purple-500/50 text-purple-400" },
-  { id: "verified", label: "Verified Pin", fallbackColor: "bg-blue-900/40 border-blue-500/50 text-blue-400" },
-  { id: "ambassador", label: "Trax Ambassador", fallbackColor: "bg-zinc-800 border-[#7C3AED] text-[#7C3AED]" },
+  { id: "founding", label: "Founding Seller", imgSrc: "/badges/badge-founding-seller.png", fallbackColor: "bg-slate-800 border-slate-600 text-slate-300" },
+  { id: "gold", label: "Gold Medal", imgSrc: "/badges/badge-gold-medal.png", fallbackColor: "bg-amber-900/40 border-amber-500/50 text-amber-500" },
+  { id: "certified", label: "Certified Badge", imgSrc: "/badges/badge-certified-badge.png", fallbackColor: "bg-purple-900/40 border-purple-500/50 text-purple-400" },
+  { id: "verified", label: "Verified Pin", imgSrc: "/badges/badge-verified-pin.png", fallbackColor: "bg-blue-900/40 border-blue-500/50 text-blue-400" },
+  { id: "ambassador", label: "Trax Ambassador", imgSrc: "/badges/badge-trax-ambassador.png", fallbackColor: "bg-zinc-800 border-[#7C3AED] text-[#7C3AED]" },
 ];
 
 interface SellerHeroProps {
@@ -26,12 +26,13 @@ interface SellerHeroProps {
   bannerImageUrl?: string | null;
   isOwner?: boolean;
   sellerId?: string;
+  badges?: string[];
   // Passing these so we can render mock cards in the background shelf
   heroCards?: { id: string; url: string }[];
   customizerNode?: React.ReactNode;
 }
 
-export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerImageUrl, isOwner, sellerId, heroCards = [], customizerNode }: SellerHeroProps) {
+export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerImageUrl, isOwner, sellerId, heroCards = [], customizerNode, badges = [] }: SellerHeroProps) {
   // Placeholder images for the hero shelf background
   const defaultHeroCards = Array.from({ length: 8 }).map((_, i) => ({
     id: `hero-card-${i}`,
@@ -124,7 +125,7 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
 
         {/* Prestige Emblems Row (Exactly 5, single row) */}
         <div className="flex flex-wrap items-center justify-center gap-3 md:gap-6 max-w-4xl mx-auto">
-          {PRESTIGE_BADGES.map((badge) => (
+          {PRESTIGE_BADGES.filter(b => badges.includes(b.id)).map((badge) => (
             <div key={badge.id} className="flex flex-col items-center gap-3">
               {badge.imgSrc ? (
                 // Future Asset Injection Point
