@@ -136,6 +136,21 @@ export default async function SellerStorePage(props: Props) {
     .where(and(...activeConditions))
     .orderBy(desc(listings.createdAt));
 
+  // Fetch unfiltered active listings for the header strip fallback
+  const unfilteredActiveListings = await db.select({
+      id: listings.id,
+      cardId: listings.cardId,
+      title: listings.title,
+      priceCents: listings.priceCents,
+      grade: listings.grade,
+      gradingCompany: listings.gradingCompany,
+      condition: listings.condition,
+      photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE item_photos.card_id = listings.card_id), '[]'::json)`,
+    })
+    .from(listings)
+    .where(and(eq(listings.sellerId, seller.userId), eq(listings.status, "ACTIVE")))
+    .orderBy(desc(listings.createdAt));
+
   // Fetch binder cards
   const binderCards = await db.select({
       id: cards.id,
@@ -179,8 +194,8 @@ export default async function SellerStorePage(props: Props) {
   let heroCardsData = [];
   if (headerIds.length > 0) {
     heroCardsData = binderCards.filter(c => headerIds.includes(c.id));
-  } else if (activeListings.length > 0) {
-    heroCardsData = activeListings;
+  } else if (unfilteredActiveListings.length > 0) {
+    heroCardsData = unfilteredActiveListings;
   } else {
     heroCardsData = binderCards;
   }
