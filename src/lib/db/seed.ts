@@ -32,7 +32,7 @@ async function main() {
 
     // Insert some cards for buyer
     let grailCardId = null;
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 19; i++) {
       const item = mockListings[i % mockListings.length];
       const [newCard] = await db.insert(cards).values({
         ownerId: BUYER_ID,
