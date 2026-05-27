@@ -39,18 +39,14 @@ async function main() {
         title: item.title,
         category: item.category,
         subcategory: item.subcategory || "Other",
-        condition: item.condition,
-        gradingCompany: item.gradingCompany,
-        grade: item.grade,
-        description: item.description || "Mint condition",
+        condition: item.condition || "Mint",
+        gradingCompany: item.gradingCompany || null,
+        grade: item.grade || null,
+        description: "Mint condition",
         createdAt: new Date(Date.now() - i * 1000),
       }).returning({ id: cards.id });
 
-      if (item.photoUrls) {
-        for (let j = 0; j < item.photoUrls.length; j++) {
-          await db.insert(itemPhotos).values({ cardId: newCard.id, kind: "front", sortOrder: j, storagePath: item.photoUrls[j] });
-        }
-      } else if (item.photoUrl) {
+      if (item.photoUrl) {
         await db.insert(itemPhotos).values({ cardId: newCard.id, kind: "front", sortOrder: 0, storagePath: item.photoUrl });
       }
       
@@ -95,18 +91,14 @@ async function main() {
         title: item.title + ` #${i}`, // Ensure unique titles
         category: item.category,
         subcategory: item.subcategory || "Other",
-        condition: item.condition,
+        condition: item.condition || "Mint",
         gradingCompany: item.gradingCompany || (isSlab ? "PSA" : null),
         grade: item.grade || (isSlab ? "10" : null),
-        description: item.description,
+        description: "Mint condition",
         createdAt: new Date(Date.now() - i * 1000),
       }).returning({ id: cards.id });
 
-      if (item.photoUrls) {
-        for (let j = 0; j < item.photoUrls.length; j++) {
-          await db.insert(itemPhotos).values({ cardId: newCard.id, kind: "front", sortOrder: j, storagePath: item.photoUrls[j] });
-        }
-      } else if (item.photoUrl) {
+      if (item.photoUrl) {
         await db.insert(itemPhotos).values({ cardId: newCard.id, kind: "front", sortOrder: 0, storagePath: item.photoUrl });
       }
 
@@ -120,10 +112,10 @@ async function main() {
           title: item.title + ` #${i}`,
           category: item.category,
           subcategory: item.subcategory || "Other",
-          condition: item.condition,
+          condition: item.condition || "Mint",
           gradingCompany: item.gradingCompany || (isSlab ? "PSA" : null),
           grade: item.grade || (isSlab ? "10" : null),
-          description: item.description,
+          description: "Mint condition",
           priceCents: Math.floor(Math.random() * 500000) + 1000, // random price between $10 and $5000
           status: "ACTIVE",
           createdAt: new Date(Date.now() - i * 1000),
@@ -162,7 +154,7 @@ async function main() {
         title: item.title + " (Private)",
         category: item.category,
         subcategory: item.subcategory || "Other",
-        condition: item.condition,
+        condition: item.condition || "Mint",
       }).returning({ id: cards.id });
 
       await db.insert(listings).values({
@@ -170,7 +162,7 @@ async function main() {
         cardId: newCard.id,
         title: item.title + " (Private)",
         category: item.category,
-        condition: item.condition,
+        condition: item.condition || "Mint",
         priceCents: 5000,
         status: "ACTIVE",
       });
