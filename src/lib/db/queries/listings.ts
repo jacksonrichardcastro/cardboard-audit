@@ -1,4 +1,4 @@
-import { eq, desc, ilike, and, gte, lte, sql } from "drizzle-orm";
+import { eq, desc, ilike, and, gte, lte, sql, like, between } from "drizzle-orm";
 import { withUserContext } from "@/lib/db";
 import { listings, profiles, itemPhotos } from "@/lib/db/schema";
 import { unstable_cache } from "next/cache";
@@ -8,6 +8,11 @@ export async function getTrendingListings(params?: {
   category?: string;
   minPrice?: string;
   maxPrice?: string;
+  sport?: string;
+  listing_type?: string;
+  grade?: string;
+  era?: string;
+  price?: string;
 }) {
   try {
     const filters: any[] = [eq(listings.status, "ACTIVE")];
@@ -16,6 +21,42 @@ export async function getTrendingListings(params?: {
     if (params?.category) filters.push(eq(listings.category, params.category));
     if (params?.minPrice) filters.push(gte(listings.priceCents, Number(params.minPrice) * 100));
     if (params?.maxPrice) filters.push(lte(listings.priceCents, Number(params.maxPrice) * 100));
+
+    if (params?.sport) {
+      if (params.sport === 'tcg' || params.sport === 'non-sport') {
+        filters.push(like(listings.sport, `${params.sport}%`));
+      } else {
+        filters.push(eq(listings.sport, params.sport));
+      }
+    }
+    
+    if (params?.listing_type) {
+      filters.push(eq(listings.listingType, params.listing_type));
+    }
+
+    if (params?.grade) {
+      const gradeMap: Record<string, string> = {
+        'psa-10': 'PSA 10',
+        'psa-9': 'PSA 9',
+        'other-graded': 'Other Graded',
+        'raw': 'Raw / Ungraded'
+      };
+      if (gradeMap[params.grade]) {
+        filters.push(eq(listings.gradeTier, gradeMap[params.grade]));
+      }
+    }
+
+    if (params?.era) {
+      filters.push(eq(listings.era, params.era));
+    }
+
+    if (params?.price) {
+      if (params.price === 'under-50') filters.push(lte(listings.priceCents, 5000));
+      else if (params.price === '50-200') filters.push(between(listings.priceCents, 5000, 20000));
+      else if (params.price === '200-1000') filters.push(between(listings.priceCents, 20000, 100000));
+      else if (params.price === '1000-5000') filters.push(between(listings.priceCents, 100000, 500000));
+      else if (params.price === '5000-plus') filters.push(gte(listings.priceCents, 500000));
+    }
 
     const getCachedData = unstable_cache(
       async () => {

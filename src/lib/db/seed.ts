@@ -42,6 +42,10 @@ async function main() {
         condition: item.condition || "Mint",
         gradingCompany: item.gradingCompany || null,
         grade: item.grade || null,
+        sport: item.sport,
+        listingType: item.listingType,
+        gradeTier: item.gradeTier,
+        era: item.era,
         description: "Mint condition",
         createdAt: new Date(Date.now() - i * 1000),
       }).returning({ id: cards.id });
@@ -94,6 +98,10 @@ async function main() {
         condition: item.condition || "Mint",
         gradingCompany: item.gradingCompany || (isSlab ? "PSA" : null),
         grade: item.grade || (isSlab ? "10" : null),
+        sport: item.sport,
+        listingType: item.listingType,
+        gradeTier: item.gradeTier,
+        era: item.era,
         description: "Mint condition",
         createdAt: new Date(Date.now() - i * 1000),
       }).returning({ id: cards.id });
@@ -115,6 +123,10 @@ async function main() {
           condition: item.condition || "Mint",
           gradingCompany: item.gradingCompany || (isSlab ? "PSA" : null),
           grade: item.grade || (isSlab ? "10" : null),
+          sport: item.sport,
+          listingType: item.listingType,
+          gradeTier: item.gradeTier,
+          era: item.era,
           description: "Mint condition",
           priceCents: Math.floor(Math.random() * 500000) + 1000, // random price between $10 and $5000
           status: "ACTIVE",
@@ -155,6 +167,10 @@ async function main() {
         category: item.category,
         subcategory: item.subcategory || "Other",
         condition: item.condition || "Mint",
+        sport: item.sport,
+        listingType: item.listingType,
+        gradeTier: item.gradeTier,
+        era: item.era,
       }).returning({ id: cards.id });
 
       await db.insert(listings).values({
@@ -163,6 +179,10 @@ async function main() {
         title: item.title + " (Private)",
         category: item.category,
         condition: item.condition || "Mint",
+        sport: item.sport,
+        listingType: item.listingType,
+        gradeTier: item.gradeTier,
+        era: item.era,
         priceCents: 5000,
         status: "ACTIVE",
       });

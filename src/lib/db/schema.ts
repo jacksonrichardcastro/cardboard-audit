@@ -57,6 +57,10 @@ export const cards = pgTable("cards", {
   subcategory: varchar("subcategory", { length: 100 }),
   set: varchar("set", { length: 100 }),
   year: varchar("year", { length: 50 }),
+  sport: varchar("sport", { length: 100 }),
+  listingType: varchar("listing_type", { length: 50 }),
+  gradeTier: varchar("grade_tier", { length: 50 }),
+  era: varchar("era", { length: 50 }),
   cardNumber: varchar("card_number", { length: 100 }),
   condition: varchar("condition", { length: 100 }).notNull(),
   gradingCompany: varchar("grading_company", { length: 100 }),
@@ -79,6 +83,10 @@ export const listings = pgTable("listings", {
   subcategory: varchar("subcategory", { length: 100 }), // Pokemon, Baseball, etc.
   set: varchar("set", { length: 100 }),
   year: varchar("year", { length: 50 }),
+  sport: varchar("sport", { length: 100 }),
+  listingType: varchar("listing_type", { length: 50 }),
+  gradeTier: varchar("grade_tier", { length: 50 }),
+  era: varchar("era", { length: 50 }),
   cardNumber: varchar("card_number", { length: 100 }),
   condition: varchar("condition", { length: 100 }).notNull(),
   gradingCompany: varchar("grading_company", { length: 100 }),
@@ -98,6 +106,11 @@ export const listings = pgTable("listings", {
 }, (table) => ({
   sellerIdx: index("seller_idx").on(table.sellerId),
   categoryIdx: index("category_idx").on(table.category, table.subcategory),
+  sportIdx: index("sport_idx").on(table.sport),
+  listingTypeIdx: index("listing_type_idx").on(table.listingType),
+  gradeTierIdx: index("grade_tier_idx").on(table.gradeTier),
+  eraIdx: index("era_idx").on(table.era),
+  priceIdx: index("price_idx").on(table.priceCents),
   titleSellerIdx: unique("title_seller_unique").on(table.title, table.sellerId),
 }));
 

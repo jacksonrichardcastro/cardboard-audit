@@ -10,7 +10,8 @@ async function main() {
 
   try {
     await db.execute(sql`TRUNCATE TABLE listings CASCADE;`);
-    console.log("Successfully truncated listings and all dependencies.");
+    await db.execute(sql`TRUNCATE TABLE cards CASCADE;`);
+    console.log("Successfully truncated listings and cards and all dependencies.");
   } catch (err) {
     console.error("Error truncating:", err);
   } finally {

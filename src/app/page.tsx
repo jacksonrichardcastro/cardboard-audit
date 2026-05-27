@@ -7,9 +7,23 @@ import { FilterSidebar } from "@/components/storefront/filter-sidebar";
 import { db } from "@/lib/db";
 import { listings } from "@/lib/db/schema";
 import { eq, count } from "drizzle-orm";
+import { FiltersDrawer } from "@/components/storefront/FiltersDrawer";
+import { ActiveFilterChips } from "@/components/storefront/ActiveFilterChips";
 
-export default async function Home() {
-  const dbListings = await getTrendingListings({});
+interface Props {
+  searchParams: Promise<Record<string, string | undefined>>;
+}
+
+export default async function Home(props: Props) {
+  const searchParams = await props.searchParams;
+  
+  const dbListings = await getTrendingListings({
+    sport: searchParams.sport,
+    listing_type: searchParams.listing_type,
+    grade: searchParams.grade,
+    era: searchParams.era,
+    price: searchParams.price
+  });
   
   // Clean mapping standardizing Postgres arrays dynamically safely to existing UI constraints
   const listingsData = dbListings.map((d: any) => ({
@@ -75,23 +89,43 @@ export default async function Home() {
         </Badge>
       </div>
 
-      <div className="space-y-8 py-4">
-        <div className="px-4 md:px-8">
-          <FilterSidebar />
+      <div className="max-w-[1600px] mx-auto px-4 md:px-8 py-4">
+        {/* Mobile Filters Drawer & Active Chips Row */}
+        <div className="md:hidden mb-4 space-y-3">
+          <div className="flex items-center">
+            <FiltersDrawer />
+          </div>
+          <ActiveFilterChips />
         </div>
 
-        {/* Horizontal Dashboard Rails */}
-        <CardRail 
-          title="Recommended for you" 
-          listings={recommendedListings} 
-          seeAllHref="/search?sort=recommended" 
-        />
-        
-        <CardRail 
-          title="Recently added" 
-          listings={recentListings} 
-          seeAllHref="/search?sort=newest" 
-        />
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Persistent Desktop Sidebar */}
+          <div className="hidden md:block w-64 shrink-0">
+            <FilterSidebar />
+          </div>
+
+          {/* Right Content Area */}
+          <div className="flex-1 min-w-0 space-y-8">
+            <div className="hidden md:block mb-4">
+              <ActiveFilterChips />
+            </div>
+
+            {/* Horizontal Dashboard Rails */}
+            <CardRail 
+              title={dbListings.length > 0 ? "Results" : "No Results"} 
+              listings={recentListings} 
+              seeAllHref="#" 
+            />
+            
+            {recommendedListings.length > 0 && (
+              <CardRail 
+                title="Recommended for you" 
+                listings={recommendedListings} 
+                seeAllHref="#" 
+              />
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

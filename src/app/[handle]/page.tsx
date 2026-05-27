@@ -12,6 +12,9 @@ import { auth } from "@clerk/nextjs/server";
 import { getPossessiveName } from "@/lib/utils/formatters";
 import { Lock } from "lucide-react";
 import { HeaderCustomizer } from "@/components/shared/HeaderCustomizer";
+import { FiltersDrawer } from "@/components/storefront/FiltersDrawer";
+import { ActiveFilterChips } from "@/components/storefront/ActiveFilterChips";
+import { like, lte, gte, between } from "drizzle-orm";
 
 interface Props {
   params: Promise<{ handle: string }>;
@@ -77,6 +80,47 @@ export default async function SellerStorePage(props: Props) {
   
   const currentTab = searchParams.tab || (isSellerLayout ? "storefront" : "collection");
 
+  const activeConditions = [
+    eq(listings.sellerId, seller.userId),
+    eq(listings.status, "ACTIVE")
+  ];
+
+  if (searchParams.sport) {
+    if (searchParams.sport === 'tcg' || searchParams.sport === 'non-sport') {
+      activeConditions.push(like(listings.sport, `${searchParams.sport}%`));
+    } else {
+      activeConditions.push(eq(listings.sport, searchParams.sport));
+    }
+  }
+  
+  if (searchParams.listing_type) {
+    activeConditions.push(eq(listings.listingType, searchParams.listing_type));
+  }
+
+  if (searchParams.grade) {
+    const gradeMap: Record<string, string> = {
+      'psa-10': 'PSA 10',
+      'psa-9': 'PSA 9',
+      'other-graded': 'Other Graded',
+      'raw': 'Raw / Ungraded'
+    };
+    if (gradeMap[searchParams.grade]) {
+      activeConditions.push(eq(listings.gradeTier, gradeMap[searchParams.grade]));
+    }
+  }
+
+  if (searchParams.era) {
+    activeConditions.push(eq(listings.era, searchParams.era));
+  }
+
+  if (searchParams.price) {
+    if (searchParams.price === 'under-50') activeConditions.push(lte(listings.priceCents, 5000));
+    else if (searchParams.price === '50-200') activeConditions.push(between(listings.priceCents, 5000, 20000));
+    else if (searchParams.price === '200-1000') activeConditions.push(between(listings.priceCents, 20000, 100000));
+    else if (searchParams.price === '1000-5000') activeConditions.push(between(listings.priceCents, 100000, 500000));
+    else if (searchParams.price === '5000-plus') activeConditions.push(gte(listings.priceCents, 500000));
+  }
+
   // Fetch active listings for Storefront / Active Listings tab
   const activeListings = await db.select({
       id: listings.id,
@@ -89,10 +133,7 @@ export default async function SellerStorePage(props: Props) {
       photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE item_photos.card_id = listings.card_id), '[]'::json)`,
     })
     .from(listings)
-    .where(and(
-      eq(listings.sellerId, seller.userId),
-      eq(listings.status, "ACTIVE")
-    ))
+    .where(and(...activeConditions))
     .orderBy(desc(listings.createdAt));
 
   // Fetch binder cards
@@ -194,7 +235,8 @@ export default async function SellerStorePage(props: Props) {
             </h2>
           </div>
 
-          <div className="pb-4 flex items-center z-10">
+          <div className="pb-4 flex items-center z-10 gap-2">
+            <FiltersDrawer />
             <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 rounded-lg border border-white/5">
               <Lock className="w-4 h-4 text-zinc-500" />
               <span className="text-xs font-semibold text-zinc-400">
@@ -206,6 +248,10 @@ export default async function SellerStorePage(props: Props) {
 
         {/* Tab Content Areas */}
         <div className="min-h-[400px]">
+          {(currentTab === "storefront" || currentTab === "active-listings") && (
+            <ActiveFilterChips />
+          )}
+
           {(currentTab === "collection" || (currentTab === "binder" && !seller.binderPrivate)) && (
             <BinderGrid 
               isOwner={isOwner}

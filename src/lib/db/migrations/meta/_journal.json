@@ -15,6 +15,13 @@
       "when": 1779843717700,
       "tag": "0001_parched_captain_america",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779860856607,
+      "tag": "0002_curly_pandemic",
+      "breakpoints": true
     }
   ]
 }
