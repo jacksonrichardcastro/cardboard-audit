@@ -61,7 +61,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
       category: d.category as any,
       subcategory: "Other",
       condition: d.condition,
-      grade: d.grade || undefined,
+      grade: d.gradingCompany && d.grade ? `${d.gradingCompany} ${d.grade}` : d.grade || undefined,
       priceCents: d.priceCents,
       photoUrl: Array.isArray(d.photos) ? d.photos[0] : (d.photos as any || 'https://placehold.co/400x550'),
       sellerBusinessName: d.sellerName,

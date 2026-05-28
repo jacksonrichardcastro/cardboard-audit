@@ -98,6 +98,8 @@ export const listings = pgTable("listings", {
   edition: varchar("edition", { length: 100 }),
   graded: boolean("graded").notNull().default(false),
   shippingMethod: varchar("shipping_method", { length: 100 }),
+  shipsFrom: varchar("ships_from", { length: 255 }),
+  shippingEstimate: varchar("shipping_estimate", { length: 255 }),
   reviewNotes: text("review_notes"),
   publishedAt: timestamp("published_at"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),

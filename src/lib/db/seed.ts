@@ -52,6 +52,7 @@ async function main() {
 
       if (item.photoUrl) {
         await db.insert(itemPhotos).values({ cardId: newCard.id, kind: "front", sortOrder: 0, storagePath: item.photoUrl });
+        await db.insert(itemPhotos).values({ cardId: newCard.id, kind: "back", sortOrder: 1, storagePath: item.photoUrl });
       }
       
       if (i === 0) grailCardId = newCard.id;
@@ -108,6 +109,7 @@ async function main() {
 
       if (item.photoUrl) {
         await db.insert(itemPhotos).values({ cardId: newCard.id, kind: "front", sortOrder: 0, storagePath: item.photoUrl });
+        await db.insert(itemPhotos).values({ cardId: newCard.id, kind: "back", sortOrder: 1, storagePath: item.photoUrl });
       }
 
       if (i === 0) sellerGrailCardId = newCard.id;

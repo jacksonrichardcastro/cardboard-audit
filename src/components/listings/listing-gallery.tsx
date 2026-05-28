@@ -36,7 +36,11 @@ export function ListingGallery({ photos, title }: { photos: string[], title: str
             return (
               <button
                 key={index}
-                onClick={() => setActiveIndex(index)}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setActiveIndex(index);
+                }}
                 className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
                   isActive 
                     ? "border-violet-600 ring-2 ring-violet-600/30" 
