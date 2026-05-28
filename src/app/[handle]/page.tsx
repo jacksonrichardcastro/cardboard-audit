@@ -210,8 +210,12 @@ export default async function SellerStorePage(props: Props) {
   return (
     <div className="min-h-screen bg-black text-white selection:bg-[#7C3AED]/30 relative">
       {/* Ambient background glow */}
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#7C3AED]/10 via-black to-black opacity-50 z-0" />
-      
+      <div 
+        className="absolute inset-0 pointer-events-none z-0"
+        style={{
+          backgroundImage: 'radial-gradient(80% 50% at 50% 0%, rgba(124, 58, 237, 0.45) 0%, rgba(124, 58, 237, 0.20) 30%, rgba(0, 0, 0, 0) 70%)'
+        }}
+      />
       <div className="relative z-10">
         <SellerHero 
           name={sellerName}
