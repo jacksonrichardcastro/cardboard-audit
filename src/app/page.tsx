@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, Flame } from "lucide-react";
 import { SearchBar } from "@/components/storefront/search-bar";
 import { CardRail } from "@/components/storefront/card-rail";
 import { getTrendingListings } from "@/lib/db/queries/listings";
@@ -145,6 +145,7 @@ export default async function Home(props: Props) {
             {/* Horizontal Dashboard Rails */}
             <CardRail 
               title={dbListings.length > 0 ? "Trending" : "No Results"} 
+              icon={dbListings.length > 0 ? <Flame className="w-6 h-6 text-violet-600 fill-violet-600" /> : undefined}
               listings={recentListings} 
               seeAllHref="#" 
             />

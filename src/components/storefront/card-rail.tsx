@@ -6,15 +6,19 @@ import { ChevronRight } from "lucide-react";
 
 interface CardRailProps {
   title: string;
+  icon?: React.ReactNode;
   listings: MockListing[];
   seeAllHref?: string;
 }
 
-export function CardRail({ title, listings, seeAllHref }: CardRailProps) {
+export function CardRail({ title, icon, listings, seeAllHref }: CardRailProps) {
   return (
     <div className="w-full space-y-4">
       <div className="flex items-center justify-between px-4 md:px-8">
-        <h2 className="text-2xl font-bold tracking-tight text-foreground">{title}</h2>
+        <div className="flex items-center gap-2">
+          {icon}
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">{title}</h2>
+        </div>
         <Link 
           href={seeAllHref || "#"} 
           className="text-sm font-medium text-primary hover:underline flex items-center group"
