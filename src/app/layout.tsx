@@ -32,14 +32,7 @@ export default function RootLayout({
         className={`${inter.variable} ${outfit.variable} h-screen antialiased dark`}
         suppressHydrationWarning
       >
-        <body 
-          className="min-h-screen flex flex-col font-sans"
-          style={{
-            backgroundColor: '#0a0a0a',
-            backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(124, 58, 237, 0.18) 0%, rgba(124, 58, 237, 0.08) 30%, rgba(0, 0, 0, 0) 70%)',
-            backgroundAttachment: 'fixed',
-          }}
-        >
+        <body className="min-h-screen flex flex-col font-sans">
           <ThemeProvider
             attribute="class"
             defaultTheme="dark"

@@ -8,7 +8,7 @@ async function main() {
   });
   const page = await browser.newPage();
   await page.setViewport({ width: 1280, height: 1024, deviceScaleFactor: 2 });
-  const url = "https://card-bound-g3nunoapt-jacksonrichardcastros-projects.vercel.app";
+  const url = "https://card-bound-eej0txqm0-jacksonrichardcastros-projects.vercel.app";
   await page.goto(url, { waitUntil: 'networkidle2' });
   
   await page.screenshot({ path: 'dashboard-live.png', fullPage: true });

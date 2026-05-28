@@ -94,10 +94,19 @@ export default async function Home(props: Props) {
   }
 
   return (
-    <div className="min-h-screen pb-16">
-      {/* Hero Banner */}
-      <div className="relative overflow-hidden bg-black/60 border-b border-white/5 pt-16 pb-8">
-        <div className="absolute inset-0 bg-[url('https://placehold.co/1920x400/000/111?text=+')] opacity-20 bg-cover bg-center -z-20" />
+    <div className="min-h-screen bg-[#0a0a0a] text-white relative">
+      {/* Ambient background glow */}
+      <div 
+        className="absolute inset-0 pointer-events-none z-0"
+        style={{
+          backgroundImage: 'radial-gradient(80% 50% at 50% 0%, rgba(124, 58, 237, 0.18) 0%, rgba(124, 58, 237, 0.08) 30%, rgba(0, 0, 0, 0) 70%)'
+        }}
+      />
+      
+      <div className="relative z-10 pb-16">
+        {/* Hero Banner */}
+        <div className="relative overflow-hidden bg-black/60 border-b border-white/5 pt-16 pb-8">
+          <div className="absolute inset-0 bg-[url('https://placehold.co/1920x400/000/111?text=+')] opacity-20 bg-cover bg-center -z-20" />
         <div className="max-w-7xl mx-auto px-4 md:px-8 text-center space-y-6">
           <Badge className="bg-primary/20 text-primary border-none hover:bg-primary/30 py-1.5 px-4 rounded-full text-sm">
             <ShieldCheck className="w-4 h-4 mr-2 inline" /> Every seller, hand-vetted.
@@ -168,5 +177,6 @@ export default async function Home(props: Props) {
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 }

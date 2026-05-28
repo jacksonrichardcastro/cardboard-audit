@@ -8,7 +8,7 @@ async function main() {
     headless: "new"
   });
   const page = await browser.newPage();
-  const url = "https://card-bound-g3nunoapt-jacksonrichardcastros-projects.vercel.app";
+  const url = "https://card-bound-eej0txqm0-jacksonrichardcastros-projects.vercel.app";
   await page.goto(url, { waitUntil: 'networkidle2' });
   
   const styles = await page.evaluate(() => {
