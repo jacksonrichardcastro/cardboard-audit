@@ -11,6 +11,7 @@ import { viewHistory } from "@/lib/db/schema";
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import Image from "next/image"; // Will use img securely with static Next boundaries as specified earlier to bypass proxy issues if any, but since they are in public/, we can use img
+import { ListingGallery } from "@/components/listings/listing-gallery";
 
 export default async function ListingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -43,7 +44,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
     grade: dbItem.grade,
     description: dbItem.description,
     priceCents: dbItem.priceCents,
-    photoUrl: Array.isArray(dbItem.photos) ? dbItem.photos[0] : (dbItem.photos as any || 'https://placehold.co/400x550'),
+    photos: Array.isArray(dbItem.photos) ? dbItem.photos : (dbItem.photos ? [dbItem.photos as any] : []),
     sellerBusinessName: dbItem.sellerName,
     sellerVerified: dbItem.sellerVerified,
     set: dbItem.set,
@@ -85,18 +86,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
           
           {/* Left Column: Media (55%) -> 7 / 12 */}
           <div className="lg:col-span-7 space-y-4">
-            <div className="rounded-2xl overflow-hidden border border-border/50 bg-neutral-900 shadow-2xl relative aspect-[3/4] group cursor-zoom-in">
-              {/* Note: The lightbox is securely stubbed as pure CSS scale + overlay icon for this phase */}
-              <img 
-                src={item.photoUrl} 
-                alt={item.title} 
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none opacity-50" />
-              <div className="absolute top-4 right-4 bg-black/40 backdrop-blur-md p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                <Expand className="w-5 h-5 text-white" />
-              </div>
-            </div>
+            <ListingGallery photos={item.photos} title={item.title} />
           </div>
 
           {/* Right Column: Details (45%) -> 5 / 12 */}
