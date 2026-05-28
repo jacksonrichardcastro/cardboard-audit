@@ -6,7 +6,7 @@ async function main() {
   const page = await browser.newPage();
   await page.setViewport({ width: 1280, height: 1024, deviceScaleFactor: 2 });
   
-  const url = "https://card-bound-96seg8llt-jacksonrichardcastros-projects.vercel.app";
+  const url = "https://card-bound-3rra81q91-jacksonrichardcastros-projects.vercel.app";
   
   console.log(`Navigating to ${url}...`);
   await page.goto(url, { waitUntil: 'networkidle2' });
