@@ -94,13 +94,7 @@ export default async function Home(props: Props) {
   }
 
   return (
-    <div 
-      className="min-h-screen pb-16"
-      style={{
-        backgroundColor: '#0a0a0a',
-        backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(124, 58, 237, 0.18) 0%, rgba(124, 58, 237, 0.08) 30%, rgba(0, 0, 0, 0) 70%)'
-      }}
-    >
+    <div className="min-h-screen pb-16">
       {/* Hero Banner */}
       <div className="relative overflow-hidden bg-black/60 border-b border-white/5 pt-16 pb-8">
         <div className="absolute inset-0 bg-[url('https://placehold.co/1920x400/000/111?text=+')] opacity-20 bg-cover bg-center -z-20" />

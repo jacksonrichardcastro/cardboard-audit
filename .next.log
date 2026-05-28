@@ -199,3 +199,12 @@ For more details, see https://clerk.com/err/auth-middleware
 ✓ Compiled in 1212ms
 ✓ Compiled in 568ms
 ✓ Compiled in 867ms
+ GET / 200 in 1033ms (next.js: 156ms, proxy.ts: 119ms, application-code: 759ms)
+ GET / 200 in 993ms (next.js: 435ms, proxy.ts: 81ms, application-code: 477ms)
+ GET / 200 in 1123ms (next.js: 371ms, proxy.ts: 188ms, application-code: 564ms)
+ GET / 200 in 1284ms (next.js: 406ms, proxy.ts: 332ms, application-code: 547ms)
+ GET / 200 in 1022ms (next.js: 321ms, proxy.ts: 109ms, application-code: 592ms)
+ GET / 200 in 991ms (next.js: 416ms, proxy.ts: 82ms, application-code: 493ms)
+ GET / 200 in 71ms (next.js: 1960µs, proxy.ts: 6ms, application-code: 63ms)
+✓ Compiled in 965ms
+✓ Compiled in 4.9s
