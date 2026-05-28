@@ -15,9 +15,10 @@ export async function getTrendingListings(params?: {
   price?: string;
 }) {
   try {
-    const filters: any[] = [eq(listings.status, "ACTIVE")];
-    
-    if (params?.q) filters.push(ilike(listings.title, `%${params.q}%`));
+    const filters: any[] = [
+      eq(listings.status, "ACTIVE"),
+      sql`EXISTS (SELECT 1 FROM item_photos WHERE card_id = ${listings.cardId})`
+    ];
     if (params?.category) filters.push(eq(listings.category, params.category));
     if (params?.minPrice) filters.push(gte(listings.priceCents, Number(params.minPrice) * 100));
     if (params?.maxPrice) filters.push(lte(listings.priceCents, Number(params.maxPrice) * 100));
@@ -80,7 +81,7 @@ export async function getTrendingListings(params?: {
           .limit(32);
         });
       },
-      ['trending-listings-v2', JSON.stringify(params || {})],
+      ['trending-listings-v3', JSON.stringify(params || {})],
       { revalidate: 60, tags: ['listings'] }
     );
 

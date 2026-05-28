@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { listings, userPreferences, viewHistory, profiles } from "@/lib/db/schema";
-import { eq, desc, inArray, sql } from "drizzle-orm";
+import { eq, desc, inArray, sql, and } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 
 // ---------------------------------------------------------------------------
@@ -41,7 +41,7 @@ export async function getRecommendedListings(userId: string | null, limit: numbe
     })
     .from(listings)
     .innerJoin(profiles, eq(listings.sellerId, profiles.userId))
-    .where(eq(listings.status, "ACTIVE"))
+    .where(and(eq(listings.status, "ACTIVE"), sql`EXISTS (SELECT 1 FROM item_photos WHERE card_id = ${listings.cardId})`))
     .orderBy(desc(listings.createdAt))
     .limit(100);
 
