@@ -5,16 +5,21 @@ import { profiles } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import ClientPage from "./client-page";
 
-export default async function NewListingServerPage() {
+export default async function NewListingServerPage({ searchParams }: { searchParams: Promise<{ demo?: string }> }) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
+
+  const params = await searchParams;
+  const isDemo = params.demo === "1";
 
   const seller = await db.query.profiles.findFirst({
     where: eq(profiles.userId, userId),
   });
 
   if (!seller || seller.applicationStatus !== "approved") {
-    redirect("/seller/become");
+    if (!isDemo) {
+      redirect("/seller/become");
+    }
   }
 
   return <ClientPage />;

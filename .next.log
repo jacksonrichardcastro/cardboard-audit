@@ -262,3 +262,10 @@ For more details, see https://clerk.com/err/auth-middleware
  GET / 200 in 207ms (next.js: 35ms, proxy.ts: 64ms, application-code: 107ms)
  GET / 200 in 98ms (next.js: 1751µs, proxy.ts: 9ms, application-code: 87ms)
  GET / 200 in 316ms (next.js: 12ms, proxy.ts: 31ms, application-code: 273ms)
+ GET / 200 in 1158ms (next.js: 142ms, proxy.ts: 293ms, application-code: 723ms)
+ GET / 200 in 199ms (next.js: 18ms, proxy.ts: 18ms, application-code: 162ms)
+ GET / 200 in 1862ms (next.js: 57ms, proxy.ts: 46ms, application-code: 1759ms)
+⚠ Fast Refresh had to perform a full reload when ./node_modules/@clerk/shared/dist/runtime/error.mjs [app-client] (ecmascript) <locals> changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload when ./node_modules/@clerk/react/dist/chunk-RQWALB2R.mjs changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET / 200 in 299ms (next.js: 13ms, proxy.ts: 22ms, application-code: 264ms)
+ GET / 200 in 338ms (next.js: 30ms, proxy.ts: 24ms, application-code: 284ms)
