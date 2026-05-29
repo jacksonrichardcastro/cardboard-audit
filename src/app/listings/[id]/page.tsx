@@ -126,7 +126,14 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
             {/* Purchase CTA */}
             <div className="pt-2">
-              <BuyNowButton listingId={item.id} price={item.priceCents} />
+              <BuyNowButton 
+                listingId={item.id} 
+                price={item.priceCents} 
+                title={item.title} 
+                photoUrl={item.photos[0]} 
+                shipsFrom={item.shipsFrom || "Los Angeles, CA"}
+                shippingEstimate={item.shippingEstimate || "3-5 business days via USPS Priority"}
+              />
             </div>
 
             {/* Logistics & Seller */}
