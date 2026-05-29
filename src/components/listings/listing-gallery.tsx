@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Expand, X } from "lucide-react";
 
 export function ListingGallery({ photos, title }: { photos: string[], title: string }) {
@@ -9,6 +9,16 @@ export function ListingGallery({ photos, title }: { photos: string[], title: str
 
   // Fallback if empty
   const validPhotos = photos && photos.length > 0 ? photos : ['https://placehold.co/400x550'];
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightboxOpen(false);
+    };
+    if (lightboxOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxOpen]);
 
   return (
     <div className="space-y-4">

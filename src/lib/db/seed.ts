@@ -93,7 +93,7 @@ async function main() {
       
       const [newCard] = await db.insert(cards).values({
         ownerId: SELLER_ID,
-        title: item.title + ` #${i}`, // Ensure unique titles
+        title: item.title + ` #${i} (MP)`, // Ensure unique titles
         category: item.category,
         subcategory: item.subcategory || "Other",
         condition: item.condition || "Mint",
@@ -119,7 +119,7 @@ async function main() {
         await db.insert(listings).values({
           sellerId: SELLER_ID,
           cardId: newCard.id,
-          title: item.title + ` #${i}`,
+          title: item.title + ` #${i} (MP)`,
           category: item.category,
           subcategory: item.subcategory || "Other",
           condition: item.condition || "Mint",
