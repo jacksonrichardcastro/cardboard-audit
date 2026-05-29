@@ -1,6 +1,6 @@
 import { eq, desc, ilike, and, gte, lte, sql, like, between } from "drizzle-orm";
 import { withUserContext } from "@/lib/db";
-import { listings, profiles, itemPhotos } from "@/lib/db/schema";
+import { listings, profiles, itemPhotos, users } from "@/lib/db/schema";
 import { unstable_cache } from "next/cache";
 
 export async function getTrendingListings(params?: {
@@ -111,9 +111,13 @@ export async function getListingById(id: number) {
         sellerId: listings.sellerId,
         sellerName: profiles.businessName,
         sellerVerified: profiles.identityVerified,
+        shipsFrom: listings.shipsFrom,
+        shippingEstimate: listings.shippingEstimate,
+        sellerCreatedAt: users.createdAt,
       })
       .from(listings)
       .innerJoin(profiles, eq(listings.sellerId, profiles.userId))
+      .innerJoin(users, eq(profiles.userId, users.id))
       .where(and(eq(listings.id, id), eq(listings.status, "ACTIVE")))
       .limit(1);
       return record;

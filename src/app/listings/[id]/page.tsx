@@ -50,6 +50,9 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
     set: dbItem.set,
     year: dbItem.year,
     cardNumber: dbItem.cardNumber,
+    shipsFrom: dbItem.shipsFrom,
+    shippingEstimate: dbItem.shippingEstimate,
+    sellerCreatedAt: dbItem.sellerCreatedAt,
   };
 
   const dbRelated = await getTrendingListings({ category: item.category });
@@ -131,8 +134,8 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                 <CardContent className="p-4 sm:p-5 flex items-start gap-4">
                   <MapPin className="w-6 h-6 text-muted-foreground shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="font-semibold text-foreground">Ships from Los Angeles, CA</h4>
-                    <p className="text-sm text-muted-foreground mt-1">Estimated delivery: 3-5 business days via USPS Priority</p>
+                    <h4 className="font-semibold text-foreground">Ships from {item.shipsFrom || "Los Angeles, CA"}</h4>
+                    <p className="text-sm text-muted-foreground mt-1">Estimated delivery: {item.shippingEstimate || "3-5 business days via USPS Priority"}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -150,7 +153,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                       </div>
                       <div className="flex items-center text-xs text-muted-foreground mt-1">
                         <CalendarDays className="w-3.5 h-3.5 mr-1" />
-                        Member since 2024
+                        Member since {item.sellerCreatedAt ? new Date(item.sellerCreatedAt).getFullYear() : "2024"}
                       </div>
                     </div>
                   </div>
@@ -165,7 +168,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             <div className="space-y-3 pb-8">
               <h3 className="text-xl font-bold tracking-tight text-foreground">Condition & Notes</h3>
               <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap text-base">
-                {item.description || "Stored securely in an exact-fit sleeve and top-loader. Kept in a smoke-free, climate-controlled environment. Please inspect the high-resolution front and back scans carefully determining condition before purchase."}
+                {item.description || "No description provided."}
               </p>
             </div>
           </div>

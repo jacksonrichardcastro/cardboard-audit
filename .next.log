@@ -241,3 +241,4 @@ For more details, see https://clerk.com/err/auth-middleware
  GET / 200 in 450ms (next.js: 182ms, proxy.ts: 48ms, application-code: 220ms)
  GET / 200 in 472ms (next.js: 114ms, proxy.ts: 23ms, application-code: 335ms)
  GET / 200 in 473ms (next.js: 157ms, proxy.ts: 59ms, application-code: 257ms)
+✓ Compiled in 1732ms
