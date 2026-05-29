@@ -269,3 +269,4 @@ For more details, see https://clerk.com/err/auth-middleware
 ⚠ Fast Refresh had to perform a full reload when ./node_modules/@clerk/react/dist/chunk-RQWALB2R.mjs changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
  GET / 200 in 299ms (next.js: 13ms, proxy.ts: 22ms, application-code: 264ms)
  GET / 200 in 338ms (next.js: 30ms, proxy.ts: 24ms, application-code: 284ms)
+✓ Compiled in 3.9s

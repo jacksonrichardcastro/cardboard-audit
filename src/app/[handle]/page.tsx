@@ -10,7 +10,8 @@ import { ActiveListingsGrid } from "@/components/storefront/ActiveListingsGrid";
 import { BinderGrid } from "@/components/shared/BinderGrid";
 import { auth } from "@clerk/nextjs/server";
 import { getPossessiveName } from "@/lib/utils/formatters";
-import { Lock } from "lucide-react";
+import { Lock, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { HeaderCustomizer } from "@/components/shared/HeaderCustomizer";
 import { FiltersDrawer } from "@/components/storefront/FiltersDrawer";
 import { ActiveFilterChips } from "@/components/storefront/ActiveFilterChips";
@@ -255,6 +256,17 @@ export default async function SellerStorePage(props: Props) {
           </div>
 
           <div className="pb-4 flex items-center z-10 gap-2">
+            {isOwner && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center gap-2 bg-zinc-900 border-white/10 hover:bg-zinc-800 text-zinc-300 pointer-events-auto"
+                disabled
+              >
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Add to {currentTabInfo.label}</span>
+              </Button>
+            )}
             <FiltersDrawer />
             <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 rounded-lg border border-white/5">
               <Lock className="w-4 h-4 text-zinc-500" />
