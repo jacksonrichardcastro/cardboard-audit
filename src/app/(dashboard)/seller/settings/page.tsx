@@ -45,7 +45,7 @@ export default function SellerSettingsPage() {
           <CardContent className="space-y-4">
             <div className="p-4 rounded-xl bg-primary/10 border border-primary/20 text-sm">
               <ShieldCheck className="w-5 h-5 inline-block mr-2 text-primary" />
-              <span className="font-medium text-primary">Stripe handles your tax forms.</span> CardBound does not hold your full funds.
+              <span className="font-medium text-primary">Stripe handles your tax forms.</span> Trax does not hold your full funds.
             </div>
             
             <Button 

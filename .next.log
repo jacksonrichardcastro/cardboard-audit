@@ -270,3 +270,6 @@ For more details, see https://clerk.com/err/auth-middleware
  GET / 200 in 299ms (next.js: 13ms, proxy.ts: 22ms, application-code: 264ms)
  GET / 200 in 338ms (next.js: 30ms, proxy.ts: 24ms, application-code: 284ms)
 ✓ Compiled in 3.9s
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+✓ Compiled in 5.9s
+○ Compiling proxy ...

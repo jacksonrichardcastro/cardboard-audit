@@ -47,7 +47,7 @@ export default function AdminVettingDashboard() {
               Pending Applications ({applications.length})
             </CardTitle>
             <CardDescription>
-              Review identity-verified sellers before they are permitted to list items on CardBound.
+              Review identity-verified sellers before they are permitted to list items on Trax.
             </CardDescription>
           </CardHeader>
           <CardContent>

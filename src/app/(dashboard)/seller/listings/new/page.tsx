@@ -89,7 +89,7 @@ export default function NewListingPage() {
         <PackageSearch className="w-8 h-8 text-primary" />
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Create Listing</h1>
-          <p className="text-muted-foreground">List a new trading card on the CardBound marketplace.</p>
+          <p className="text-muted-foreground">List a new trading card on the Trax marketplace.</p>
         </div>
       </div>
 

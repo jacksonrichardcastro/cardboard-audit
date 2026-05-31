@@ -39,7 +39,7 @@ export default async function SellerInventoryPage() {
             <PackageSearch className="w-5 h-5 text-primary" />
             Product Catalog
           </CardTitle>
-          <CardDescription>All items currently active in the CardBound algorithm.</CardDescription>
+          <CardDescription>All items currently active in the Trax algorithm.</CardDescription>
         </CardHeader>
         <CardContent>
           {inventory.length === 0 ? (

@@ -38,7 +38,8 @@ const db = drizzle(sql);
     // TEST 2: KYC-complete user -> Sell button
     console.log("TEST 2: KYC user -> Sell button");
     let token1 = await clerk.signInTokens.createSignInToken({ userId: kycUserId, expiresInSeconds: 60 });
-    page = await browser.newPage();
+    const context1 = await browser.createBrowserContext();
+    page = await context1.newPage();
     await page.setViewport({ width: 1200, height: 1000 });
     await page.goto(`${domain}/sign-in?__clerk_ticket=${token1.token}`, { waitUntil: 'domcontentloaded' });
     await new Promise(r => setTimeout(r, 3000));
@@ -51,7 +52,8 @@ const db = drizzle(sql);
     // TEST 3: Non-KYC user -> Sell button
     console.log("TEST 3: Non-KYC user -> Sell button");
     let token2 = await clerk.signInTokens.createSignInToken({ userId: nonKycUserId, expiresInSeconds: 60 });
-    page = await browser.newPage();
+    const context2 = await browser.createBrowserContext();
+    page = await context2.newPage();
     await page.setViewport({ width: 1200, height: 1000 });
     await page.goto(`${domain}/sign-in?__clerk_ticket=${token2.token}`, { waitUntil: 'domcontentloaded' });
     await new Promise(r => setTimeout(r, 3000));
