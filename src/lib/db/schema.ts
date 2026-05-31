@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, timestamp, json, varchar, boolean, index, unique } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, timestamp, json, varchar, boolean, index, unique, uuid } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 
 export const users = pgTable("users", {
@@ -341,3 +341,46 @@ export const viewHistory = pgTable("view_history", {
 }, (table) => ({
   userViewedAtIdx: index("view_history_user_viewed_at_idx").on(table.userId, sql`${table.viewedAt} DESC`),
 }));
+
+// Chunk E: Make Offer Flow
+export const offers = pgTable("offers", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  listingId: integer("listing_id").notNull().references(() => listings.id, { onDelete: "cascade" }),
+  buyerId: varchar("buyer_id", { length: 255 }).notNull().references(() => users.id),
+  sellerId: varchar("seller_id", { length: 255 }).notNull().references(() => users.id),
+  currentAmountCents: integer("current_amount_cents").notNull(),
+  currentMessage: text("current_message"),
+  state: varchar("state", { length: 50 }).notNull().default("pending"), // 'pending' | 'countered' | 'accepted' | 'declined' | 'expired'
+  roundsUsed: integer("rounds_used").notNull().default(1),
+  lastActorId: varchar("last_actor_id", { length: 255 }).notNull().references(() => users.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  expiresAt: timestamp("expires_at").notNull().default(sql`now() + interval '7 days'`),
+}, (table) => ({
+  listingIdx: index("idx_offers_listing_id").on(table.listingId),
+  buyerIdx: index("idx_offers_buyer_id").on(table.buyerId),
+  sellerIdx: index("idx_offers_seller_id").on(table.sellerId),
+}));
+
+export const offersRelations = relations(offers, ({ one }) => ({
+  listing: one(listings, {
+    fields: [offers.listingId],
+    references: [listings.id],
+  }),
+  buyer: one(users, {
+    fields: [offers.buyerId],
+    references: [users.id],
+    relationName: "buyerOffers",
+  }),
+  seller: one(users, {
+    fields: [offers.sellerId],
+    references: [users.id],
+    relationName: "sellerOffers",
+  }),
+  lastActor: one(users, {
+    fields: [offers.lastActorId],
+    references: [users.id],
+    relationName: "lastActorOffers",
+  })
+}));
+

@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ShieldCheck, MapPin, CalendarDays, ExternalLink, ChevronRight, Home, Expand } from "lucide-react";
 import { notFound } from "next/navigation";
 import { BuyNowButton } from "@/components/storefront/buy-now-button";
+import { MakeOfferButton } from "@/components/storefront/make-offer-button";
 import { CardRail } from "@/components/storefront/card-rail";
 import { getListingById, getTrendingListings } from "@/lib/db/queries/listings";
 import { db } from "@/lib/db";
@@ -125,15 +126,24 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             </div>
 
             {/* Purchase CTA */}
-            <div className="pt-2">
-              <BuyNowButton 
-                listingId={item.id} 
-                price={item.priceCents} 
-                title={item.title} 
-                photoUrl={item.photos[0]} 
-                shipsFrom={item.shipsFrom || "Los Angeles, CA"}
-                shippingEstimate={item.shippingEstimate || "3-5 business days via USPS Priority"}
-              />
+            <div className="pt-2 flex flex-col sm:flex-row gap-3">
+              <div className="flex-1">
+                <BuyNowButton 
+                  listingId={item.id} 
+                  price={item.priceCents} 
+                  title={item.title} 
+                  photoUrl={item.photos[0]} 
+                  shipsFrom={item.shipsFrom || "Los Angeles, CA"}
+                  shippingEstimate={item.shippingEstimate || "3-5 business days via USPS Priority"}
+                />
+              </div>
+              <div className="flex-1">
+                <MakeOfferButton
+                  listingId={item.id}
+                  priceCents={item.priceCents}
+                  title={item.title}
+                />
+              </div>
             </div>
 
             {/* Logistics & Seller */}
