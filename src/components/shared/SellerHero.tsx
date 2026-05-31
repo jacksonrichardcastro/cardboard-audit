@@ -1,8 +1,17 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Mail } from "lucide-react";
+import { CheckCircle2, Mail, ChevronDown } from "lucide-react";
 import Link from "next/link";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { updatePresenceStatus } from "@/app/actions/profile";
+import { useTransition } from "react";
+import { useRouter } from "next/navigation";
 
 interface BadgeConfig {
   id: string;
@@ -32,9 +41,36 @@ interface SellerHeroProps {
   // Passing these so we can render mock cards in the background shelf
   heroCards?: { id: string; url: string }[];
   customizerNode?: React.ReactNode;
+  presenceStatus?: string | null;
 }
 
-export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerImageUrl, isOwner, sellerId, heroCards = [], customizerNode, badges = [] }: SellerHeroProps) {
+export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerImageUrl, isOwner, sellerId, heroCards = [], customizerNode, badges = [], presenceStatus = "online" }: SellerHeroProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
+  const handleStatusChange = (status: "online" | "away" | "offline") => {
+    startTransition(async () => {
+      try {
+        await updatePresenceStatus(status);
+        router.refresh();
+      } catch (err) {
+        console.error("Failed to update status", err);
+      }
+    });
+  };
+
+  const getStatusColor = (status: string) => {
+    if (status === "away") return "bg-yellow-500";
+    if (status === "offline") return "bg-zinc-500";
+    return "bg-green-500";
+  };
+
+  const getStatusBadgeColor = (status: string) => {
+    if (status === "away") return "bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30 border-yellow-500/50";
+    if (status === "offline") return "bg-zinc-500/20 text-zinc-400 hover:bg-zinc-500/30 border-zinc-500/50";
+    return "bg-[#7C3AED]/20 text-[#7C3AED] hover:bg-[#7C3AED]/30 border-[#7C3AED]/50";
+  };
+
   // Placeholder images for the hero shelf background
   const defaultHeroCards = Array.from({ length: 12 }).map((_, i) => ({
     id: `hero-card-${i}`,
@@ -111,11 +147,44 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
           <h1 className="text-xl md:text-2xl font-light font-[family-name:var(--font-display)] text-white tracking-[0.2em] uppercase">
             {name}
           </h1>
-          {/* V1 Hardcoded presence indicator. Future: Support Online/Away/Offline states with corresponding dot colors (green/yellow/gray) */}
-          <Badge variant="secondary" className="flex items-center gap-1.5 bg-[#7C3AED]/20 text-[#7C3AED] hover:bg-[#7C3AED]/30 border border-[#7C3AED]/50 rounded-sm font-semibold tracking-wider text-xs px-2 py-0.5 uppercase">
-            <span className="w-1.5 h-1.5 bg-green-500 rounded-full inline-block"></span>
-            Online
-          </Badge>
+          
+          {isOwner ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger className="focus:outline-none" disabled={isPending}>
+                <Badge variant="secondary" className={`flex items-center gap-1.5 rounded-sm font-semibold tracking-wider text-xs px-2 py-0.5 uppercase cursor-pointer transition-colors border ${getStatusBadgeColor(presenceStatus || "online")}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full inline-block ${getStatusColor(presenceStatus || "online")}`}></span>
+                  {presenceStatus || "online"}
+                  <ChevronDown className="w-3 h-3 ml-1 opacity-70" />
+                </Badge>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center" className="bg-zinc-950 border-white/10 text-white min-w-[120px]">
+                <DropdownMenuItem onClick={() => handleStatusChange("online")} className="cursor-pointer hover:bg-zinc-900 focus:bg-zinc-900">
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full inline-block bg-green-500"></span>
+                    Online
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleStatusChange("away")} className="cursor-pointer hover:bg-zinc-900 focus:bg-zinc-900">
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full inline-block bg-yellow-500"></span>
+                    Away
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleStatusChange("offline")} className="cursor-pointer hover:bg-zinc-900 focus:bg-zinc-900">
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full inline-block bg-zinc-500"></span>
+                    Offline
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Badge variant="secondary" className={`flex items-center gap-1.5 rounded-sm font-semibold tracking-wider text-xs px-2 py-0.5 uppercase border ${getStatusBadgeColor(presenceStatus || "online")}`}>
+              <span className={`w-1.5 h-1.5 rounded-full inline-block ${getStatusColor(presenceStatus || "online")}`}></span>
+              {presenceStatus || "online"}
+            </Badge>
+          )}
+
           <Link 
             href={isOwner ? "/messages" : `/messages/new?to=${sellerId}`}
             className="p-1.5 rounded-full bg-[#7C3AED]/10 text-[#7C3AED] hover:bg-[#7C3AED]/20 hover:text-white transition-colors border border-[#7C3AED]/30"

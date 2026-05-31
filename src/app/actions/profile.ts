@@ -59,7 +59,7 @@ export async function updateHeaderCustomization(cardIds: number[]) {
   return { success: true };
 }
 
-export async function updateSellerProfile(data: { bio?: string; locationCity?: string; profilePhotoUrl?: string; headerStyle?: string; bannerImageUrl?: string }) {
+export async function updateSellerProfile(data: { bio?: string; locationCity?: string; profilePhotoUrl?: string; headerStyle?: string; bannerImageUrl?: string; presenceStatus?: string | null }) {
   const { userId } = await auth();
   if (!userId) {
     throw new Error("Unauthorized");
@@ -73,7 +73,27 @@ export async function updateSellerProfile(data: { bio?: string; locationCity?: s
       profilePhotoUrl: data.profilePhotoUrl,
       headerStyle: data.headerStyle,
       bannerImageUrl: data.bannerImageUrl,
+      presenceStatus: data.presenceStatus || undefined,
     })
+    .where(eq(profiles.userId, userId));
+
+  const [seller] = await db.select({ handle: profiles.handle }).from(profiles).where(eq(profiles.userId, userId)).limit(1);
+  if (seller?.handle) {
+    revalidatePath(`/${seller.handle}`);
+  }
+
+  return { success: true };
+}
+
+export async function updatePresenceStatus(status: "online" | "away" | "offline") {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  await db
+    .update(profiles)
+    .set({ presenceStatus: status })
     .where(eq(profiles.userId, userId));
 
   const [seller] = await db.select({ handle: profiles.handle }).from(profiles).where(eq(profiles.userId, userId)).limit(1);

@@ -23,6 +23,7 @@ export async function SiteHeader() {
       userProfile = {
         handle: profileRow.handle,
         avatarUrl: profileRow.profilePhotoUrl,
+        displayName: profileRow.displayName || profileRow.businessName,
       };
     }
   }

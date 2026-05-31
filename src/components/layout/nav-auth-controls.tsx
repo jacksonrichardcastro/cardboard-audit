@@ -16,6 +16,7 @@ import { LogOut, User, Tag } from "lucide-react";
 type UserProfile = {
   handle: string | null;
   avatarUrl: string | null;
+  displayName: string | null;
 };
 
 export function NavAuthControls({
@@ -34,13 +35,24 @@ export function NavAuthControls({
       <DropdownMenu>
         <DropdownMenuTrigger className="relative h-8 w-8 rounded-full outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
             <Avatar className="h-8 w-8 hover:opacity-90 transition-opacity">
-              <AvatarImage src={userProfile?.avatarUrl || ""} alt={userProfile?.handle || "User"} />
+              <AvatarImage src={userProfile?.avatarUrl || ""} alt={userProfile?.displayName || userProfile?.handle || "User"} />
               <AvatarFallback className="bg-violet-100 text-violet-900 dark:bg-violet-900/30 dark:text-violet-300">
-                {userProfile?.handle ? userProfile.handle.charAt(0).toUpperCase() : "U"}
+                {userProfile?.displayName 
+                  ? userProfile.displayName.charAt(0).toUpperCase() 
+                  : userProfile?.handle 
+                    ? userProfile.handle.charAt(0).toUpperCase() 
+                    : "U"}
               </AvatarFallback>
             </Avatar>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" align="end">
+          <DropdownMenuItem className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
+            <Link href="/seller/dashboard" className="w-full flex items-center px-2 py-1.5">
+              <User className="mr-2 h-4 w-4" />
+              <span>Dashboard</span>
+            </Link>
+          </DropdownMenuItem>
+          
           <DropdownMenuItem className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
             <Link href="/offers" className="w-full flex items-center px-2 py-1.5">
               <Tag className="mr-2 h-4 w-4" />

@@ -16,6 +16,7 @@ interface EditProfileFormProps {
     profilePhotoUrl: string | null;
     headerStyle?: string | null;
     bannerImageUrl?: string | null;
+    presenceStatus?: string | null;
   };
 }
 
@@ -29,6 +30,7 @@ export function EditProfileForm({ initialData }: EditProfileFormProps) {
     profilePhotoUrl: initialData.profilePhotoUrl || "",
     headerStyle: initialData.headerStyle || "cards",
     bannerImageUrl: initialData.bannerImageUrl || "",
+    presenceStatus: initialData.presenceStatus || "online",
   });
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -108,6 +110,7 @@ export function EditProfileForm({ initialData }: EditProfileFormProps) {
         profilePhotoUrl: formData.profilePhotoUrl,
         headerStyle: formData.headerStyle,
         bannerImageUrl: formData.bannerImageUrl,
+        presenceStatus: formData.presenceStatus,
       });
       router.push("/seller/dashboard"); // Redirect to dashboard after saving
       router.refresh();
@@ -212,6 +215,27 @@ export function EditProfileForm({ initialData }: EditProfileFormProps) {
             </div>
           </div>
         )}
+      </div>
+
+      <div className="space-y-4 pt-4 border-t border-white/10">
+        <Label>Presence Status</Label>
+        <div className="flex gap-4">
+          {(['online', 'away', 'offline'] as const).map((status) => (
+            <button
+              key={status}
+              type="button"
+              onClick={() => setFormData({ ...formData, presenceStatus: status })}
+              className={`px-4 py-2 border rounded-lg text-sm capitalize transition-colors ${
+                formData.presenceStatus === status 
+                  ? 'border-[#7C3AED] bg-[#7C3AED]/10 text-white' 
+                  : 'border-white/10 bg-zinc-950 text-zinc-400 hover:bg-zinc-900'
+              }`}
+            >
+              {status}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-zinc-500">This status will be displayed on your storefront.</p>
       </div>
 
       <div className="space-y-2 pt-4 border-t border-white/10">
