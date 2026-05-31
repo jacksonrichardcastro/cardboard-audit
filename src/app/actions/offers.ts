@@ -59,3 +59,110 @@ export async function createOfferAction(listingId: number, amountCents: number, 
     return { error: "Failed to create offer. Please try again." };
   }
 }
+
+export async function acceptOfferAction(offerId: string) {
+  const { userId } = await auth();
+  if (!userId) return { error: "Must be signed in." };
+
+  const offer = await db.query.offers.findFirst({
+    where: eq(offers.id, offerId),
+  });
+
+  if (!offer) return { error: "Offer not found." };
+
+  if (offer.state !== "pending" && offer.state !== "countered") {
+    return { error: "Offer is not in a state that can be accepted." };
+  }
+
+  // Ensure current user is part of the offer but NOT the last actor
+  if ((offer.buyerId !== userId && offer.sellerId !== userId) || offer.lastActorId === userId) {
+    return { error: "You cannot accept this offer." };
+  }
+
+  try {
+    await db.update(offers)
+      .set({ state: "accepted", updatedAt: new Date() })
+      .where(eq(offers.id, offerId));
+    return { success: true };
+  } catch (err) {
+    console.error(err);
+    return { error: "Failed to accept offer." };
+  }
+}
+
+export async function declineOfferAction(offerId: string) {
+  const { userId } = await auth();
+  if (!userId) return { error: "Must be signed in." };
+
+  const offer = await db.query.offers.findFirst({
+    where: eq(offers.id, offerId),
+  });
+
+  if (!offer) return { error: "Offer not found." };
+
+  if (offer.state !== "pending" && offer.state !== "countered") {
+    return { error: "Offer is not in a state that can be declined." };
+  }
+
+  if ((offer.buyerId !== userId && offer.sellerId !== userId) || offer.lastActorId === userId) {
+    return { error: "You cannot decline this offer." };
+  }
+
+  try {
+    await db.update(offers)
+      .set({ state: "declined", updatedAt: new Date() })
+      .where(eq(offers.id, offerId));
+    return { success: true };
+  } catch (err) {
+    console.error(err);
+    return { error: "Failed to decline offer." };
+  }
+}
+
+export async function counterOfferAction(offerId: string, amountCents: number, message?: string) {
+  const { userId } = await auth();
+  if (!userId) return { error: "Must be signed in." };
+
+  if (!amountCents || amountCents <= 0) {
+    return { error: "Counter amount must be greater than zero." };
+  }
+
+  if (message && message.length > 1000) {
+    return { error: "Message cannot exceed 1000 characters." };
+  }
+
+  const offer = await db.query.offers.findFirst({
+    where: eq(offers.id, offerId),
+  });
+
+  if (!offer) return { error: "Offer not found." };
+
+  if (offer.state !== "pending" && offer.state !== "countered") {
+    return { error: "Offer is not in a state that can be countered." };
+  }
+
+  if ((offer.buyerId !== userId && offer.sellerId !== userId) || offer.lastActorId === userId) {
+    return { error: "You cannot counter this offer." };
+  }
+
+  if (offer.roundsUsed >= 3) {
+    return { error: "Maximum number of rounds (3) reached." };
+  }
+
+  try {
+    await db.update(offers)
+      .set({
+        currentAmountCents: amountCents,
+        currentMessage: message || null,
+        lastActorId: userId,
+        roundsUsed: offer.roundsUsed + 1,
+        state: "countered",
+        updatedAt: new Date(),
+      })
+      .where(eq(offers.id, offerId));
+    return { success: true };
+  } catch (err) {
+    console.error(err);
+    return { error: "Failed to counter offer." };
+  }
+}
