@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { Menu, Flame } from "lucide-react";
 import { auth } from "@clerk/nextjs/server";
+import { db } from "@/lib/db";
+import { profiles } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import { NavAuthControls } from "./nav-auth-controls";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -10,6 +13,19 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/s
 export async function SiteHeader() {
   const { userId } = await auth();
   const isSignedIn = !!userId;
+
+  let userProfile = null;
+  if (userId) {
+    const profileRow = await db.query.profiles.findFirst({
+      where: eq(profiles.userId, userId),
+    });
+    if (profileRow) {
+      userProfile = {
+        handle: profileRow.handle,
+        avatarUrl: profileRow.profilePhotoUrl,
+      };
+    }
+  }
 
   return (
     <header className="sticky top-0 z-50 h-16 border-b border-white/10 bg-background">
@@ -58,7 +74,7 @@ export async function SiteHeader() {
             <Button asChild>
               <Link href="/sell" className="hidden md:inline-flex">Sell</Link>
             </Button>
-            <NavAuthControls isSignedIn={isSignedIn} />
+            <NavAuthControls isSignedIn={isSignedIn} userProfile={userProfile} />
           </div>
           <div className="md:hidden">
             <Sheet>
@@ -89,7 +105,7 @@ export async function SiteHeader() {
                     <Link href="/sell">Sell</Link>
                   </Button>
                   <div className="flex flex-col gap-4 border-t border-border pt-6">
-                    <NavAuthControls isSignedIn={isSignedIn} />
+                    <NavAuthControls isSignedIn={isSignedIn} userProfile={userProfile} />
                   </div>
                 </div>
               </SheetContent>
