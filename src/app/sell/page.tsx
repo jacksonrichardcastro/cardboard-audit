@@ -1,32 +1,24 @@
-import Link from "next/link";
-import { 
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import { db } from "@/lib/db";
+import { profiles } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 
-export default function SellPage() {
-  return (
-    <div className="container mx-auto flex items-center justify-center px-4 md:px-6 py-24 min-h-[70vh]">
-      <Card className="w-full max-w-2xl text-center bg-card/60 backdrop-blur-sm border-white/10 shadow-xl">
-        <CardHeader className="pt-12 pb-6">
-          <CardTitle className="text-4xl font-bold tracking-tight">Sell on Marketplace</CardTitle>
-          <CardDescription className="text-lg mt-4 max-w-lg mx-auto">
-            Listing creation is coming soon. We're building the seller onboarding flow — check back shortly.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-        </CardContent>
-        <CardFooter className="flex justify-center pb-12">
-          <Button asChild size="lg" variant="default" className="px-8">
-            <Link href="/">Browse the marketplace</Link>
-          </Button>
-        </CardFooter>
-      </Card>
-    </div>
-  );
+export default async function SellPage() {
+  const { userId } = await auth();
+
+  if (!userId) {
+    // Clerk provides redirectToSignIn but for simple Next.js App Router we can just redirect to sign-in
+    redirect("/sign-in?redirect_url=/sell/new");
+  }
+
+  const seller = await db.query.profiles.findFirst({
+    where: eq(profiles.userId, userId),
+  });
+
+  if (!seller || seller.applicationStatus !== "approved") {
+    redirect("/seller/become");
+  }
+
+  redirect("/sell/new");
 }
