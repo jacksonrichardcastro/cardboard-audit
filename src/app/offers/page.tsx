@@ -48,7 +48,7 @@ export default async function OffersPage() {
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
-              {receivedOffers.map((offer) => (
+              {receivedOffers.map((offer: any) => (
                 <OfferCard 
                   key={offer.id} 
                   offer={offer} 
@@ -68,7 +68,7 @@ export default async function OffersPage() {
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
-              {madeOffers.map((offer) => (
+              {madeOffers.map((offer: any) => (
                 <OfferCard 
                   key={offer.id} 
                   offer={offer} 
