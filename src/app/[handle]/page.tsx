@@ -258,13 +258,15 @@ export default async function SellerStorePage(props: Props) {
           <div className="pb-4 flex items-center z-10 gap-2">
             {isOwner && (
               <Button 
+                asChild
                 variant="outline" 
                 size="sm" 
                 className="flex items-center gap-2 bg-zinc-900 border-white/10 hover:bg-zinc-800 text-zinc-300 pointer-events-auto"
-                disabled
               >
-                <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">Add to {currentTabInfo.label}</span>
+                <Link href="/sell">
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">Add to {currentTabInfo.label}</span>
+                </Link>
               </Button>
             )}
             <FiltersDrawer />

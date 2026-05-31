@@ -36,6 +36,7 @@ export const profiles = pgTable("profiles", {
   binderPrivate: boolean("binder_private").notNull().default(false),
   headerCustomizationIds: json("header_customization_ids").default([]),
   badges: json("badges").$type<string[]>().default([]),
+  presenceStatus: varchar("presence_status", { length: 20 }).notNull().default("online"), // online, away, offline
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => ({
   handleIdx: unique("profiles_handle_idx").on(table.handle),

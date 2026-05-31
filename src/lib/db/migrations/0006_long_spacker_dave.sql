@@ -1,0 +1,1 @@
+ALTER TABLE "profiles" ADD COLUMN "presence_status" varchar(20) DEFAULT 'online' NOT NULL;
