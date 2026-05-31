@@ -1,9 +1,25 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
-import { offers, listings } from "@/lib/db/schema";
+import { offers, listings, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+
+async function ensureUserExists(userId: string) {
+  const user = await currentUser();
+  if (!user) return;
+  const email = user.emailAddresses[0]?.emailAddress;
+  if (!email) return;
+
+  await db.insert(users)
+    .values({
+      id: userId,
+      email: email,
+      role: "buyer",
+      accountType: "buyer"
+    })
+    .onConflictDoNothing();
+}
 
 export async function createOfferAction(listingId: number, amountCents: number, message?: string) {
   const { userId } = await auth();
@@ -11,6 +27,8 @@ export async function createOfferAction(listingId: number, amountCents: number, 
   if (!userId) {
     return { error: "Must be signed in to make an offer." };
   }
+
+  await ensureUserExists(userId);
 
   if (!amountCents || amountCents <= 0) {
     return { error: "Offer amount must be greater than zero." };
@@ -63,6 +81,7 @@ export async function createOfferAction(listingId: number, amountCents: number, 
 export async function acceptOfferAction(offerId: string) {
   const { userId } = await auth();
   if (!userId) return { error: "Must be signed in." };
+  await ensureUserExists(userId);
 
   const offer = await db.query.offers.findFirst({
     where: eq(offers.id, offerId),
@@ -93,6 +112,7 @@ export async function acceptOfferAction(offerId: string) {
 export async function declineOfferAction(offerId: string) {
   const { userId } = await auth();
   if (!userId) return { error: "Must be signed in." };
+  await ensureUserExists(userId);
 
   const offer = await db.query.offers.findFirst({
     where: eq(offers.id, offerId),
@@ -122,6 +142,7 @@ export async function declineOfferAction(offerId: string) {
 export async function counterOfferAction(offerId: string, amountCents: number, message?: string) {
   const { userId } = await auth();
   if (!userId) return { error: "Must be signed in." };
+  await ensureUserExists(userId);
 
   if (!amountCents || amountCents <= 0) {
     return { error: "Counter amount must be greater than zero." };
