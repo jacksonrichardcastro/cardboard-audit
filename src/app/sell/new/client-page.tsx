@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useRef } from "react";
 import { PhotoCapture, type CapturedPhoto } from "@/components/sell/photo-capture";
-import { createDraft, updateDraft, loadDraft } from "../actions";
+import { createDraft, updateDraft, loadDraft, publishDraft } from "../actions";
+import { Loader2, ImagePlus } from "lucide-react";
 
 export default function NewListingPage() {
   const router = useRouter();
@@ -18,6 +20,9 @@ export default function NewListingPage() {
   const [draftId, setDraftId] = useState<number | null>(draftIdParam ? parseInt(draftIdParam) : null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(!!draftIdParam);
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<any>({
     subject: "",
@@ -79,6 +84,68 @@ export default function NewListingPage() {
 
   const handleChange = (field: string, value: any) => {
     setFormData((prev: any) => ({ ...prev, [field]: value }));
+  };
+
+  const handleManualUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!draftId) return alert("Draft is still initializing. Please wait.");
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    setIsUploadingFiles(true);
+    let newPhotos = [...formData.photos];
+    
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const kind = newPhotos.length === 0 ? "front" : newPhotos.length === 1 ? "back" : "angle";
+        const sortOrder = newPhotos.length;
+        
+        const res = await fetch("/api/storage/upload", {
+          method: "POST",
+          body: JSON.stringify({ draftId, kind }),
+          headers: { "Content-Type": "application/json" }
+        });
+        if (!res.ok) throw new Error("Failed to get secure upload URL");
+        
+        const { signedUrl, publicUrl } = await res.json();
+        const uploadRes = await fetch(signedUrl, {
+          method: "PUT",
+          body: file,
+          headers: { "Content-Type": file.type || "image/jpeg" }
+        });
+        
+        if (!uploadRes.ok) throw new Error("Failed to upload image to bucket");
+        newPhotos.push({ kind, url: publicUrl, sortOrder });
+      }
+      setFormData((prev: any) => ({ ...prev, photos: newPhotos }));
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || "Upload failed");
+    } finally {
+      setIsUploadingFiles(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handlePublish = async () => {
+    if (!draftId) return;
+    setIsPublishing(true);
+    try {
+      const isDemo = searchParams.get("demo") === "1";
+      // Perform final save before publish
+      await updateDraft(draftId, formData);
+      const listingId = await publishDraft(draftId, isDemo);
+      if (isDemo) {
+        alert("Demo Mode: Submission blocked. This would have redirected to /listings/" + listingId);
+        setIsPublishing(false);
+      } else {
+        router.push(`/listings/${listingId}`);
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || "Failed to publish listing.");
+      setIsPublishing(false);
+    }
   };
 
   if (isLoading) return <div className="p-12 text-center">Loading draft...</div>;
@@ -193,7 +260,29 @@ export default function NewListingPage() {
 
         {step === 3 && (
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold border-b pb-2">Step 3: Photos</h2>
+            <h2 className="text-xl font-semibold border-b pb-2 flex justify-between items-center">
+              Step 3: Photos
+              <div className="flex gap-2">
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  hidden 
+                  accept="image/*" 
+                  multiple 
+                  onChange={handleManualUpload} 
+                />
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-2"
+                  disabled={!draftId || isUploadingFiles}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {isUploadingFiles ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />}
+                  {isUploadingFiles ? "Uploading..." : "Upload Existing"}
+                </Button>
+              </div>
+            </h2>
             
             {formData.photos.length === 0 ? (
               <div className="py-4">
@@ -203,7 +292,6 @@ export default function NewListingPage() {
                   kind="front" 
                   sortOrder={0} 
                   onCapture={(photo) => {
-                    console.log("Captured front photo:", photo.url);
                     setFormData({ ...formData, photos: [...formData.photos, photo] });
                   }} 
                 />
@@ -216,19 +304,18 @@ export default function NewListingPage() {
                   kind="back" 
                   sortOrder={1} 
                   onCapture={(photo) => {
-                    console.log("Captured back photo:", photo.url);
                     setFormData({ ...formData, photos: [...formData.photos, photo] });
                   }} 
                 />
               </div>
             ) : (
               <div className="space-y-4">
-                <p className="text-center text-sm text-muted-foreground">Photos captured (not yet uploaded)!</p>
+                <p className="text-center text-sm text-muted-foreground">Photos captured/uploaded successfully!</p>
                 <div className="grid grid-cols-2 gap-4">
                   {formData.photos.map((p: any, i: number) => (
                     <div key={i} className="relative aspect-[3/4] bg-neutral-900 rounded-lg overflow-hidden border border-border">
                       <img src={p.url} className="absolute inset-0 w-full h-full object-cover" />
-                      <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                      <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded capitalize">
                         {p.kind}
                       </div>
                       <Button 
@@ -245,6 +332,19 @@ export default function NewListingPage() {
                       </Button>
                     </div>
                   ))}
+                </div>
+                
+                <div className="text-center mt-4">
+                   <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    className="gap-2"
+                    disabled={!draftId || isUploadingFiles}
+                    onClick={() => fileInputRef.current?.click()}
+                   >
+                     {isUploadingFiles ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />}
+                     Add Another Photo
+                   </Button>
                 </div>
               </div>
             )}
@@ -318,8 +418,12 @@ export default function NewListingPage() {
             <div className="flex justify-between pt-4">
               <Button variant="outline" onClick={() => setStep(4)}>Back</Button>
               <div className="text-right">
-                <Button disabled>Review & Publish</Button>
-                <p className="text-xs text-muted-foreground mt-2">(Publish flow coming in Phase 5d)</p>
+                <Button 
+                  onClick={handlePublish}
+                  disabled={isPublishing || !draftId}
+                >
+                  {isPublishing ? "Publishing..." : "Review & Publish"}
+                </Button>
               </div>
             </div>
           </div>

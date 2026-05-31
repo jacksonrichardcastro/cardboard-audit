@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { listingDrafts, profiles } from "@/lib/db/schema";
+import { listingDrafts, profiles, cards, listings, itemPhotos } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
@@ -83,4 +83,111 @@ export async function loadDraft(draftId: number) {
   }
 
   return draft;
+}
+
+export async function publishDraft(draftId: number, isDemo: boolean = false) {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  // 1. Load Draft & Verify Ownership
+  const draft = await db.query.listingDrafts.findFirst({
+    where: eq(listingDrafts.id, draftId),
+  });
+
+  if (!draft || draft.sellerId !== userId) {
+    throw new Error("Draft not found or unauthorized");
+  }
+
+  const formData = draft.data as any;
+
+  // 2. Verify Seller Profile / KYC (If not demo)
+  const seller = await db.query.profiles.findFirst({
+    where: eq(profiles.userId, userId),
+  });
+
+  if (!seller || seller.applicationStatus !== "approved") {
+    throw new Error("Only approved sellers can publish listings.");
+  }
+
+  // Demo bypass: just return a fake ID without DB writes
+  if (isDemo) {
+    return 999999;
+  }
+
+  // 3. Construct Canonical Title
+  let canonicalTitle = `${formData.year || ''} ${formData.set || ''} ${formData.subject || ''}`.trim();
+  if (formData.cardNumber) {
+    canonicalTitle += ` #${formData.cardNumber}`;
+  }
+  if (formData.edition) {
+    canonicalTitle += ` ${formData.edition}`;
+  }
+  // Fallback if somehow completely empty
+  if (!canonicalTitle.trim()) {
+    canonicalTitle = "Unknown Card";
+  }
+
+  // 4. Database Transaction
+  const listingId = await db.transaction(async (tx) => {
+    // a. Insert Card
+    const [newCard] = await tx.insert(cards).values({
+      ownerId: userId,
+      title: canonicalTitle,
+      category: "Trading Cards",
+      set: formData.set || null,
+      year: formData.year || null,
+      cardNumber: formData.cardNumber || null,
+      condition: formData.condition || "Ungraded",
+      gradingCompany: formData.gradingCompany || null,
+      grade: formData.grade || null,
+      description: formData.description || null,
+    }).returning();
+
+    // b. Insert Photos
+    if (formData.photos && formData.photos.length > 0) {
+      const photosToInsert = formData.photos.map((p: any) => ({
+        cardId: newCard.id,
+        kind: p.kind || "front",
+        sortOrder: p.sortOrder || 0,
+        storagePath: p.url, // Storing full URL for V1
+      }));
+      await tx.insert(itemPhotos).values(photosToInsert);
+    }
+
+    // c. Insert Listing
+    const priceCents = Math.round(parseFloat(formData.price || "0") * 100);
+    const [newListing] = await tx.insert(listings).values({
+      sellerId: userId,
+      cardId: newCard.id,
+      title: canonicalTitle,
+      category: "Trading Cards",
+      set: formData.set || null,
+      year: formData.year || null,
+      cardNumber: formData.cardNumber || null,
+      condition: formData.condition || "Ungraded",
+      gradingCompany: formData.gradingCompany || null,
+      grade: formData.grade || null,
+      description: formData.description || null,
+      priceCents,
+      quantity: 1,
+      status: "ACTIVE",
+      edition: formData.edition || null,
+      graded: formData.graded || false,
+      shippingMethod: formData.shippingMethod || "seller_managed",
+    }).returning();
+
+    // d. Delete Draft
+    await tx.delete(listingDrafts).where(eq(listingDrafts.id, draftId));
+
+    return newListing.id;
+  });
+
+  // Revalidate cache paths
+  revalidatePath("/");
+  revalidatePath("/[handle]", "page");
+  revalidatePath("/listings/[id]", "page");
+
+  return listingId;
 }

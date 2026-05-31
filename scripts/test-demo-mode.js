@@ -18,8 +18,11 @@ const db = drizzle(sql);
       expiresInSeconds: 60,
     });
     
-    // Using the new Vercel branch
-    const domain = 'https://card-bound-3lhcl5yjh-jacksonrichardcastros-projects.vercel.app';
+    const domain = process.argv[2];
+    if (!domain) {
+      console.error("Please provide domain as argument");
+      process.exit(1);
+    }
     const ticketUrl = `${domain}/sign-in?__clerk_ticket=${signInToken.token}`;
     
     const browser = await puppeteer.launch({ headless: "new" });
