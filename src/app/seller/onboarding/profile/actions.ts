@@ -1,8 +1,8 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { profiles } from "@/lib/db/schema";
-import { auth } from "@clerk/nextjs/server";
+import { profiles, sellerApprovalQueue } from "@/lib/db/schema";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { RESERVED_HANDLES } from "@/lib/reserved-handles";
 import { syncUserFromClerk } from "@/lib/auth-sync";
@@ -45,4 +45,33 @@ export async function saveProfile(data: { handle: string; displayName: string; b
         locationState: data.state || null,
       },
     });
+
+  const clerkUser = await currentUser();
+  const email = clerkUser?.emailAddresses[0]?.emailAddress?.toLowerCase();
+
+  const ALLOWLIST = [
+    "superiorparadigm@gmail.com", "hiimwage@gmail.com", "AVIIICollectibles@gmail.com",
+    "trey@dealercompassgroup.com", "mattrennick89@gmail.com", "cd3.cards@gmail.com",
+    "terrapincards@gmail.com", "Patrick2e65@gmail.com", "hobbychad@proton.me",
+    "Essantiago09@att.net", "marty.truax@gmail.com", "madmancardstx@gmail.com",
+    "christiangarcia6610@gmail.com", "rabermudez@gmail.com", "rc_magnate@yahoo.com",
+    "ckraker27@gmail.com", "gotdemcards@gmail.com", "abjeffcoat@gmail.com",
+    "darin.bergmann@gmail.com", "Daniel.C.Sturman@gmail.com", "shuakop@gmail.com",
+    "Joeblemaire@gmail.com", "sneakordz@gmail.com", "Junkforcozy@gmail.com",
+    "Cris.a.1996@hotmail.com", "nadroj117@gmail.com", "HitMachineSports@Gmail.com",
+    "rkgreen19@gmail.com", "raptordelivery1@gmail.com", "Greenescardco@hotmail.com",
+    "itsgreeny17@gmail.com", "ShopHPM@gmail.com"
+  ].map(e => e.toLowerCase());
+
+  if (email && ALLOWLIST.includes(email)) {
+    // Update profile approval status directly
+    await db.update(profiles)
+      .set({ approvalStatus: "approved" })
+      .where(eq(profiles.userId, userId));
+      
+    // Insert into queue for admin dashboard visibility
+    await db.insert(sellerApprovalQueue)
+      .values({ sellerId: userId, reviewedAt: new Date() })
+      .onConflictDoNothing();
+  }
 }

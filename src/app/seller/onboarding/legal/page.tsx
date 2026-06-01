@@ -21,8 +21,12 @@ export default function LegalAcceptancePage() {
     try {
       setLoading(true);
       setError(null);
-      await acceptLegal();
-      router.push("/seller/onboarding/pending");
+      const res = await acceptLegal();
+      if (res?.isApproved) {
+        router.push("/seller/dashboard");
+      } else {
+        router.push("/seller/onboarding/pending");
+      }
     } catch (e: any) {
       setError(e.message || "Something went wrong");
       setLoading(false);

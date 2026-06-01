@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { users, profiles, sellerApprovalQueue } from "@/lib/db/schema";
+import { users, profiles, sellerApprovalQueue, userPreferences } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { clerkClient } from "@clerk/nextjs/server";
 import { notFound } from "next/navigation";
@@ -26,6 +26,7 @@ export default async function SellerReviewPage(props: { params: Promise<{ seller
   const { user: dbUser, profile: seller } = userRecord;
 
   const [queueEntry] = await db.select().from(sellerApprovalQueue).where(eq(sellerApprovalQueue.sellerId, userId)).limit(1);
+  const [prefs] = await db.select().from(userPreferences).where(eq(userPreferences.userId, userId)).limit(1);
   const client = await clerkClient();
   let email = dbUser.email;
   try {
@@ -103,6 +104,21 @@ export default async function SellerReviewPage(props: { params: Promise<{ seller
                 <p>—</p>
               )}
             </div>
+          </div>
+          
+          <div className="pt-4 border-t border-white/10">
+            <p className="text-sm text-muted-foreground font-medium mb-2">Collecting Preferences</p>
+            {prefs?.sportCategories && prefs.sportCategories.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {prefs.sportCategories.map(cat => (
+                  <span key={cat} className="px-2 py-1 bg-violet-500/20 text-violet-300 rounded text-xs font-medium">
+                    {cat}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground italic">No preferences captured</p>
+            )}
           </div>
         </div>
       </div>

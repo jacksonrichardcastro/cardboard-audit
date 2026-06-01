@@ -3,24 +3,11 @@
 import { useEffect, useState, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 
-const CAPTIONS = [
-  "By the hobby. For the hobby.",
-  "Curated by collectors, for collectors.",
-  "Hand-vetted sellers. Always.",
-  "Marketplace built for the bench.",
-  "Where the hobby trades.",
-  "Beta launched May 31, 2026."
-];
-
 export function TickerPill() {
-  const [caption, setCaption] = useState("");
+  const caption = "Welcome to the Trax Beta. Marketplace coming soon.. Enjoy!";
   const textRef = useRef<HTMLSpanElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [needsScroll, setNeedsScroll] = useState(false);
-
-  useEffect(() => {
-    setCaption(CAPTIONS[Math.floor(Math.random() * CAPTIONS.length)]);
-  }, []);
 
   useEffect(() => {
     if (textRef.current && containerRef.current) {
