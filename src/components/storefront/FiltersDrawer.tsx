@@ -27,11 +27,14 @@ function FilterSection({ title, defaultExpanded = false, children }: FilterSecti
   );
 }
 
+import { useFiltersStore } from "@/store/useFiltersStore";
+
 export function FiltersDrawer() {
-  const [isOpen, setIsOpen] = useState(false);
-  const searchParams = useSearchParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const pathname = usePathname();
+  
+  const { isOpen, setIsOpen } = useFiltersStore();
 
   // Local state for the drawer before applying
   const [localParams, setLocalParams] = useState<URLSearchParams>(new URLSearchParams(searchParams.toString()));
@@ -134,16 +137,8 @@ export function FiltersDrawer() {
       {/* Overlay */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/60 z-[200] backdrop-blur-sm transition-opacity"
-          onClick={(e) => {
-            // If click is in the top-left area (Trax logo), navigate home
-            if (e.clientY <= 64 && e.clientX <= 200) {
-              setIsOpen(false);
-              router.push("/");
-            } else {
-              setIsOpen(false);
-            }
-          }}
+          className="fixed inset-0 bg-black/95 z-[200] backdrop-blur-sm transition-opacity"
+          onClick={() => setIsOpen(false)}
         />
       )}
 

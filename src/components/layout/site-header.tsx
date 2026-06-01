@@ -10,6 +10,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/s
 import { syncUserFromClerk } from "@/lib/auth-sync";
 import { WelcomeModal } from "@/components/onboarding/welcome-modal";
 import { MobileMenu } from "./mobile-menu";
+import { TraxLogo } from "./TraxLogo";
 
 export async function SiteHeader() {
   const { userId } = await auth();
@@ -46,19 +47,10 @@ export async function SiteHeader() {
   return (
     <>
       {showWelcomeModal && <WelcomeModal />}
-      <header className="sticky top-0 z-[120] h-16 border-b border-white/10 bg-background">
+      <header className="sticky top-0 z-[250] h-16 border-b border-white/10 bg-background">
       <div className="flex h-full w-full items-center justify-between px-4 md:px-6 lg:px-8">
         <div className="flex items-center gap-5">
-          <Link href="/" className="flex items-center gap-1">
-            <>
-              <img
-                src="/trax-logo.png"
-                alt="Trax"
-                className="h-7 w-auto"
-              />
-              <span className="text-xl font-bold tracking-tighter">Marketplace</span>
-            </>
-          </Link>
+          <TraxLogo />
           <nav className="hidden md:flex items-center gap-2">
             <Link
               href="/for-you"
