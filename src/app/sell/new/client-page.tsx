@@ -121,7 +121,7 @@ export default function NewListingPage() {
         const { signedUrl, publicUrl } = await res.json();
         const uploadRes = await fetch(signedUrl, {
           method: "PUT",
-          body: file,
+          body: await file.arrayBuffer(),
           headers: { "Content-Type": file.type || "image/jpeg" }
         });
         
@@ -299,6 +299,7 @@ export default function NewListingPage() {
               <div className="py-4">
                 <h3 className="text-center font-medium mb-4 text-muted-foreground">Capture Front of Card</h3>
                 <PhotoCapture 
+                  key="front"
                   draftId={draftId}
                   kind="front" 
                   sortOrder={0} 
@@ -311,6 +312,7 @@ export default function NewListingPage() {
               <div className="py-4">
                 <h3 className="text-center font-medium mb-4 text-muted-foreground">Capture Back of Card</h3>
                 <PhotoCapture 
+                  key="back"
                   draftId={draftId}
                   kind="back" 
                   sortOrder={1} 

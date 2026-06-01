@@ -201,7 +201,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
     const { signedUrl, publicUrl } = await res.json();
     const uploadRes = await fetch(signedUrl, {
       method: "PUT",
-      body: blob,
+      body: await blob.arrayBuffer(),
       headers: { "Content-Type": "image/jpeg" }
     });
     if (!uploadRes.ok) throw new Error("Failed to upload image");
