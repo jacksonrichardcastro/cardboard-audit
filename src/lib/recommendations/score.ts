@@ -44,7 +44,7 @@ export async function getRecommendedListings(userId: string | null, limit: numbe
     })
     .from(listings)
     .innerJoin(profiles, eq(listings.sellerId, profiles.userId))
-    .where(and(eq(listings.status, "active"), sql`EXISTS (SELECT 1 FROM item_photos WHERE card_id = ${listings.cardId})`))
+    .where(sql`EXISTS (SELECT 1 FROM item_photos WHERE card_id = ${listings.cardId})`)
     .orderBy(desc(listings.createdAt))
     .limit(100);
 
