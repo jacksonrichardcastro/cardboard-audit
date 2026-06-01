@@ -47,7 +47,7 @@ export async function createOfferAction(listingId: number, amountCents: number, 
     return { error: "Listing not found." };
   }
 
-  if (listing.status !== "ACTIVE") {
+  if (listing.status !== "active" && listing.status !== "pending_marketplace_activation") {
     return { error: "Listing is no longer active." };
   }
 

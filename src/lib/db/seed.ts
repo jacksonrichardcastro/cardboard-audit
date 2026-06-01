@@ -61,7 +61,7 @@ async function main() {
       await db.update(profiles).set({ grailCardId }).where(eq(profiles.userId, BUYER_ID));
     }
 
-    // 2. Seller: storefront_test
+    // 2. Seller: alexthegrader
     const SELLER_ID = "seller-storefront";
     await db.insert(users).values({
       id: SELLER_ID,
@@ -71,7 +71,7 @@ async function main() {
 
     await db.insert(profiles).values({
       userId: SELLER_ID,
-      handle: "storefront_test",
+      handle: "alexthegrader",
       displayName: "Alex 'The Grader' Chen",
       bio: "Expert Collector | PSA 10 Specialist | Trusted Seller Since 2018 | Curating Rarity",
       businessName: "Storefront Test Shop",
@@ -80,7 +80,7 @@ async function main() {
       kycStatus: "verified",
       stripeConnectAccountId: "acct_verified_seller",
       badges: ["founding", "verified", "ambassador"],
-    }).onConflictDoUpdate({ target: profiles.userId, set: { handle: "storefront_test" } });
+    }).onConflictDoUpdate({ target: profiles.userId, set: { handle: "alexthegrader" } });
 
     // Insert 60 cards, and 55 listings
     let insertedListings = 0;
