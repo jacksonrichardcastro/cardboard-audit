@@ -126,7 +126,7 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
         )}
 
         {/* Profile Avatar (overlapping the shelf) */}
-        <div className="absolute left-1/2 bottom-0 translate-y-1/2 -translate-x-1/2 z-10">
+        <div className="absolute left-1/2 bottom-0 translate-y-1/2 -translate-x-1/2 z-20">
           {avatarUrl ? (
             <img 
               src={avatarUrl} 
@@ -142,17 +142,17 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
       </div>
 
       {/* Profile Details */}
-      <div className="relative z-10 mt-10 md:mt-12 flex flex-col items-center text-center px-4 w-full">
-        <div className="flex justify-center items-center gap-3 w-full max-w-full mb-2">
+      <div className="relative z-10 mt-10 md:mt-12 flex flex-col items-center text-center px-4 w-full overflow-hidden">
+        <div className="flex flex-col items-center gap-2 w-full max-w-full mb-2">
           {/* Centered Name */}
-          <div className="flex justify-center items-center min-w-0">
+          <div className="flex justify-center items-center min-w-0 w-full">
             <h1 className="text-xl md:text-2xl font-light font-[family-name:var(--font-display)] text-white tracking-[0.2em] uppercase text-center truncate px-2">
               {name}
             </h1>
           </div>
 
           {/* Flanking Status/Icon */}
-          <div className="flex items-center justify-start gap-2">
+          <div className="flex justify-center items-center gap-2 shrink-0">
           {isOwner ? (
             <DropdownMenu>
               <DropdownMenuTrigger className="focus:outline-none" disabled={isPending}>

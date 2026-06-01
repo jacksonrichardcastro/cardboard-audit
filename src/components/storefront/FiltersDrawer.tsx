@@ -134,13 +134,21 @@ export function FiltersDrawer() {
       {/* Overlay */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/60 z-[100] backdrop-blur-sm transition-opacity"
-          onClick={() => setIsOpen(false)}
+          className="fixed inset-0 bg-black/60 z-[200] backdrop-blur-sm transition-opacity"
+          onClick={(e) => {
+            // If click is in the top-left area (Trax logo), navigate home
+            if (e.clientY <= 64 && e.clientX <= 200) {
+              setIsOpen(false);
+              router.push("/");
+            } else {
+              setIsOpen(false);
+            }
+          }}
         />
       )}
 
       {/* Drawer */}
-      <div className={`fixed top-16 right-0 h-[calc(100vh-64px)] w-full sm:w-[360px] bg-[#0A0A0A] border-l border-white/10 z-[110] transform transition-transform duration-250 ease-[cubic-bezier(0.32,0.72,0,1)] flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`fixed top-16 right-0 h-[calc(100vh-64px)] w-full sm:w-[360px] bg-[#0A0A0A] border-l border-white/10 z-[210] transform transition-transform duration-250 ease-[cubic-bezier(0.32,0.72,0,1)] flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         
         {/* Header */}
         <div className="p-5 border-b border-white/10 flex items-center justify-between bg-[#0A0A0A] shrink-0">
