@@ -60,20 +60,29 @@ export default function NewListingPage() {
     }
   }, [draftIdParam]);
 
-  // Debounced auto-save
+  // Initialize draft immediately if not editing an existing one
   useEffect(() => {
-    if (isLoading) return;
+    if (!draftIdParam && !draftId && !isLoading) {
+      setIsSaving(true);
+      createDraft({ ...formData, mode: mode || "listing" })
+        .then(draft => {
+          setDraftId(draft.id);
+        })
+        .catch(console.error)
+        .finally(() => {
+          setIsSaving(false);
+        });
+    }
+  }, [draftIdParam, draftId, isLoading, mode]);
+
+  // Debounced auto-save (only when draftId exists)
+  useEffect(() => {
+    if (isLoading || !draftId) return;
     
     const handler = setTimeout(async () => {
       setIsSaving(true);
       try {
-        if (draftId) {
-          await updateDraft(draftId, formData);
-        } else {
-          const draft = await createDraft(formData);
-          setDraftId(draft.id);
-          // Only update URL silently if possible, but for simplicity we'll just keep the ID in state.
-        }
+        await updateDraft(draftId, formData);
       } catch (err) {
         console.error("Failed to save draft", err);
       } finally {
@@ -269,24 +278,20 @@ export default function NewListingPage() {
             <h2 className="text-xl font-semibold border-b pb-2 flex justify-between items-center">
               Step 3: Photos
               <div className="flex gap-2">
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  hidden 
-                  accept="image/*" 
-                  multiple 
-                  onChange={handleManualUpload} 
-                />
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="gap-2"
-                  disabled={!draftId || isUploadingFiles}
-                  onClick={() => fileInputRef.current?.click()}
+                <label 
+                  className={`inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3 gap-2 cursor-pointer ${(!draftId || isUploadingFiles) ? 'opacity-50 pointer-events-none' : ''}`}
                 >
+                  <input 
+                    type="file" 
+                    className="sr-only"
+                    accept="image/*" 
+                    multiple 
+                    onChange={handleManualUpload}
+                    disabled={!draftId || isUploadingFiles}
+                  />
                   {isUploadingFiles ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />}
                   {isUploadingFiles ? "Uploading..." : "Upload Existing"}
-                </Button>
+                </label>
               </div>
             </h2>
             
