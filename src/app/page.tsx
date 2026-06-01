@@ -70,9 +70,9 @@ export default async function Home(props: Props) {
 
   const cleanListings = filterAndDedupe(listingsData);
 
-  // "Recently added" - sorted natively via DB query ordering (first 16)
-  const recentListings = cleanListings.slice(0, 16);
-  const recentIds = new Set(recentListings.map(l => l.id));
+  const hardcodedIds = [61, 62, 63, 64, 65, 66, 67, 68, 69];
+  const recentListings = hardcodedIds.map(id => listingsData.find((l: any) => l.id === id)).filter(Boolean);
+  const recentIds = new Set(recentListings.map((l: any) => l.id));
 
   // Recommendations Engine integration
   const { userId } = await auth();

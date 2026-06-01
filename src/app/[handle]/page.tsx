@@ -208,9 +208,18 @@ export default async function SellerStorePage(props: Props) {
     heroCardsData = binderCards;
   }
 
+  // Dedupe heroCardsData by title so it alternates beautifully and removes duplicates
+  const seenTitles = new Set();
+  const dedupedHeroCardsData = heroCardsData.filter(c => {
+    const title = c.title.replace(/\\(.*?\\)|#\\d+/g, '').trim().toLowerCase();
+    if (seenTitles.has(title)) return false;
+    seenTitles.add(title);
+    return true;
+  });
+
   // Since the grid needs to start with Sports, activeListings starts with Sports.
   // To make the header strip start with Pokemon, we offset by 1.
-  const formattedHeroCards = heroCardsData.slice(1, 20).map(item => ({
+  const formattedHeroCards = dedupedHeroCardsData.slice(1, 20).map(item => ({
     id: item.id.toString(),
     url: (item.photos && item.photos[0]) ? item.photos[0] : 'https://placehold.co/300x400/1a1a1a/333333?text=PSA+10'
   }));
