@@ -17,8 +17,8 @@ export async function createDraft(initialData: any = {}) {
     where: eq(profiles.userId, userId),
   });
 
-  if (!seller || seller.applicationStatus !== "approved") {
-    throw new Error("Only approved sellers can create listings");
+  if (!seller) {
+    throw new Error("Seller profile not found");
   }
 
   const [draft] = await db.insert(listingDrafts).values({
