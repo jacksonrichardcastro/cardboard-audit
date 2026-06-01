@@ -314,14 +314,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
     );
   };
 
-  const isAnyFail = [tilt, framing, lighting, focus, background].some(c => c.state === 'fail');
-  const isAnyWarn = [tilt, framing, lighting, focus, background].some(c => c.state === 'warn');
-  const isAnyIdle = [tilt, framing, lighting, focus, background].some(c => c.state === 'idle' || c.state === 'gated');
-  
-  const captureButtonClass = isAnyFail ? 'bg-red-500 hover:bg-red-600 text-white' :
-                             isAnyWarn ? 'bg-yellow-500 hover:bg-yellow-600 text-yellow-950' : 
-                             isAnyIdle ? 'bg-muted text-muted-foreground opacity-50' :
-                             'bg-green-500 hover:bg-green-600 text-white';
+  const captureButtonClass = 'bg-green-500 hover:bg-green-600 text-white';
 
   if (cameraError) {
     return (
@@ -347,7 +340,6 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
               <Loader2 className="w-4 h-4 animate-spin" /> Uploading to secure bucket...
             </p>
           )}
-          {!draftId && <p className="text-xs text-destructive mt-2">Saving draft state... Please wait.</p>}
         </div>
       </div>
     );
@@ -383,6 +375,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
 
       <div className="relative w-full aspect-[3/4] bg-black rounded-xl overflow-hidden shadow-lg border border-border">
         {/* RAW METRICS OVERLAY (TEMPORARY FOR EMPIRICAL HARDWARE TUNING) */}
+        {process.env.NODE_ENV === 'development' && (
         <div className="absolute top-2 left-2 bg-black/80 text-green-400 text-[10px] p-2 rounded z-30 pointer-events-none font-mono">
           <div>FRAMES: {frameCount}</div>
           <div>LEVEL: {tilt.raw?.toFixed(2) ?? 'N/A'}</div>
@@ -439,6 +432,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
             </div>
           )}
         </div>
+        )}
         {/* Debug Canvas Thumbnail */}
         <canvas ref={processCanvasRef} width={300} height={400} className="hidden" />
         
@@ -474,7 +468,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
         )}
 
         {/* Phase 4: Visual Debug Overlays for the 8x8 Grid */}
-        {debugData && debugData.gridDensities && (
+        {process.env.NODE_ENV === 'development' && debugData && debugData.gridDensities && (
           <div className="absolute inset-0 pointer-events-none z-10">
             {debugData.gridDensities.map((density, i) => {
               if (density === -1) return null; // Don't highlight skipped cells
@@ -499,31 +493,19 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
       {validationError && (
         <p className="text-sm text-destructive font-medium mt-4 text-center">{validationError}</p>
       )}
-      {!draftId && (
-        <p className="text-xs text-muted-foreground mt-4 text-center animate-pulse">Initializing draft state, please wait...</p>
-      )}
 
       <div className="mt-6 flex flex-col items-center gap-2">
         <Button 
           size="lg" 
           className={cn("rounded-full w-16 h-16 p-0 border-4 border-background shadow-xl hover:scale-105 transition-all relative", captureButtonClass)} 
           onClick={handleCapture}
-          disabled={!isReady || isUploading || !draftId || isAnyIdle}
+          disabled={!isReady || isUploading}
         >
           <Camera className="w-6 h-6" />
-          {isAnyFail && (
-            <span className="absolute -top-7 text-[10px] font-bold bg-red-500 text-white px-2 py-0.5 rounded shadow whitespace-nowrap">
-              Capture Anyway
-            </span>
-          )}
           <span className="sr-only">Capture Photo</span>
         </Button>
         <p className="text-sm text-muted-foreground mt-2 text-center max-w-[250px] min-h-[40px]">
-          {isAnyFail 
-            ? [tilt, framing, lighting, focus, background].find(c => c.state === 'fail')?.tip 
-            : isAnyWarn 
-              ? [tilt, framing, lighting, focus, background].find(c => c.state === 'warn')?.tip 
-              : "Align the card within the guide"}
+          Align the card within the guide
         </p>
       </div>
       
