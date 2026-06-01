@@ -126,7 +126,7 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
         )}
 
         {/* Profile Avatar (overlapping the shelf) */}
-        <div className="absolute left-1/2 bottom-0 translate-y-1/2 -translate-x-1/2 z-20">
+        <div className="absolute left-1/2 bottom-0 translate-y-1/2 -translate-x-1/2 z-10">
           {avatarUrl ? (
             <img 
               src={avatarUrl} 
@@ -143,12 +143,9 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
 
       {/* Profile Details */}
       <div className="relative z-10 mt-10 md:mt-12 flex flex-col items-center text-center px-4 w-full">
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center w-full max-w-3xl mb-2 gap-2 md:gap-4">
-          {/* Empty left column to perfectly balance the right column */}
-          <div className="flex justify-end"></div>
-
+        <div className="flex justify-center items-center gap-3 w-full max-w-full mb-2">
           {/* Centered Name */}
-          <div className="flex justify-center items-center">
+          <div className="flex justify-center items-center min-w-0">
             <h1 className="text-xl md:text-2xl font-light font-[family-name:var(--font-display)] text-white tracking-[0.2em] uppercase text-center truncate px-2">
               {name}
             </h1>

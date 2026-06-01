@@ -16,8 +16,10 @@ export default async function BecomeSellerPage() {
       const profile = await db.query.profiles.findFirst({
         where: eq(profiles.userId, userId)
       });
-      if (profile && profile.handle) {
+      if (profile && profile.handle && profile.handle !== "kyc_user") {
         redirect(`/${profile.handle}`);
+      } else {
+        redirect(`/seller/onboarding/profile`);
       }
     }
   }

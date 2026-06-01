@@ -294,7 +294,7 @@ export default async function SellerStorePage(props: Props) {
           </div>
 
           <div className="pb-4 flex items-center z-10 gap-2">
-            {isOwner && (
+            {isOwner && currentTab !== "blog" && currentTab !== "ratings" && (
               <QuickUploadModal label={`Add to ${currentTabInfo.label}`} />
             )}
             <FiltersDrawer />

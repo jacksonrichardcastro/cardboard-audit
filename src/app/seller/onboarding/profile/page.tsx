@@ -128,7 +128,7 @@ export default function ProfileSetupPage() {
           </div>
 
           <Button type="submit" className="w-full bg-violet-600 hover:bg-violet-700" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? "Saving..." : "Continue to Verify Identity"}
+            {form.formState.isSubmitting ? "Saving..." : "Take me to Trax"}
           </Button>
         </form>
       </Form>

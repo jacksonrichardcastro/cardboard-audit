@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { listingDrafts, profiles } from "@/lib/db/schema";
+import { listingDrafts, profiles, users } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
@@ -16,7 +16,13 @@ export default async function DraftsPage() {
   });
 
   if (!seller) {
-    redirect("/seller/become");
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+    });
+    const isSeller = user?.accountType === "seller" || user?.role === "seller";
+    if (!isSeller) {
+      redirect("/seller/become");
+    }
   }
 
   const drafts = await db.query.listingDrafts.findMany({

@@ -37,12 +37,19 @@ export function FiltersDrawer() {
   const [localParams, setLocalParams] = useState<URLSearchParams>(new URLSearchParams(searchParams.toString()));
 
   useEffect(() => {
+    setIsOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
     if (isOpen) {
       setLocalParams(new URLSearchParams(searchParams.toString()));
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
     }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
   }, [isOpen, searchParams]);
 
   const toggleParam = (key: string, value: string) => {

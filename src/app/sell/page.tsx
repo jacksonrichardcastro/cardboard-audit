@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { profiles } from "@/lib/db/schema";
+import { profiles, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
 export default async function SellPage() {
@@ -17,7 +17,13 @@ export default async function SellPage() {
   });
 
   if (!seller) {
-    redirect("/seller/become");
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+    });
+    const isSeller = user?.accountType === "seller" || user?.role === "seller";
+    if (!isSeller) {
+      redirect("/seller/become");
+    }
   }
 
   redirect("/sell/new");

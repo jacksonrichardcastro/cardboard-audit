@@ -44,9 +44,10 @@ export function WelcomeModal() {
             <div className="bg-white/5 border border-white/10 rounded-lg p-3 text-xs text-zinc-400">
               <span className="text-white font-medium block mb-1">What to do next:</span>
               <ul className="list-disc pl-4 space-y-1">
-                <li>Claim your unique storefront handle</li>
-                <li>Customize your profile to stand out</li>
-                <li>Start making offers on grails</li>
+                <li>Customize your storefront — header style, display name, online status, bio</li>
+                <li>Populate your binder with the cards in your collection</li>
+                <li>Draft listings for your storefront — set prices, conditions, specials</li>
+                <li>Share your storefront link</li>
               </ul>
             </div>
           </div>

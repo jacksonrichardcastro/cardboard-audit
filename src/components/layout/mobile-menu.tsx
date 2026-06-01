@@ -42,7 +42,7 @@ export function MobileMenu({
       />
       <SheetContent side="right">
         <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-        <div className="flex flex-col gap-6 pt-6">
+        <div className="flex flex-col gap-6 pt-12">
           <Link href="/for-you" onClick={handleLinkClick} className="text-sm font-medium flex items-center gap-1.5 pl-4">
             <Flame className="w-4 h-4 text-violet-600 fill-violet-600" />
             {isSignedIn ? "For You" : "Hot"}
@@ -61,7 +61,7 @@ export function MobileMenu({
           </Link>
           <div className="pl-4 pr-4">
             <Button asChild className="w-full">
-              <Link href="/sell" onClick={handleLinkClick}>Sell</Link>
+              <Link href="/seller/onboarding/stripe" onClick={handleLinkClick}>Sell</Link>
             </Button>
           </div>
 

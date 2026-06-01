@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { profiles } from "@/lib/db/schema";
+import { profiles, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import ClientPage from "./client-page";
 
@@ -17,7 +17,11 @@ export default async function NewListingServerPage({ searchParams }: { searchPar
   });
 
   if (!seller) {
-    if (!isDemo) {
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+    });
+    const isSeller = user?.accountType === "seller" || user?.role === "seller";
+    if (!isDemo && !isSeller) {
       redirect("/seller/become");
     }
   }

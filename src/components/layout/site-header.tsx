@@ -90,7 +90,7 @@ export async function SiteHeader() {
         <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center gap-4">
             <Button asChild>
-              <Link href="/sell" className="hidden md:inline-flex">Sell</Link>
+              <Link href="/seller/onboarding/stripe" className="hidden md:inline-flex">Sell</Link>
             </Button>
             <NavAuthControls isSignedIn={isSignedIn} userProfile={userProfile} isAdmin={isAdmin} />
           </div>

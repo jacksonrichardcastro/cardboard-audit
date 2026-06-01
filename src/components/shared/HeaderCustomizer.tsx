@@ -88,7 +88,7 @@ export function HeaderCustomizer({ cards, selectedIds }: HeaderCustomizerProps) 
       if (val) setLocalSelection(selectedIds);
       setOpen(val);
     }}>
-      <DialogTrigger className="absolute top-4 right-4 z-40 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-sm border border-white/20 text-white text-xs font-semibold hover:bg-white/10 transition-colors">
+      <DialogTrigger className="absolute top-4 right-4 z-10 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-sm border border-white/20 text-white text-xs font-semibold hover:bg-white/10 transition-colors">
         <Edit3 className="w-3.5 h-3.5" />
         Customize Header
       </DialogTrigger>

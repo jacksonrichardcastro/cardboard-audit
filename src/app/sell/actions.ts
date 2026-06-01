@@ -181,7 +181,12 @@ export async function publishDraft(draftId: number, isDemo: boolean = false) {
       returnId = newListing.id;
     }
 
-    // d. Delete Draft
+    // d. Set Grail if null
+    if (!seller.grailCardId) {
+      await tx.update(profiles).set({ grailCardId: newCard.id }).where(eq(profiles.userId, userId));
+    }
+
+    // e. Delete Draft
     await tx.delete(listingDrafts).where(eq(listingDrafts.id, draftId));
 
     return returnId;

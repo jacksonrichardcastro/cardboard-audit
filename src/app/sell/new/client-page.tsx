@@ -283,7 +283,8 @@ export default function NewListingPage() {
                 >
                   <input 
                     type="file" 
-                    className="sr-only"
+                    ref={fileInputRef}
+                    className="hidden"
                     accept="image/*" 
                     multiple 
                     onChange={handleManualUpload}
@@ -382,7 +383,7 @@ export default function NewListingPage() {
                 <div className="space-y-2">
                   <Label>Price (USD) *</Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
                     <Input 
                       type="number" 
                       min="1.00" 
