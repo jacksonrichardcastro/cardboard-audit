@@ -30,7 +30,7 @@ export default async function Home(props: Props) {
     price: searchParams.price
   });
   
-  const hardcodedIds = [61, 62, 63, 64, 65, 66, 67, 68, 69];
+  const hardcodedIds = [61, 62, 67, 64, 65, 66, 63, 68, 69];
   
   const rawTrendingListings = await db.select({
     id: listings.id,
@@ -74,31 +74,58 @@ export default async function Home(props: Props) {
     };
   }).filter((item): item is NonNullable<typeof item> => item !== null);
 
-  // Recommendations Engine integration
+  // Recommendations Engine integration (Hardcoded Featured Listings)
   const { userId } = await auth();
   const prefs = await getUserPreferences();
-  const rawRecommended = await getRecommendedListings(userId, 20);
   
-  const recommendedMapped = rawRecommended.map((d: any) => ({
-    id: d.id,
-    title: d.title,
-    category: d.category as any,
-    subcategory: "Other",
-    condition: d.condition,
-    grade: d.grade || undefined,
-    gradingCompany: d.gradingCompany,
-    priceCents: d.priceCents,
-    discountType: d.discountType,
-    discountAmount: d.discountAmount,
-    discountActiveUntil: d.discountActiveUntil,
-    photoUrl: (Array.isArray(d.photos) && d.photos.length > 0 && d.photos[0] !== null) ? d.photos[0] : 'https://placehold.co/400x550',
-    sellerBusinessName: d.sellerName,
-    createdAt: new Date().toISOString(),
-    sport: d.sport || "",
-    listingType: d.listingType || "BUY_IT_NOW",
-    gradeTier: d.gradeTier || "Raw / Ungraded",
-    era: d.era || "Modern (2010+)"
-  }));
+  const featuredIds = [75, 74, 77, 78, 79, 96, 82, 95, 88];
+  
+  const rawFeaturedListings = await db.select({
+    id: listings.id,
+    title: listings.title,
+    priceCents: listings.priceCents,
+    grade: listings.grade,
+    gradingCompany: listings.gradingCompany,
+    condition: listings.condition,
+    discountType: listings.discountType,
+    discountAmount: listings.discountAmount,
+    discountActiveUntil: listings.discountActiveUntil,
+    photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE card_id = ${listings.cardId}), '[]'::json)`,
+    sellerBusinessName: profiles.businessName,
+    sport: listings.sport,
+    listingType: listings.listingType,
+    gradeTier: listings.gradeTier,
+    era: listings.era,
+    category: listings.category
+  })
+  .from(listings)
+  .innerJoin(profiles, eq(listings.sellerId, profiles.userId))
+  .where(inArray(listings.id, featuredIds));
+
+  const recommendedMapped = featuredIds.map(id => {
+    const d = rawFeaturedListings.find(l => l.id === id);
+    if (!d) return null;
+    return {
+      id: d.id.toString(),
+      title: d.title,
+      category: d.category as any,
+      subcategory: "Other",
+      condition: d.condition,
+      grade: d.grade || undefined,
+      gradingCompany: d.gradingCompany || undefined,
+      priceCents: d.priceCents,
+      discountType: d.discountType || undefined,
+      discountAmount: d.discountAmount || undefined,
+      discountActiveUntil: d.discountActiveUntil || undefined,
+      photoUrl: (Array.isArray(d.photos) && d.photos.length > 0 && d.photos[0] !== null) ? d.photos[0] : 'https://placehold.co/400x550',
+      sellerBusinessName: d.sellerBusinessName,
+      createdAt: new Date().toISOString(),
+      sport: d.sport || "",
+      listingType: d.listingType || "BUY_IT_NOW",
+      gradeTier: d.gradeTier || "Raw / Ungraded",
+      era: d.era || "Modern (2010+)"
+    };
+  }).filter((item): item is NonNullable<typeof item> => item !== null);
 
   const hasPreferences = !!(prefs && prefs.sportCategories && prefs.sportCategories.length > 0);
   const isPersonalized = userId && hasPreferences;
