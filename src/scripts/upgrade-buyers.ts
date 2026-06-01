@@ -5,21 +5,21 @@ import { eq } from "drizzle-orm";
 async function upgrade() {
   console.log("Upgrading buyers to sellers...");
   
-  await db.update(profiles)
-    .set({
-      accountType: "seller",
-      kycStatus: "verified",
-      applicationStatus: "approved",
-      approvalStatus: "approved"
-    })
-    .where(eq(profiles.accountType, "buyer"));
-    
+  // 1. Update all users to seller
   await db.update(users)
     .set({
       role: "seller",
       accountType: "seller"
     })
-    .where(eq(users.role, "buyer"));
+    .where(eq(users.accountType, "buyer"));
+    
+  // 2. Update all profiles to approved
+  await db.update(profiles)
+    .set({
+      kycStatus: "verified",
+      applicationStatus: "approved",
+      approvalStatus: "approved"
+    });
     
   console.log("Upgrade complete.");
   process.exit(0);

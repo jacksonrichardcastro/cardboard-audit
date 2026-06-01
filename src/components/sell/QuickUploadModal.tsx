@@ -11,16 +11,18 @@ export function QuickUploadModal({ label = "Add" }: { label?: string }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="flex items-center gap-2 bg-zinc-900 border-white/10 hover:bg-zinc-800 text-zinc-300 pointer-events-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">{label}</span>
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger 
+        render={
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex items-center gap-1.5 h-8 bg-zinc-900 border-white/10 hover:bg-zinc-800 text-zinc-300"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span className="text-xs font-medium">{label}</span>
+          </Button>
+        }
+      />
       <DialogContent className="sm:max-w-md bg-zinc-950 border-white/10 text-white">
         <DialogHeader>
           <DialogTitle className="text-xl">What would you like to add?</DialogTitle>

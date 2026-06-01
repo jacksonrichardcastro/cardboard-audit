@@ -17,7 +17,7 @@ export async function SiteHeader() {
 
   const isAdmin = isSignedIn && userId === process.env.ADMIN_USER_ID;
 
-  let userProfile = null;
+  let userProfile: { handle: string | null; displayName: string | null; avatarUrl: string | null } | null = null;
   let showWelcomeModal = false;
 
   if (userId) {

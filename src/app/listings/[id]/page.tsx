@@ -58,6 +58,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
     shipsFrom: dbItem.shipsFrom,
     shippingEstimate: dbItem.shippingEstimate,
     sellerCreatedAt: dbItem.sellerCreatedAt,
+    sellerAvatarUrl: dbItem.sellerAvatarUrl,
   };
 
   const dbRelated = await getTrendingListings({ category: item.category });

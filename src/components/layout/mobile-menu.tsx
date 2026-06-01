@@ -14,7 +14,7 @@ export function MobileMenu({
 }: { 
   isSignedIn: boolean; 
   isAdmin?: boolean;
-  userProfile?: { handle: string | null; displayName: string | null } | null;
+  userProfile?: { handle: string | null; displayName: string | null; avatarUrl?: string | null } | null;
 }) {
   const [open, setOpen] = useState(false);
   const { signOut } = useClerk();
@@ -32,12 +32,14 @@ export function MobileMenu({
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <Menu className="h-5 w-5" />
-          <span className="sr-only">Toggle navigation menu</span>
-        </Button>
-      </SheetTrigger>
+      <SheetTrigger 
+        render={
+          <Button variant="ghost" size="icon">
+            <Menu className="h-5 w-5" />
+            <span className="sr-only">Toggle navigation menu</span>
+          </Button>
+        }
+      />
       <SheetContent side="right">
         <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
         <div className="flex flex-col gap-6 pt-6">
