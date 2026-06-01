@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Star } from "lucide-react";
+import { Star, Flame } from "lucide-react";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { RunDiscountModal } from "./RunDiscountModal";
 
 export interface ActiveListingsGridProps {
   isOwner?: boolean;
@@ -15,6 +16,9 @@ export interface ActiveListingsGridProps {
     grade: string | null;
     gradingCompany: string | null;
     condition: string;
+    discountType?: string | null;
+    discountAmount?: number | null;
+    discountActiveUntil?: Date | null;
     photos: string[];
   }[];
 }
@@ -57,15 +61,51 @@ export function ActiveListingsGrid({ isOwner, listings }: ActiveListingsGridProp
                   {listing.title}
                 </h3>
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm md:text-[15px] font-bold text-white">
-                    ${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </p>
+                  <div className="flex flex-col">
+                    {listing.discountType && listing.discountAmount && (
+                      <span className="text-[10px] md:text-xs text-zinc-500 line-through">
+                        ${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    )}
+                    <p className={`text-sm md:text-[15px] font-bold ${listing.discountType ? "text-[#7C3AED]" : "text-white"}`}>
+                      ${((listing.discountType === 'percent' 
+                        ? listing.priceCents * (1 - (listing.discountAmount || 0) / 10000)
+                        : listing.discountType === 'dollar'
+                        ? Math.max(0, listing.priceCents - (listing.discountAmount || 0))
+                        : listing.priceCents) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                  </div>
                   <p className="text-[10px] md:text-[11px] text-zinc-500 truncate ml-1.5">
                     {listing.grade ? `${listing.gradingCompany} ${listing.grade}` : listing.condition}
                   </p>
                 </div>
               </div>
             </Link>
+
+            {isOwner && (
+              <RunDiscountModal
+                listingId={listing.id}
+                listingPriceCents={listing.priceCents}
+                currentType={listing.discountType}
+                currentAmount={listing.discountAmount}
+                currentUntil={listing.discountActiveUntil}
+                triggerNode={
+                  <button className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 backdrop-blur-md p-1.5 rounded-md border border-white/10 text-white z-20 transition-colors">
+                    <Flame className="w-4 h-4 text-orange-500" />
+                  </button>
+                }
+              />
+            )}
+            {listing.discountType && listing.discountAmount && (
+              <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-sm border border-white/10 flex items-center gap-1 z-10 pointer-events-none">
+                <Flame className="w-3 h-3 text-orange-500" />
+                <span className="text-[10px] font-bold text-white">
+                  {listing.discountType === 'percent' 
+                    ? `${listing.discountAmount / 100}% OFF` 
+                    : `$${(listing.discountAmount / 100).toFixed(0)} OFF`}
+                </span>
+              </div>
+            )}
             
             {/* STRICT V16 CONFIRMATION: BIN + Offer Flow (No "Bid Now") */}
             <div className="grid grid-cols-2 gap-2 px-2.5 pb-2.5">

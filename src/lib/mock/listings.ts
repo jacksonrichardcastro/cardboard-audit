@@ -12,6 +12,9 @@ export interface MockListing {
   listingType: string;
   gradeTier: string;
   era: string;
+  discountType?: string | null;
+  discountAmount?: number | null;
+  discountActiveUntil?: Date | null;
 }
 
 export const mockListings: MockListing[] = [

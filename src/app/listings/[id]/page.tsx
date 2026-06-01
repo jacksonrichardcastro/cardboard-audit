@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
-import { ShieldCheck, MapPin, CalendarDays, ExternalLink, ChevronRight, Home, Expand } from "lucide-react";
+import { ShieldCheck, MapPin, CalendarDays, ExternalLink, ChevronRight, Home, Expand, Flame } from "lucide-react";
 import { notFound } from "next/navigation";
 import { BuyNowButton } from "@/components/storefront/buy-now-button";
 import { MakeOfferButton } from "@/components/storefront/make-offer-button";
@@ -45,6 +45,9 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
     grade: dbItem.grade,
     description: dbItem.description,
     priceCents: dbItem.priceCents,
+    discountType: dbItem.discountType,
+    discountAmount: dbItem.discountAmount,
+    discountActiveUntil: dbItem.discountActiveUntil,
     photos: Array.isArray(dbItem.photos) ? dbItem.photos : (dbItem.photos ? [dbItem.photos as any] : []),
     sellerBusinessName: dbItem.sellerName,
     sellerVerified: dbItem.sellerVerified,
@@ -68,6 +71,9 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
       grade: d.grade || undefined,
       gradingCompany: d.gradingCompany || undefined,
       priceCents: d.priceCents,
+      discountType: d.discountType,
+      discountAmount: d.discountAmount,
+      discountActiveUntil: d.discountActiveUntil,
       photoUrl: Array.isArray(d.photos) ? d.photos[0] : (d.photos as any || 'https://placehold.co/400x550'),
       sellerBusinessName: d.sellerName,
       createdAt: new Date().toISOString()
@@ -121,7 +127,30 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
               </div>
 
               <div className="flex items-end gap-3 pt-2">
-                <p className="text-5xl font-black tracking-tighter text-foreground">${(item.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                <div className="flex flex-col">
+                  {item.discountType && item.discountAmount && (
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="bg-primary/20 backdrop-blur-md px-2 py-0.5 rounded-sm border border-primary/30 flex items-center gap-1">
+                        <Flame className="w-4 h-4 text-orange-500" />
+                        <span className="text-xs font-bold text-primary">
+                          {item.discountType === 'percent' 
+                            ? `${item.discountAmount / 100}% OFF` 
+                            : `$${(item.discountAmount / 100).toFixed(0)} OFF`}
+                        </span>
+                      </div>
+                      <span className="text-xl text-muted-foreground line-through font-medium">
+                        ${(item.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  )}
+                  <p className={`text-5xl font-black tracking-tighter ${item.discountType ? "text-primary" : "text-foreground"}`}>
+                    ${((item.discountType === 'percent' 
+                      ? item.priceCents * (1 - (item.discountAmount || 0) / 10000)
+                      : item.discountType === 'dollar'
+                      ? Math.max(0, item.priceCents - (item.discountAmount || 0))
+                      : item.priceCents) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -130,7 +159,11 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
               <div className="flex-1">
                 <BuyNowButton 
                   listingId={item.id} 
-                  price={item.priceCents} 
+                  price={item.discountType === 'percent' 
+                    ? item.priceCents * (1 - (item.discountAmount || 0) / 10000)
+                    : item.discountType === 'dollar'
+                    ? Math.max(0, item.priceCents - (item.discountAmount || 0))
+                    : item.priceCents} 
                   title={item.title} 
                   photoUrl={item.photos[0]} 
                   shipsFrom={item.shipsFrom || "Los Angeles, CA"}
@@ -140,7 +173,11 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
               <div className="flex-1">
                 <MakeOfferButton
                   listingId={item.id}
-                  priceCents={item.priceCents}
+                  priceCents={item.discountType === 'percent' 
+                    ? item.priceCents * (1 - (item.discountAmount || 0) / 10000)
+                    : item.discountType === 'dollar'
+                    ? Math.max(0, item.priceCents - (item.discountAmount || 0))
+                    : item.priceCents}
                   title={item.title}
                 />
               </div>

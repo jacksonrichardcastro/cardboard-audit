@@ -2,7 +2,7 @@
 
 import { MockListing } from "@/lib/mock/listings";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Flame } from "lucide-react";
 
 interface CardRailProps {
   title: string;
@@ -49,15 +49,36 @@ export function CardRail({ title, icon, listings, seeAllHref }: CardRailProps) {
                       (e.currentTarget as HTMLImageElement).style.visibility = "hidden";
                     }}
                   />
+                  {listing.discountType && listing.discountAmount && (
+                    <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-sm border border-white/10 flex items-center gap-1 z-10 pointer-events-none">
+                      <Flame className="w-3 h-3 text-orange-500" />
+                      <span className="text-[10px] font-bold text-white">
+                        {listing.discountType === 'percent' 
+                          ? `${listing.discountAmount / 100}% OFF` 
+                          : `$${(listing.discountAmount / 100).toFixed(0)} OFF`}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div className="p-2 space-y-1">
                   <h3 className="text-sm font-medium line-clamp-1 text-foreground" title={listing.title}>
                     {listing.title}
                   </h3>
                   <div className="flex items-center justify-between">
-                    <p className="text-base font-semibold text-foreground">
-                      ${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </p>
+                    <div className="flex flex-col">
+                      {listing.discountType && listing.discountAmount && (
+                        <span className="text-[10px] text-muted-foreground line-through">
+                          ${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      )}
+                      <p className={`text-base font-semibold ${listing.discountType ? "text-primary" : "text-foreground"}`}>
+                        ${((listing.discountType === 'percent' 
+                          ? listing.priceCents * (1 - (listing.discountAmount || 0) / 10000)
+                          : listing.discountType === 'dollar'
+                          ? Math.max(0, listing.priceCents - (listing.discountAmount || 0))
+                          : listing.priceCents) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                    </div>
                     <p className="text-xs text-muted-foreground truncate ml-2">
                       {listing.grade ? `${listing.gradingCompany} ${listing.grade}` : listing.condition}
                     </p>

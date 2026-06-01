@@ -102,6 +102,9 @@ export const listings = pgTable("listings", {
   shipsFrom: varchar("ships_from", { length: 255 }),
   shippingEstimate: varchar("shipping_estimate", { length: 255 }),
   reviewNotes: text("review_notes"),
+  discountType: varchar("discount_type", { length: 20 }), // 'percent', 'dollar', null
+  discountAmount: integer("discount_amount"),
+  discountActiveUntil: timestamp("discount_active_until"),
   publishedAt: timestamp("published_at"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),

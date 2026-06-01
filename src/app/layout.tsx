@@ -4,6 +4,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SiteHeader } from "@/components/layout/site-header";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -43,6 +44,7 @@ export default function RootLayout({
             <main className="flex-1">
               {children}
             </main>
+            <Toaster />
           </ThemeProvider>
         </body>
       </html>

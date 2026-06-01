@@ -13,6 +13,7 @@ import { getPossessiveName } from "@/lib/utils/formatters";
 import { Lock, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HeaderCustomizer } from "@/components/shared/HeaderCustomizer";
+import { BinderValueToggle } from "@/components/shared/binder-value-toggle";
 import { FiltersDrawer } from "@/components/storefront/FiltersDrawer";
 import { ActiveFilterChips } from "@/components/storefront/ActiveFilterChips";
 import { like, lte, gte, between } from "drizzle-orm";
@@ -131,6 +132,9 @@ export default async function SellerStorePage(props: Props) {
       grade: listings.grade,
       gradingCompany: listings.gradingCompany,
       condition: listings.condition,
+      discountType: listings.discountType,
+      discountAmount: listings.discountAmount,
+      discountActiveUntil: listings.discountActiveUntil,
       photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE item_photos.card_id = listings.card_id), '[]'::json)`,
     })
     .from(listings)
@@ -146,6 +150,9 @@ export default async function SellerStorePage(props: Props) {
       grade: listings.grade,
       gradingCompany: listings.gradingCompany,
       condition: listings.condition,
+      discountType: listings.discountType,
+      discountAmount: listings.discountAmount,
+      discountActiveUntil: listings.discountActiveUntil,
       photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE item_photos.card_id = listings.card_id), '[]'::json)`,
     })
     .from(listings)
@@ -271,12 +278,7 @@ export default async function SellerStorePage(props: Props) {
               </Button>
             )}
             <FiltersDrawer />
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 rounded-lg border border-white/5">
-              <Lock className="w-4 h-4 text-zinc-500" />
-              <span className="text-xs font-semibold text-zinc-400">
-                {isOwner ? `$${(2450000 / 100).toLocaleString()}` : "Private Value"}
-              </span>
-            </div>
+            <BinderValueToggle isOwner={isOwner} />
           </div>
         </div>
 
