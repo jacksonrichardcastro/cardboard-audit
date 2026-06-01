@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatDistanceToNow, format } from "date-fns";
 import { Search } from "lucide-react";
 import { redirect } from "next/navigation";
+import ActivationQueue from "./activation-queue";
 
 export default async function AdminDashboardPage(props: {
   searchParams: Promise<{ q?: string; type?: string }>;
@@ -88,8 +89,31 @@ export default async function AdminDashboardPage(props: {
 
   const totalSignups = fetchedUsers.length; // If unfiltered, this is all signups.
 
+  // Fetch pending listings for Activation Queue
+  const pendingDbListings = await db
+    .select({
+      id: listings.id,
+      title: listings.title,
+      priceCents: listings.priceCents,
+      createdAt: listings.createdAt,
+      photoUrl: sql<string>`(SELECT storage_path FROM item_photos WHERE item_photos.card_id = listings.card_id ORDER BY sort_order ASC LIMIT 1)`,
+      sellerHandle: profiles.handle,
+    })
+    .from(listings)
+    .innerJoin(profiles, eq(listings.sellerId, profiles.userId))
+    .where(eq(listings.status, "pending_marketplace_activation"))
+    .orderBy(desc(listings.createdAt));
+
+  const pendingListings = pendingDbListings.map(l => ({
+    ...l,
+    photoUrl: l.photoUrl || "https://placehold.co/400x550",
+    sellerHandle: l.sellerHandle || "unknown",
+  }));
+
   return (
     <div className="container mx-auto px-4 py-8">
+      <ActivationQueue listings={pendingListings} />
+
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight mb-2">Master Accounts</h1>

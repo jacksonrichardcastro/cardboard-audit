@@ -95,7 +95,8 @@ export const listings = pgTable("listings", {
   description: text("description"),
   priceCents: integer("price_cents").notNull(), // Stored in cents
   quantity: integer("quantity").notNull().default(1),
-  status: varchar("status", { length: 50 }).notNull().default("ACTIVE"), // ACTIVE, SOLD, DRAFT, PENDING_REVIEW, REJECTED
+  status: varchar("status", { length: 50 }).notNull().default("pending_marketplace_activation"), // pending_marketplace_activation, active, sold, paused
+  isDemo: boolean("is_demo").notNull().default(false),
   edition: varchar("edition", { length: 100 }),
   graded: boolean("graded").notNull().default(false),
   shippingMethod: varchar("shipping_method", { length: 100 }),

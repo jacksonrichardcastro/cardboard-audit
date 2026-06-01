@@ -195,7 +195,7 @@ export async function createCheckoutSessionAction(listingIds: number[]) {
     })
     .from(listings)
     .innerJoin(profiles, eq(listings.sellerId, profiles.userId))
-    .where(and(inArray(listings.id, listingIds), eq(listings.status, "ACTIVE")));
+    .where(and(inArray(listings.id, listingIds), eq(listings.status, "active")));
 
   if (dbItems.length !== listingIds.length) {
     return { error: "One or more items not found or unavailable." };

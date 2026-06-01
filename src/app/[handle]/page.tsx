@@ -84,7 +84,7 @@ export default async function SellerStorePage(props: Props) {
 
   const activeConditions = [
     eq(listings.sellerId, seller.userId),
-    eq(listings.status, "ACTIVE")
+    inArray(listings.status, ["active", "pending_marketplace_activation"])
   ];
 
   if (searchParams.sport) {
@@ -156,7 +156,7 @@ export default async function SellerStorePage(props: Props) {
       photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE item_photos.card_id = listings.card_id), '[]'::json)`,
     })
     .from(listings)
-    .where(and(eq(listings.sellerId, seller.userId), eq(listings.status, "ACTIVE")))
+    .where(and(eq(listings.sellerId, seller.userId), inArray(listings.status, ["active", "pending_marketplace_activation"])))
     .orderBy(desc(listings.createdAt));
 
   // Fetch binder cards

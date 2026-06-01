@@ -172,7 +172,6 @@ export async function publishDraft(draftId: number, isDemo: boolean = false) {
       description: formData.description || null,
       priceCents,
       quantity: 1,
-      status: "ACTIVE",
       edition: formData.edition || null,
       graded: formData.graded || false,
       shippingMethod: formData.shippingMethod || "seller_managed",

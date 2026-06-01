@@ -41,6 +41,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
     title: dbItem.title,
     category: dbItem.category,
     condition: dbItem.condition,
+    status: dbItem.status,
     gradingCompany: dbItem.gradingCompany,
     grade: dbItem.grade,
     description: dbItem.description,
@@ -165,33 +166,63 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             </div>
 
             {/* Purchase CTA */}
-            <div className="pt-2 flex flex-col sm:flex-row gap-3">
-              <div className="flex-1">
-                <BuyNowButton 
-                  listingId={item.id} 
-                  price={item.discountType === 'percent' 
-                    ? item.priceCents * (1 - (item.discountAmount || 0) / 10000)
-                    : item.discountType === 'dollar'
-                    ? Math.max(0, item.priceCents - (item.discountAmount || 0))
-                    : item.priceCents} 
-                  title={item.title} 
-                  photoUrl={item.photos[0]} 
-                  shipsFrom={item.shipsFrom || "Los Angeles, CA"}
-                  shippingEstimate={item.shippingEstimate || "3-5 business days via USPS Priority"}
-                />
+            {item.status === 'pending_marketplace_activation' ? (
+              <div className="pt-2">
+                <div className="w-full rounded-xl bg-violet-500/10 border border-violet-500/20 p-4 text-center">
+                  <p className="text-violet-500 font-semibold tracking-wide">
+                    Marketplace activates later this month — listings unlock then.
+                  </p>
+                </div>
+                <div className="pt-3 flex flex-col sm:flex-row gap-3 opacity-50 pointer-events-none grayscale-[50%]">
+                  <div className="flex-1">
+                    <BuyNowButton 
+                      listingId={item.id} 
+                      price={item.priceCents} 
+                      title={item.title} 
+                      photoUrl={item.photos[0]} 
+                      shipsFrom={item.shipsFrom || "Los Angeles, CA"}
+                      shippingEstimate={item.shippingEstimate || "3-5 business days via USPS Priority"}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <MakeOfferButton
+                      listingId={item.id}
+                      priceCents={item.priceCents}
+                      title={item.title}
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="flex-1">
-                <MakeOfferButton
-                  listingId={item.id}
-                  priceCents={item.discountType === 'percent' 
-                    ? item.priceCents * (1 - (item.discountAmount || 0) / 10000)
-                    : item.discountType === 'dollar'
-                    ? Math.max(0, item.priceCents - (item.discountAmount || 0))
-                    : item.priceCents}
-                  title={item.title}
-                />
+            ) : (
+              <div className="pt-2 flex flex-col sm:flex-row gap-3">
+                <div className="flex-1">
+                  <BuyNowButton 
+                    listingId={item.id} 
+                    price={item.discountType === 'percent' 
+                      ? item.priceCents * (1 - (item.discountAmount || 0) / 10000)
+                      : item.discountType === 'dollar'
+                      ? Math.max(0, item.priceCents - (item.discountAmount || 0))
+                      : item.priceCents} 
+                    title={item.title} 
+                    photoUrl={item.photos[0]} 
+                    shipsFrom={item.shipsFrom || "Los Angeles, CA"}
+                    shippingEstimate={item.shippingEstimate || "3-5 business days via USPS Priority"}
+                  />
+                </div>
+                <div className="flex-1">
+                  <MakeOfferButton
+                    listingId={item.id}
+                    priceCents={item.discountType === 'percent' 
+                      ? item.priceCents * (1 - (item.discountAmount || 0) / 10000)
+                      : item.discountType === 'dollar'
+                      ? Math.max(0, item.priceCents - (item.discountAmount || 0))
+                      : item.priceCents}
+                    title={item.title}
+                  />
+                </div>
               </div>
-            </div>
+            )}
+
 
             {/* Logistics & Seller */}
             <div className="grid gap-4 pt-4">

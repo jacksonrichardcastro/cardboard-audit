@@ -141,7 +141,7 @@ export default async function Home(props: Props) {
     displayText = `Launching May 31, 2026 · ${daysUntilLaunch} days`;
   } else {
     // Post-launch: query real activity from DB
-    const activeListings = await db.select({ count: count() }).from(listings).where(eq(listings.status, 'ACTIVE'));
+    const activeListings = await db.select({ count: count() }).from(listings).where(eq(listings.status, 'active'));
     const total = activeListings[0]?.count ?? 0;
     displayText = `${total.toLocaleString()} cards available right now`;
   }

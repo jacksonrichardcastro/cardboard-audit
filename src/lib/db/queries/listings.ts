@@ -16,7 +16,7 @@ export async function getTrendingListings(params?: {
 }) {
   try {
     const filters: any[] = [
-      eq(listings.status, "ACTIVE"),
+      eq(listings.status, "active"),
       sql`EXISTS (SELECT 1 FROM item_photos WHERE card_id = ${listings.cardId})`
     ];
     if (params?.category) filters.push(eq(listings.category, params.category));
@@ -125,7 +125,7 @@ export async function getListingById(id: number) {
       .from(listings)
       .innerJoin(profiles, eq(listings.sellerId, profiles.userId))
       .innerJoin(users, eq(profiles.userId, users.id))
-      .where(and(eq(listings.id, id), eq(listings.status, "ACTIVE")))
+      .where(and(eq(listings.id, id), eq(listings.status, "active")))
       .limit(1);
       return record;
     });

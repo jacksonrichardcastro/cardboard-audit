@@ -37,7 +37,6 @@ export async function createListing(payload: {
     priceCents: payload.priceCents,
     description: payload.description,
     photos: payload.photos,
-    status: "ACTIVE",
   }).returning({ id: listings.id });
   });
 
