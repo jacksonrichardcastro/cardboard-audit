@@ -42,7 +42,7 @@ export function MobileMenu({
       />
       <SheetContent side="right">
         <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-        <div className="flex flex-col gap-6 mt-[env(safe-area-inset-top)] pt-16 pb-safe">
+        <div className="flex flex-col gap-6 pt-[max(env(safe-area-inset-top),5rem)] pb-safe pl-4 pr-4">
           <Link href="/for-you" onClick={handleLinkClick} className="text-sm font-medium flex items-center gap-1.5 pl-4">
             <Flame className="w-4 h-4 text-violet-600 fill-violet-600" />
             {isSignedIn ? "For You" : "Hot"}

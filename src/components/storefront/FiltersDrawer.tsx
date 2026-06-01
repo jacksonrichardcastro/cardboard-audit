@@ -27,6 +27,7 @@ function FilterSection({ title, defaultExpanded = false, children }: FilterSecti
   );
 }
 
+import { createPortal } from "react-dom";
 import { useFiltersStore } from "@/store/useFiltersStore";
 
 export function FiltersDrawer() {
@@ -35,6 +36,11 @@ export function FiltersDrawer() {
   const pathname = usePathname();
   
   const { isOpen, setIsOpen } = useFiltersStore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Local state for the drawer before applying
   const [localParams, setLocalParams] = useState<URLSearchParams>(new URLSearchParams(searchParams.toString()));
@@ -134,13 +140,16 @@ export function FiltersDrawer() {
         Filters
       </button>
 
-      {/* Overlay */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black/95 z-[200] backdrop-blur-sm transition-opacity"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
+      {/* Portal for Overlay and Drawer */}
+      {mounted && createPortal(
+        <>
+          {/* Overlay */}
+          {isOpen && (
+            <div 
+              className="fixed inset-0 bg-black/95 z-[200] backdrop-blur-sm transition-opacity"
+              onClick={() => setIsOpen(false)}
+            />
+          )}
 
       {/* Drawer */}
       <div className={`fixed top-16 right-0 h-[calc(100vh-64px)] w-full sm:w-[360px] bg-[#0A0A0A] border-l border-white/10 z-[210] transform transition-transform duration-250 ease-[cubic-bezier(0.32,0.72,0,1)] flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
@@ -292,6 +301,9 @@ export function FiltersDrawer() {
         </div>
 
       </div>
+        </>,
+        document.body
+      )}
     </>
   );
 }

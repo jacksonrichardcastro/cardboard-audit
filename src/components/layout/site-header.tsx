@@ -47,7 +47,7 @@ export async function SiteHeader() {
   return (
     <>
       {showWelcomeModal && <WelcomeModal />}
-      <header className="sticky top-0 z-[250] h-16 border-b border-white/10 bg-background">
+      <header className="sticky top-0 z-[120] h-16 border-b border-white/10 bg-background">
       <div className="flex h-full w-full items-center justify-between px-4 md:px-6 lg:px-8">
         <div className="flex items-center gap-5">
           <TraxLogo />
