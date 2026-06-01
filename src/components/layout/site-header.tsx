@@ -28,6 +28,8 @@ export async function SiteHeader() {
     }
   }
 
+  const isAdmin = isSignedIn && userId === process.env.ADMIN_USER_ID;
+
   return (
     <header className="sticky top-0 z-50 h-16 border-b border-white/10 bg-background">
       <div className="flex h-full w-full items-center justify-between px-4 md:px-6 lg:px-8">
@@ -75,7 +77,7 @@ export async function SiteHeader() {
             <Button asChild>
               <Link href="/sell" className="hidden md:inline-flex">Sell</Link>
             </Button>
-            <NavAuthControls isSignedIn={isSignedIn} userProfile={userProfile} />
+            <NavAuthControls isSignedIn={isSignedIn} userProfile={userProfile} isAdmin={isAdmin} />
           </div>
           <div className="md:hidden">
             <Sheet>
@@ -106,7 +108,7 @@ export async function SiteHeader() {
                     <Link href="/sell">Sell</Link>
                   </Button>
                   <div className="flex flex-col gap-4 border-t border-border pt-6">
-                    <NavAuthControls isSignedIn={isSignedIn} userProfile={userProfile} />
+                    <NavAuthControls isSignedIn={isSignedIn} userProfile={userProfile} isAdmin={isAdmin} />
                   </div>
                 </div>
               </SheetContent>

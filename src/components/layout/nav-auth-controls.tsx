@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User, Tag } from "lucide-react";
+import { LogOut, User, Tag, ShieldCheck } from "lucide-react";
 
 type UserProfile = {
   handle: string | null;
@@ -22,9 +22,11 @@ type UserProfile = {
 export function NavAuthControls({
   isSignedIn,
   userProfile,
+  isAdmin,
 }: {
   isSignedIn: boolean;
   userProfile?: UserProfile | null;
+  isAdmin?: boolean;
 }) {
   const { signOut } = useClerk();
 
@@ -46,6 +48,18 @@ export function NavAuthControls({
             </Avatar>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" align="end">
+          {isAdmin && (
+            <>
+              <DropdownMenuItem className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
+                <Link href="/admin" className="w-full flex items-center px-2 py-1.5 text-violet-500 font-semibold">
+                  <ShieldCheck className="mr-2 h-4 w-4" />
+                  <span>Admin Dashboard</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </>
+          )}
+
           <DropdownMenuItem className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
             <Link href="/seller/dashboard" className="w-full flex items-center px-2 py-1.5">
               <User className="mr-2 h-4 w-4" />

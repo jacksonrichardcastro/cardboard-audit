@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Check, Edit3, Loader2 } from "lucide-react";
-import { updateHeaderCustomization } from "@/app/actions/profile";
+import { updateHeaderCustomization, updateSellerProfile } from "@/app/actions/profile";
 
 interface Card {
   id: number;
@@ -21,6 +21,46 @@ export function HeaderCustomizer({ cards, selectedIds }: HeaderCustomizerProps) 
   const [open, setOpen] = useState(false);
   const [localSelection, setLocalSelection] = useState<number[]>(selectedIds);
   const [isPending, startTransition] = useTransition();
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingBanner(true);
+    try {
+      const res = await fetch("/api/storage/profile", {
+        method: "POST",
+        body: JSON.stringify({ kind: "avatar" }),
+        headers: { "Content-Type": "application/json" }
+      });
+
+      if (!res.ok) throw new Error("Failed to get secure upload URL");
+      
+      const { signedUrl, publicUrl } = await res.json();
+      
+      const uploadRes = await fetch(signedUrl, {
+        method: "PUT",
+        body: file,
+        headers: { "Content-Type": file.type }
+      });
+
+      if (!uploadRes.ok) throw new Error("Failed to upload image to bucket");
+
+      await updateSellerProfile({
+        headerStyle: 'banner',
+        bannerImageUrl: publicUrl,
+      });
+
+      setOpen(false);
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to upload banner photo. Please try again.");
+    } finally {
+      setIsUploadingBanner(false);
+    }
+  };
 
   const toggleCard = (id: number) => {
     setLocalSelection(prev => {
@@ -86,8 +126,28 @@ export function HeaderCustomizer({ cards, selectedIds }: HeaderCustomizerProps) 
             );
           })}
           {cards.length === 0 && (
-            <div className="col-span-full text-center py-12 text-zinc-500">
-              You don't have any cards in your binder yet.
+            <div className="col-span-full flex flex-col items-center justify-center text-center py-12 text-zinc-500 gap-4">
+              <p>You don't have any cards in your binder yet.</p>
+              <div className="flex flex-col items-center gap-3 mt-4 border border-white/10 rounded-xl p-6 bg-black/50">
+                <p className="text-sm font-medium text-white">Use a photo banner instead &rarr;</p>
+                <div className="relative">
+                  <Button variant="outline" className="border-[#7C3AED] text-[#7C3AED] hover:bg-[#7C3AED] hover:text-white" disabled={isUploadingBanner}>
+                    {isUploadingBanner ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading...</>
+                    ) : (
+                      "Upload Banner Image"
+                    )}
+                  </Button>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleBannerUpload}
+                    disabled={isUploadingBanner}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                  />
+                </div>
+                <p className="text-xs text-zinc-500">Recommended: 1500 x 400px</p>
+              </div>
             </div>
           )}
         </div>
