@@ -13,24 +13,26 @@ interface CardRailProps {
 
 export function CardRail({ title, icon, listings, seeAllHref }: CardRailProps) {
   return (
-    <div className="w-full space-y-4">
-      <div className="flex items-center justify-between px-4 md:px-8">
+    <div className="w-full space-y-4 -mx-4 md:mx-0 w-[calc(100%+32px)] md:w-full">
+      <div className="flex items-center justify-between px-4 md:px-0">
         <div className="flex items-center gap-2">
           {icon}
           <h2 className="text-2xl font-bold tracking-tight text-foreground">{title}</h2>
         </div>
-        <Link 
-          href={seeAllHref || "#"} 
-          className="text-sm font-medium text-primary hover:underline flex items-center group"
-        >
-          See all
-          <ChevronRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
-        </Link>
+        {seeAllHref && seeAllHref !== "#" && (
+          <Link 
+            href={seeAllHref} 
+            className="text-sm font-medium text-primary hover:underline flex items-center group"
+          >
+            See all
+            <ChevronRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
+          </Link>
+        )}
       </div>
 
       {/* Horizontal scrolling strip locking Fanatics collect swiping grids */}
-      <div className="w-full overflow-x-auto pb-4 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden px-4 md:px-8">
-        <div className="flex gap-3 w-max">
+      <div className="w-full overflow-x-auto pb-4 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden scroll-px-4 md:scroll-px-0">
+        <div className="flex gap-3 w-max px-4 md:px-0">
           {listings.map((listing) => (
             <Link 
               key={listing.id} 
@@ -87,6 +89,7 @@ export function CardRail({ title, icon, listings, seeAllHref }: CardRailProps) {
               </div>
             </Link>
           ))}
+          <div className="w-1 shrink-0 md:hidden" />
         </div>
       </div>
     </div>

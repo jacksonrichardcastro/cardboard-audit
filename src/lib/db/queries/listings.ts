@@ -118,6 +118,7 @@ export async function getListingById(id: number) {
         sellerName: profiles.businessName,
         sellerHandle: profiles.handle,
         sellerVerified: profiles.identityVerified,
+        sellerAvatarUrl: profiles.profilePhotoUrl,
         shipsFrom: listings.shipsFrom,
         shippingEstimate: listings.shippingEstimate,
         sellerCreatedAt: users.createdAt,

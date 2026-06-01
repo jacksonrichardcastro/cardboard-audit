@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { RESERVED_HANDLES } from "@/lib/reserved-handles";
 import { db } from "@/lib/db";
+import { QuickUploadModal } from "@/components/sell/QuickUploadModal";
 import { profiles, listings, users, cards, itemPhotos } from "@/lib/db/schema";
 import { eq, desc, and, inArray, sql } from "drizzle-orm";
 import { Metadata } from "next";
@@ -80,7 +81,7 @@ export default async function SellerStorePage(props: Props) {
   const seller = profileRecord.profile;
   const isSellerLayout = profileRecord.accountType === "seller" && seller.kycStatus === "verified";
   
-  const currentTab = searchParams.tab || (isSellerLayout ? "storefront" : "collection");
+  const currentTab = searchParams.tab || (isSellerLayout ? "active-listings" : "collection");
 
   const activeConditions = [
     eq(listings.sellerId, seller.userId),
@@ -272,7 +273,7 @@ export default async function SellerStorePage(props: Props) {
       <main className="max-w-7xl mx-auto px-4 md:px-8 pb-12">
         
         {/* Navigation Tabs Row */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-white/10 mb-6 mt-0 gap-4 relative">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-white/10 mb-6 mt-0 pt-6 md:pt-8 gap-4 relative">
           <nav className="flex items-center gap-6 overflow-x-auto pb-[-1px] scrollbar-hide relative z-10">
             {tabs.map((tab) => (
               <Link 
@@ -294,17 +295,7 @@ export default async function SellerStorePage(props: Props) {
 
           <div className="pb-4 flex items-center z-10 gap-2">
             {isOwner && (
-              <Button 
-                asChild
-                variant="outline" 
-                size="sm" 
-                className="flex items-center gap-2 bg-zinc-900 border-white/10 hover:bg-zinc-800 text-zinc-300 pointer-events-auto"
-              >
-                <Link href="/sell">
-                  <Plus className="w-4 h-4" />
-                  <span className="hidden sm:inline">Add to {currentTabInfo.label}</span>
-                </Link>
-              </Button>
+              <QuickUploadModal label={`Add to ${currentTabInfo.label}`} />
             )}
             <FiltersDrawer />
             <BinderValueToggle isOwner={isOwner} />
@@ -360,7 +351,7 @@ export default async function SellerStorePage(props: Props) {
 
           {(currentTab === "storefront" || currentTab === "active-listings") && activeListings.length === 0 && (
             <div className="text-center py-24 bg-zinc-950/50 rounded-xl border border-white/5 flex flex-col items-center">
-              <p className="text-lg text-zinc-500 mb-2">No active listings...yet 👀</p>
+              <p className="text-lg text-zinc-500 mb-2">No listings yet. Draft your first listing to get started.</p>
               {!isSellerLayout && <p className="text-sm text-zinc-600">Want to sell on Trax? Upgrade to a Seller account.</p>}
             </div>
           )}

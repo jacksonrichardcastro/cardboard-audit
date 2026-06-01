@@ -83,7 +83,7 @@ export function BinderGrid({ isOwner, sellerName, collectionValueCents, grailCar
           return (
             <div 
               key={card.id} 
-              className={`relative flex flex-col group mx-auto transition-all duration-300 ${isGrail ? 'w-[80%] md:w-[85%] z-10' : 'w-[65%]'}`}
+              className={`relative flex flex-col group mx-auto transition-all duration-300 ${isGrail ? 'col-span-2 md:col-span-1 order-first md:order-none w-[80%] md:w-[85%] z-10' : 'w-[80%] sm:w-[65%]'}`}
             >
               
               {/* MVP Grail Toggle for Owners */}

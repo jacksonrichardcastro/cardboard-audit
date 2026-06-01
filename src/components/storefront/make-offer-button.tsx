@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Handshake, AlertCircle } from "lucide-react";
 import { useAuth, useClerk } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { createOfferAction } from "@/app/actions/offers";
 import {
   Dialog,
@@ -29,10 +30,11 @@ export function MakeOfferButton({ listingId, priceCents, title }: MakeOfferButto
   
   const { isSignedIn } = useAuth();
   const clerk = useClerk();
+  const router = useRouter();
 
   const handleOfferClick = () => {
     if (!isSignedIn) {
-      clerk.openSignIn({ fallbackRedirectUrl: window.location.href });
+      router.push(`/sign-in?redirect_url=/listings/${listingId}`);
       return;
     }
     setError(null);
@@ -87,10 +89,11 @@ export function MakeOfferButton({ listingId, priceCents, title }: MakeOfferButto
         onClick={handleOfferClick}
         variant="outline"
         size="lg"
-        className="w-full text-lg h-14 font-semibold hover:bg-muted/50 transition-colors border-2"
+        className="w-full text-base sm:text-lg h-12 sm:h-14 font-semibold hover:bg-muted/50 transition-colors border-2 px-2 sm:px-8"
       >
-        <Handshake className="w-5 h-5 mr-2" /> 
-        Make Offer
+        <Handshake className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 shrink-0" /> 
+        <span className="sm:hidden">Offer</span>
+        <span className="hidden sm:inline">Make Offer</span>
       </Button>
 
       {/* Minimal Toast overlay */}

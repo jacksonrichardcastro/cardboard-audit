@@ -234,7 +234,7 @@ export function OfferCard({ offer, currentUserId, role }: OfferCardProps) {
             <Button 
               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
               onClick={() => {
-                setToastMessage("Trax payment infrastructure activates Monday. Your accepted offer is locked in — checkout opens with full payment verification Monday morning.");
+                setToastMessage("Trax payment infrastructure activates Wednesday. Your accepted offer is locked in — checkout opens with full payment verification Wednesday morning.");
                 setTimeout(() => setToastMessage(null), 5000);
               }}
             >

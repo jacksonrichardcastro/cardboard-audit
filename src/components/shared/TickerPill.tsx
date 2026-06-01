@@ -15,9 +15,9 @@ export function TickerPill() {
           100% { transform: translateX(-50%); }
         }
         .animate-ticker {
-          display: inline-block;
-          white-space: nowrap;
-          animation: ticker-scroll 10s linear infinite;
+          display: flex;
+          width: max-content;
+          animation: ticker-scroll 15s linear infinite;
         }
         .animate-ticker:hover {
           animation-play-state: paused;

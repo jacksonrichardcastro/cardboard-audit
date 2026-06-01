@@ -27,7 +27,8 @@ export default async function AdminDashboardPage(props: {
       displayName: profiles.displayName,
       businessName: profiles.businessName,
       kycStatus: profiles.kycStatus,
-      listingCount: sql<number>`(SELECT CAST(COUNT(*) AS INT) FROM ${listings} WHERE ${listings.sellerId} = ${users.id})`,
+      activeListingCount: sql<number>`(SELECT CAST(COUNT(*) AS INT) FROM ${listings} WHERE ${listings.sellerId} = ${users.id} AND ${listings.status} = 'active')`,
+      pendingListingCount: sql<number>`(SELECT CAST(COUNT(*) AS INT) FROM ${listings} WHERE ${listings.sellerId} = ${users.id} AND ${listings.status} = 'pending_marketplace_activation')`,
       binderCardCount: sql<number>`(SELECT CAST(COUNT(*) AS INT) FROM ${cards} WHERE ${cards.ownerId} = ${users.id})`,
       transactionCount: sql<number>`(SELECT CAST(COUNT(*) AS INT) FROM ${orders} WHERE ${orders.buyerId} = ${users.id} OR ${orders.sellerId} = ${users.id})`,
       lifetimeSalesCents: sql<number>`(SELECT COALESCE(SUM(${orders.totalCents}), 0) FROM ${orders} WHERE ${orders.sellerId} = ${users.id})`,
@@ -73,7 +74,8 @@ export default async function AdminDashboardPage(props: {
       displayName: profiles.displayName,
       businessName: profiles.businessName,
       kycStatus: profiles.kycStatus,
-      listingCount: sql<number>`(SELECT CAST(COUNT(*) AS INT) FROM ${listings} WHERE ${listings.sellerId} = ${users.id})`,
+      activeListingCount: sql<number>`(SELECT CAST(COUNT(*) AS INT) FROM ${listings} WHERE ${listings.sellerId} = ${users.id} AND ${listings.status} = 'active')`,
+      pendingListingCount: sql<number>`(SELECT CAST(COUNT(*) AS INT) FROM ${listings} WHERE ${listings.sellerId} = ${users.id} AND ${listings.status} = 'pending_marketplace_activation')`,
       binderCardCount: sql<number>`(SELECT CAST(COUNT(*) AS INT) FROM ${cards} WHERE ${cards.ownerId} = ${users.id})`,
       transactionCount: sql<number>`(SELECT CAST(COUNT(*) AS INT) FROM ${orders} WHERE ${orders.buyerId} = ${users.id} OR ${orders.sellerId} = ${users.id})`,
       lifetimeSalesCents: sql<number>`(SELECT COALESCE(SUM(${orders.totalCents}), 0) FROM ${orders} WHERE ${orders.sellerId} = ${users.id})`,
@@ -158,7 +160,8 @@ export default async function AdminDashboardPage(props: {
               <TableHead>Email</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>KYC</TableHead>
-              <TableHead className="text-right">Listings</TableHead>
+              <TableHead className="text-right">Active Listings</TableHead>
+              <TableHead className="text-right">Pending Listings</TableHead>
               <TableHead className="text-right">Binder Cards</TableHead>
               <TableHead className="text-right">Txns</TableHead>
               <TableHead className="text-right">Sales</TableHead>
@@ -201,7 +204,12 @@ export default async function AdminDashboardPage(props: {
                   </TableCell>
                   <TableCell className="text-right">
                     <Link href={`/admin/sellers/${user.userId}`} className="block text-sm">
-                      {user.listingCount}
+                      {user.activeListingCount}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Link href={`/admin/sellers/${user.userId}`} className="block text-sm">
+                      {user.pendingListingCount}
                     </Link>
                   </TableCell>
                   <TableCell className="text-right">

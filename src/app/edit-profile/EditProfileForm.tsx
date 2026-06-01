@@ -20,10 +20,17 @@ interface EditProfileFormProps {
   };
 }
 
+import { ImageCropperModal } from "@/components/shared/ImageCropperModal";
+
 export function EditProfileForm({ initialData }: EditProfileFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [cropImageUrl, setCropImageUrl] = useState("");
+  const [cropTarget, setCropTarget] = useState<"avatar" | "banner">("avatar");
+
   const [formData, setFormData] = useState({
     bio: initialData.bio || "",
     locationCity: initialData.locationCity || "",
@@ -37,66 +44,20 @@ export function EditProfileForm({ initialData }: EditProfileFormProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setIsUploading(true);
-    try {
-      const res = await fetch("/api/storage/profile", {
-        method: "POST",
-        body: JSON.stringify({ kind: "avatar" }),
-        headers: { "Content-Type": "application/json" }
-      });
-
-      if (!res.ok) throw new Error("Failed to get secure upload URL");
-      
-      const { signedUrl, publicUrl } = await res.json();
-      
-      const uploadRes = await fetch(signedUrl, {
-        method: "PUT",
-        body: file,
-        headers: { "Content-Type": file.type }
-      });
-
-      if (!uploadRes.ok) throw new Error("Failed to upload image to bucket");
-
-      setFormData(prev => ({ ...prev, profilePhotoUrl: publicUrl }));
-    } catch (err) {
-      console.error(err);
-      alert("Failed to upload profile photo. Please try again.");
-    } finally {
-      setIsUploading(false);
-    }
+    const url = URL.createObjectURL(file);
+    setCropTarget("avatar");
+    setCropImageUrl(url);
+    setCropModalOpen(true);
   };
 
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setIsUploading(true);
-    try {
-      const res = await fetch("/api/storage/profile", {
-        method: "POST",
-        body: JSON.stringify({ kind: "avatar" }),
-        headers: { "Content-Type": "application/json" }
-      });
-
-      if (!res.ok) throw new Error("Failed to get secure upload URL");
-      
-      const { signedUrl, publicUrl } = await res.json();
-      
-      const uploadRes = await fetch(signedUrl, {
-        method: "PUT",
-        body: file,
-        headers: { "Content-Type": file.type }
-      });
-
-      if (!uploadRes.ok) throw new Error("Failed to upload image to bucket");
-
-      setFormData(prev => ({ ...prev, bannerImageUrl: publicUrl }));
-    } catch (err) {
-      console.error(err);
-      alert("Failed to upload banner photo. Please try again.");
-    } finally {
-      setIsUploading(false);
-    }
+    const url = URL.createObjectURL(file);
+    setCropTarget("banner");
+    setCropImageUrl(url);
+    setCropModalOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -266,10 +227,46 @@ export function EditProfileForm({ initialData }: EditProfileFormProps) {
         />
       </div>
 
-      <Button type="submit" disabled={isLoading || isUploading} className="w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white">
-        {isLoading ? "Saving..." : "Save Profile"}
-      </Button>
+      <div className="pt-4 flex items-center justify-end">
+        <Button type="submit" disabled={isLoading} className="bg-[#7C3AED] hover:bg-[#6D28D9] text-white px-8">
+          {isLoading ? "Saving..." : "Save Profile"}
+        </Button>
+      </div>
 
+      <ImageCropperModal
+        isOpen={cropModalOpen}
+        onClose={() => setCropModalOpen(false)}
+        imageUrl={cropImageUrl}
+        aspectRatio={cropTarget === 'avatar' ? 1 : 1500 / 400}
+        onCropComplete={async (blob) => {
+          setIsUploading(true);
+          try {
+            const res = await fetch("/api/storage/profile", {
+              method: "POST",
+              body: JSON.stringify({ kind: cropTarget }),
+              headers: { "Content-Type": "application/json" }
+            });
+            if (!res.ok) throw new Error("Failed to get secure upload URL");
+            const { signedUrl, publicUrl } = await res.json();
+            const uploadRes = await fetch(signedUrl, {
+              method: "PUT",
+              body: blob,
+              headers: { "Content-Type": blob.type }
+            });
+            if (!uploadRes.ok) throw new Error("Failed to upload image to bucket");
+            if (cropTarget === 'avatar') {
+              setFormData(prev => ({ ...prev, profilePhotoUrl: publicUrl }));
+            } else {
+              setFormData(prev => ({ ...prev, bannerImageUrl: publicUrl }));
+            }
+          } catch (err) {
+            console.error(err);
+            alert("Failed to upload cropped photo. Please try again.");
+          } finally {
+            setIsUploading(false);
+          }
+        }}
+      />
     </form>
   );
 }

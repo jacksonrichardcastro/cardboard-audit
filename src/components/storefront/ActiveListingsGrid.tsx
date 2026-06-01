@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Star, Flame } from "lucide-react";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 import { RunDiscountModal } from "./RunDiscountModal";
 
 export interface ActiveListingsGridProps {
@@ -26,6 +27,16 @@ export interface ActiveListingsGridProps {
 export function ActiveListingsGrid({ isOwner, listings }: ActiveListingsGridProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const { isSignedIn } = useAuth();
+
+  const handleAction = (e: React.MouseEvent, listingId: number) => {
+    e.preventDefault();
+    if (!isSignedIn) {
+      router.push(`/sign-in?redirect_url=/listings/${listingId}`);
+    } else {
+      router.push(`/listings/${listingId}`);
+    }
+  };
 
 
 
@@ -109,10 +120,10 @@ export function ActiveListingsGrid({ isOwner, listings }: ActiveListingsGridProp
             
             {/* STRICT V16 CONFIRMATION: BIN + Offer Flow (No "Bid Now") */}
             <div className="grid grid-cols-2 gap-2 px-2.5 pb-2.5">
-              <Button className="h-7 w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-[10px] md:text-xs font-semibold px-2 rounded">
+              <Button onClick={(e) => handleAction(e, listing.id)} className="h-7 w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-[9px] sm:text-[10px] md:text-xs font-semibold px-1 sm:px-2 rounded z-20 relative">
                 Buy Now
               </Button>
-              <Button variant="outline" className="h-7 w-full border-white/10 bg-white/5 hover:bg-white/10 text-white text-[10px] md:text-xs font-semibold px-2 rounded">
+              <Button onClick={(e) => handleAction(e, listing.id)} variant="outline" className="h-7 w-full border-white/10 bg-white/5 hover:bg-white/10 text-white text-[9px] sm:text-[10px] md:text-xs font-semibold px-1 sm:px-2 rounded z-20 relative">
                 Make Offer
               </Button>
             </div>

@@ -1,21 +1,36 @@
-
-
 import Link from "next/link";
 import { Menu, Flame } from "lucide-react";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
-import { profiles } from "@/lib/db/schema";
+import { profiles, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { NavAuthControls } from "./nav-auth-controls";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import { syncUserFromClerk } from "@/lib/auth-sync";
+import { WelcomeModal } from "@/components/onboarding/welcome-modal";
+import { MobileMenu } from "./mobile-menu";
 
 export async function SiteHeader() {
   const { userId } = await auth();
   const isSignedIn = !!userId;
 
+  const isAdmin = isSignedIn && userId === process.env.ADMIN_USER_ID;
+
   let userProfile = null;
+  let showWelcomeModal = false;
+
   if (userId) {
+    await syncUserFromClerk();
+    
+    const userRow = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+    });
+
+    if (userRow && userRow.accountType === "seller" && !userRow.welcomeModalDismissed && !isAdmin) {
+      showWelcomeModal = true;
+    }
+    
     const profileRow = await db.query.profiles.findFirst({
       where: eq(profiles.userId, userId),
     });
@@ -28,10 +43,10 @@ export async function SiteHeader() {
     }
   }
 
-  const isAdmin = isSignedIn && userId === process.env.ADMIN_USER_ID;
-
   return (
-    <header className="sticky top-0 z-50 h-16 border-b border-white/10 bg-background">
+    <>
+      {showWelcomeModal && <WelcomeModal />}
+      <header className="sticky top-0 z-[120] h-16 border-b border-white/10 bg-background">
       <div className="flex h-full w-full items-center justify-between px-4 md:px-6 lg:px-8">
         <div className="flex items-center gap-5">
           <Link href="/" className="flex items-center gap-1">
@@ -80,42 +95,11 @@ export async function SiteHeader() {
             <NavAuthControls isSignedIn={isSignedIn} userProfile={userProfile} isAdmin={isAdmin} />
           </div>
           <div className="md:hidden">
-            <Sheet>
-              <SheetTrigger render={<Button variant="ghost" size="icon" />}>
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle navigation menu</span>
-              </SheetTrigger>
-              <SheetContent side="right">
-                <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-                <div className="flex flex-col gap-6 pt-6">
-                  <Link href="/for-you" className="text-sm font-medium flex items-center gap-1.5">
-                    <Flame className="w-4 h-4 text-violet-600 fill-violet-600" />
-                    {isSignedIn ? "For You" : "Hot"}
-                  </Link>
-                  <Link href="/tracker" className="text-sm font-medium inline-flex items-center gap-2">
-                    Tracker
-                    <span className="text-[10px] uppercase font-semibold tracking-wider px-1.5 py-0.5 rounded bg-violet-500/15 text-violet-300 border border-violet-500/30">
-                      Soon
-                    </span>
-                  </Link>
-                  <Link href="/breaks" className="text-sm font-medium inline-flex items-center gap-2">
-                    Live Breaks
-                    <span className="text-[10px] uppercase font-semibold tracking-wider px-1.5 py-0.5 rounded bg-violet-500/15 text-violet-300 border border-violet-500/30">
-                      Soon
-                    </span>
-                  </Link>
-                  <Button asChild className="w-full">
-                    <Link href="/sell">Sell</Link>
-                  </Button>
-                  <div className="flex flex-col gap-4 border-t border-border pt-6">
-                    <NavAuthControls isSignedIn={isSignedIn} userProfile={userProfile} isAdmin={isAdmin} />
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
+            <MobileMenu isSignedIn={isSignedIn} userProfile={userProfile} isAdmin={isAdmin} />
           </div>
         </div>
-      </div>
-    </header>
+        </div>
+      </header>
+    </>
   );
 }

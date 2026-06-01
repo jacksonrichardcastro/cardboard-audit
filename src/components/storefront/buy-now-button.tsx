@@ -34,7 +34,7 @@ export function BuyNowButton({ listingId, price, title, photoUrl, shipsFrom, shi
 
   const handleBuyClick = () => {
     if (!isSignedIn) {
-      clerk.openSignIn({ fallbackRedirectUrl: window.location.href });
+      router.push(`/sign-in?redirect_url=/listings/${listingId}`);
       return;
     }
     setError(null);
@@ -68,10 +68,11 @@ export function BuyNowButton({ listingId, price, title, photoUrl, shipsFrom, shi
       <Button 
         onClick={handleBuyClick}
         size="lg"
-        className="w-full text-lg h-14 font-semibold shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform"
+        className="w-full text-base sm:text-lg h-12 sm:h-14 font-semibold shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform px-2 sm:px-8"
       >
-        <ShoppingCart className="w-5 h-5 mr-2" /> 
-        Buy Now
+        <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 shrink-0" /> 
+        <span className="sm:hidden">Buy</span>
+        <span className="hidden sm:inline">Buy Now</span>
       </Button>
 
       {/* Mobile Sticky CTA */}
@@ -81,7 +82,7 @@ export function BuyNowButton({ listingId, price, title, photoUrl, shipsFrom, shi
           size="lg"
           className="w-full text-lg h-12 font-semibold shadow-lg shadow-primary/20"
         >
-          {`Buy Now • $${(price / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          {`Buy • $${(price / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
         </Button>
       </div>
 

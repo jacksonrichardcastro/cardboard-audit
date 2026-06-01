@@ -143,11 +143,11 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
 
       {/* Profile Details */}
       <div className="relative z-10 mt-10 md:mt-12 flex flex-col items-center text-center px-4">
-        <div className="flex items-center gap-3 mb-2">
-          <h1 className="text-xl md:text-2xl font-light font-[family-name:var(--font-display)] text-white tracking-[0.2em] uppercase">
+        <div className="flex flex-row flex-wrap justify-center items-center gap-2 md:gap-3 mb-2">
+          <h1 className="text-xl md:text-2xl font-light font-[family-name:var(--font-display)] text-white tracking-[0.2em] uppercase text-center">
             {name}
           </h1>
-          
+          <div className="flex items-center gap-2">
           {isOwner ? (
             <DropdownMenu>
               <DropdownMenuTrigger className="focus:outline-none" disabled={isPending}>
@@ -192,6 +192,7 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
           >
             <Mail className="w-4 h-4" />
           </Link>
+          </div>
         </div>
         
         {bio ? (

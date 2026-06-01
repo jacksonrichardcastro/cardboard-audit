@@ -29,8 +29,7 @@ export function ForYouClient() {
   const handleSaved = () => {
     setModalOpen(false);
     setShowSoftPrompt(false);
-    // Refresh page to load new personalized data
-    router.refresh();
+    router.push("/for-you");
   };
 
   return (

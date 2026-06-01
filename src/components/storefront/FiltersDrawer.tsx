@@ -133,7 +133,7 @@ export function FiltersDrawer() {
       )}
 
       {/* Drawer */}
-      <div className={`fixed top-0 right-0 h-full w-full sm:w-[360px] bg-[#0A0A0A] border-l border-white/10 z-[110] transform transition-transform duration-250 ease-[cubic-bezier(0.32,0.72,0,1)] flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`fixed top-16 right-0 h-[calc(100vh-64px)] w-full sm:w-[360px] bg-[#0A0A0A] border-l border-white/10 z-[110] transform transition-transform duration-250 ease-[cubic-bezier(0.32,0.72,0,1)] flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         
         {/* Header */}
         <div className="p-5 border-b border-white/10 flex items-center justify-between bg-[#0A0A0A] shrink-0">

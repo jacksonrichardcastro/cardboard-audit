@@ -206,7 +206,7 @@ export default async function Home(props: Props) {
               title={dbListings.length > 0 ? "Trending" : "No Results"} 
               icon={dbListings.length > 0 ? <Flame className="w-6 h-6 text-violet-600 fill-violet-600" /> : undefined}
               listings={recentListings} 
-              seeAllHref="#" 
+              seeAllHref="/for-you" 
             />
             
             <div className="pt-8">

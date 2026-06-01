@@ -165,7 +165,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             </div>
 
             {/* Purchase CTA */}
-            <div className="pt-2 flex flex-col sm:flex-row gap-3">
+            <div className="pt-2 flex flex-row gap-2 sm:gap-3">
               <div className="flex-1">
                 <BuyNowButton 
                   listingId={item.id} 
@@ -209,9 +209,13 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                 <Card className="bg-card/40 border-border/50 shadow-none backdrop-blur-sm hover:border-primary/30 transition-colors group cursor-pointer">
                 <CardContent className="p-4 sm:p-5 flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
-                      <span className="font-bold text-primary text-xl">{item.sellerBusinessName.charAt(0)}</span>
-                    </div>
+                    {item.sellerAvatarUrl ? (
+                      <img src={item.sellerAvatarUrl} alt={item.sellerBusinessName} className="w-12 h-12 rounded-full object-cover shrink-0" />
+                    ) : (
+                      <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
+                        <span className="font-bold text-primary text-xl">{item.sellerBusinessName.charAt(0)}</span>
+                      </div>
+                    )}
                     <div>
                       <div className="flex items-center gap-1.5">
                         <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors">{item.sellerBusinessName}</h4>
@@ -247,7 +251,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             <CardRail 
               title="Similar Cards" 
               listings={relatedListings} 
-              seeAllHref={`/category/${item.category.toLowerCase()}`}
+              seeAllHref="/for-you"
             />
           </div>
         )}

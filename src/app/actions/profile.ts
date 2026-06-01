@@ -81,6 +81,8 @@ export async function updateSellerProfile(data: { bio?: string; locationCity?: s
   if (seller?.handle) {
     revalidatePath(`/${seller.handle}`);
   }
+  revalidatePath("/edit-profile");
+  revalidatePath("/seller/dashboard");
 
   return { success: true };
 }
