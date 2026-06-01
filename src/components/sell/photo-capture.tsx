@@ -318,8 +318,9 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
   const isAnyWarn = [tilt, framing, lighting, focus, background].some(c => c.state === 'warn');
   const isAnyIdle = [tilt, framing, lighting, focus, background].some(c => c.state === 'idle' || c.state === 'gated');
   
-  const captureButtonClass = isAnyFail || isAnyIdle ? 'bg-muted text-muted-foreground opacity-50 cursor-not-allowed' :
+  const captureButtonClass = isAnyFail ? 'bg-red-500 hover:bg-red-600 text-white' :
                              isAnyWarn ? 'bg-yellow-500 hover:bg-yellow-600 text-yellow-950' : 
+                             isAnyIdle ? 'bg-muted text-muted-foreground opacity-50' :
                              'bg-green-500 hover:bg-green-600 text-white';
 
   if (cameraError) {
@@ -505,11 +506,16 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
       <div className="mt-6 flex flex-col items-center gap-2">
         <Button 
           size="lg" 
-          className={cn("rounded-full w-16 h-16 p-0 border-4 border-background shadow-xl hover:scale-105 transition-all", captureButtonClass)} 
+          className={cn("rounded-full w-16 h-16 p-0 border-4 border-background shadow-xl hover:scale-105 transition-all relative", captureButtonClass)} 
           onClick={handleCapture}
-          disabled={!isReady || isUploading || !draftId || isAnyFail || isAnyIdle}
+          disabled={!isReady || isUploading || !draftId || isAnyIdle}
         >
           <Camera className="w-6 h-6" />
+          {isAnyFail && (
+            <span className="absolute -top-7 text-[10px] font-bold bg-red-500 text-white px-2 py-0.5 rounded shadow whitespace-nowrap">
+              Capture Anyway
+            </span>
+          )}
           <span className="sr-only">Capture Photo</span>
         </Button>
         <p className="text-sm text-muted-foreground mt-2 text-center max-w-[250px] min-h-[40px]">

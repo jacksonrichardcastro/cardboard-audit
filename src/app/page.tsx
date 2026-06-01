@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
-import { ShieldCheck, Flame } from "lucide-react";
+import { TrendingUp, Award, Clock, ArrowRight, LayoutGrid, Tag, PackageSearch, Zap, Flame, Calendar, ChevronRight, ShieldCheck } from "lucide-react";
+import { TickerPill } from "@/components/shared/TickerPill";
 import { SearchBar } from "@/components/storefront/search-bar";
 import { CardRail } from "@/components/storefront/card-rail";
 import { getTrendingListings } from "@/lib/db/queries/listings";
@@ -114,8 +115,8 @@ export default async function Home(props: Props) {
         <div className="relative overflow-hidden bg-black/60 border-b border-white/5 pt-16 pb-8">
           <div className="absolute inset-0 bg-[url('https://placehold.co/1920x400/000/111?text=+')] opacity-20 bg-cover bg-center -z-20" />
         <div className="max-w-7xl mx-auto px-4 md:px-8 text-center space-y-6">
-          <Badge className="bg-primary/20 text-primary border-none hover:bg-primary/30 py-1.5 px-4 rounded-full text-sm">
-            <Flame className="w-4 h-4 mr-2 inline text-orange-500" /> Beta Mode
+          <Badge className="bg-primary/20 text-primary border-none hover:bg-primary/30 py-1 px-3 rounded-full text-sm">
+            Beta Mode <Flame className="w-4 h-4 ml-1.5 inline text-[#7C3AED]" />
           </Badge>
           <h1 className="text-5xl md:text-7xl font-bold tracking-tighter bg-gradient-to-br from-white to-gray-400 bg-clip-text text-transparent pb-2">
             Find Your Holy Grail.
@@ -130,10 +131,7 @@ export default async function Home(props: Props) {
 
       {/* Live Stat Element Buffer Zone */}
       <div className="flex justify-center pt-6 pb-10">
-        <Badge className="bg-slate-800/40 text-slate-300 border border-white/5 hover:bg-slate-800/60 py-1.5 px-4 rounded-full text-xs font-medium">
-          <span className="inline-block w-2 h-2 rounded-full bg-[#7C3AED] mr-2 animate-pulse"></span>
-          {displayText}
-        </Badge>
+        <TickerPill />
       </div>
 
       <div className="max-w-[1600px] mx-auto px-4 md:px-8 py-4">
@@ -178,6 +176,19 @@ export default async function Home(props: Props) {
                   seeAllHref="/for-you" 
                 />
               )}
+              
+              <div className="mt-8 flex items-center justify-between p-4 bg-violet-600/20 border border-violet-500/20 rounded-xl cursor-not-allowed group">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-violet-600/30 flex items-center justify-center">
+                    <LayoutGrid className="w-5 h-5 text-violet-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-white">Marketplace categories coming soon..</h3>
+                    <p className="text-sm text-violet-300 group-hover:text-violet-200 transition-colors">More ways to explore</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-violet-500 group-hover:translate-x-1 transition-transform" />
+              </div>
             </div>
           </div>
         </div>
