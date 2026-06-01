@@ -78,7 +78,7 @@ export default async function Home(props: Props) {
   const { userId } = await auth();
   const prefs = await getUserPreferences();
   
-  const featuredIds = [75, 74, 77, 78, 79, 96, 82, 95, 88];
+  const featuredIds = [75, 74, 77, 78, 79, 70, 71, 72, 76];
   
   const rawFeaturedListings = await db.select({
     id: listings.id,
