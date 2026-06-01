@@ -208,18 +208,38 @@ export default async function SellerStorePage(props: Props) {
     heroCardsData = binderCards;
   }
 
-  // Dedupe heroCardsData by title so it alternates beautifully and removes duplicates
+  // Programmatic diverse alternating selector for hero strip
   const seenTitles = new Set();
-  const dedupedHeroCardsData = heroCardsData.filter(c => {
-    const title = c.title.replace(/\\(.*?\\)|#\\d+/g, '').trim().toLowerCase();
-    if (seenTitles.has(title)) return false;
-    seenTitles.add(title);
-    return true;
-  });
+  const dedupedHeroCardsData: any[] = [];
+  for (const c of heroCardsData) {
+    const baseTitle = c.title.split('#')[0].split('(')[0].trim().toLowerCase();
+    if (!seenTitles.has(baseTitle)) {
+      seenTitles.add(baseTitle);
+      dedupedHeroCardsData.push(c);
+    }
+  }
 
-  // Since the grid needs to start with Sports, activeListings starts with Sports.
-  // To make the header strip start with Pokemon, we offset by 1.
-  const formattedHeroCards = dedupedHeroCardsData.slice(1, 20).map(item => ({
+  // Alternate them manually to prevent any clumping
+  const alternatingCards: any[] = [];
+  const categories: Record<string, any[]> = { "Sports": [], "TCG": [], "Other": [] };
+  dedupedHeroCardsData.forEach(c => {
+    const cat = c.category || "Other";
+    if (!categories[cat]) categories[cat] = [];
+    categories[cat].push(c);
+  });
+  
+  let added = true;
+  while (added) {
+    added = false;
+    for (const key of Object.keys(categories)) {
+      if (categories[key].length > 0) {
+        alternatingCards.push(categories[key].shift());
+        added = true;
+      }
+    }
+  }
+
+  const formattedHeroCards = alternatingCards.slice(0, 19).map(item => ({
     id: item.id.toString(),
     url: (item.photos && item.photos[0]) ? item.photos[0] : 'https://placehold.co/300x400/1a1a1a/333333?text=PSA+10'
   }));

@@ -6,8 +6,8 @@ import { CardRail } from "@/components/storefront/card-rail";
 import { getTrendingListings } from "@/lib/db/queries/listings";
 import { FilterSidebar } from "@/components/storefront/filter-sidebar";
 import { db } from "@/lib/db";
-import { listings } from "@/lib/db/schema";
-import { eq, count } from "drizzle-orm";
+import { listings, profiles, itemPhotos } from "@/lib/db/schema";
+import { eq, count, inArray, sql } from "drizzle-orm";
 import { FiltersDrawer } from "@/components/storefront/FiltersDrawer";
 import { ActiveFilterChips } from "@/components/storefront/ActiveFilterChips";
 import { auth } from "@clerk/nextjs/server";
@@ -30,56 +30,56 @@ export default async function Home(props: Props) {
     price: searchParams.price
   });
   
-  // Clean mapping standardizing Postgres arrays dynamically safely to existing UI constraints
-  const listingsData = dbListings.map((d: any) => ({
-    id: d.id,
-    title: d.title,
-    category: d.category as any,
-    subcategory: "Other",
-    condition: d.condition,
-    grade: d.grade || undefined,
-    gradingCompany: d.gradingCompany,
-    priceCents: d.priceCents,
-    discountType: d.discountType,
-    discountAmount: d.discountAmount,
-    discountActiveUntil: d.discountActiveUntil,
-    photoUrl: (Array.isArray(d.photos) && d.photos.length > 0 && d.photos[0] !== null) ? d.photos[0] : 'https://placehold.co/400x550',
-    sellerBusinessName: d.sellerName,
-    createdAt: new Date().toISOString(),
-    sport: d.sport || "",
-    listingType: d.listingType || "BUY_IT_NOW",
-    gradeTier: d.gradeTier || "Raw / Ungraded",
-    era: d.era || "Modern (2010+)"
-  }));
-
-  // Helper to dedupe by title and remove white-background/undesired cards
-  const filterAndDedupe = (items: any[]) => {
-    const seenTitles = new Set();
-    return items.filter(item => {
-      // Remove known white background / visually plain cards
-      if (item.title.includes("Luka Doncic")) return false;
-      
-      // Dedupe by card title (case-insensitive approximation)
-      const baseTitle = item.title.replace(/\\(.*?\\)|#\\d+/g, '').trim().toLowerCase();
-      if (seenTitles.has(baseTitle)) return false;
-      
-      seenTitles.add(baseTitle);
-      return true;
-    });
-  };
-
-  const cleanListings = filterAndDedupe(listingsData);
-
   const hardcodedIds = [61, 62, 63, 64, 65, 66, 67, 68, 69];
-  const recentListings = hardcodedIds.map(id => listingsData.find((l: any) => l.id === id)).filter(Boolean);
-  const recentIds = new Set(recentListings.map((l: any) => l.id));
+  
+  const rawTrendingListings = await db.select({
+    id: listings.id,
+    title: listings.title,
+    priceCents: listings.priceCents,
+    grade: listings.grade,
+    gradingCompany: listings.gradingCompany,
+    condition: listings.condition,
+    discountType: listings.discountType,
+    discountAmount: listings.discountAmount,
+    discountActiveUntil: listings.discountActiveUntil,
+    photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE card_id = ${listings.cardId}), '[]'::json)`,
+    sellerBusinessName: profiles.businessName,
+  })
+  .from(listings)
+  .innerJoin(profiles, eq(listings.sellerId, profiles.userId))
+  .where(inArray(listings.id, hardcodedIds));
+
+  const recentListings = hardcodedIds.map(id => {
+    const d = rawTrendingListings.find(l => l.id === id);
+    if (!d) return null;
+    return {
+      id: d.id.toString(),
+      title: d.title,
+      category: "Sports" as any,
+      subcategory: "Other",
+      condition: d.condition,
+      grade: d.grade || undefined,
+      gradingCompany: d.gradingCompany || undefined,
+      priceCents: d.priceCents,
+      discountType: d.discountType || undefined,
+      discountAmount: d.discountAmount || undefined,
+      discountActiveUntil: d.discountActiveUntil || undefined,
+      photoUrl: (Array.isArray(d.photos) && d.photos.length > 0 && d.photos[0] !== null) ? d.photos[0] : 'https://placehold.co/400x550',
+      sellerBusinessName: d.sellerBusinessName,
+      createdAt: new Date().toISOString(),
+      sport: "",
+      listingType: "BUY_IT_NOW" as any,
+      gradeTier: "Raw / Ungraded",
+      era: "Modern (2010+)"
+    };
+  }).filter((item): item is NonNullable<typeof item> => item !== null);
 
   // Recommendations Engine integration
   const { userId } = await auth();
   const prefs = await getUserPreferences();
   const rawRecommended = await getRecommendedListings(userId, 20);
   
-  const rawRecommendedMapped = rawRecommended.map((d: any) => ({
+  const recommendedMapped = rawRecommended.map((d: any) => ({
     id: d.id,
     title: d.title,
     category: d.category as any,
@@ -99,9 +99,6 @@ export default async function Home(props: Props) {
     gradeTier: d.gradeTier || "Raw / Ungraded",
     era: d.era || "Modern (2010+)"
   }));
-
-  // Dedupe recommended and ensure no cross-row overlap with recentListings
-  const recommendedMapped = filterAndDedupe(rawRecommendedMapped).filter((item: any) => !recentIds.has(item.id)).slice(0, 16);
 
   const hasPreferences = !!(prefs && prefs.sportCategories && prefs.sportCategories.length > 0);
   const isPersonalized = userId && hasPreferences;
