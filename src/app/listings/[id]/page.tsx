@@ -50,6 +50,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
     discountActiveUntil: dbItem.discountActiveUntil,
     photos: Array.isArray(dbItem.photos) ? dbItem.photos : (dbItem.photos ? [dbItem.photos as any] : []),
     sellerBusinessName: dbItem.sellerName,
+    sellerHandle: dbItem.sellerHandle,
     sellerVerified: dbItem.sellerVerified,
     set: dbItem.set,
     year: dbItem.year,
@@ -195,7 +196,8 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                 </CardContent>
               </Card>
 
-              <Card className="bg-card/40 border-border/50 shadow-none backdrop-blur-sm hover:border-primary/30 transition-colors group cursor-pointer">
+              <Link href={`/${item.sellerHandle}`}>
+                <Card className="bg-card/40 border-border/50 shadow-none backdrop-blur-sm hover:border-primary/30 transition-colors group cursor-pointer">
                 <CardContent className="p-4 sm:p-5 flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
@@ -208,13 +210,14 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                       </div>
                       <div className="flex items-center text-xs text-muted-foreground mt-1">
                         <CalendarDays className="w-3.5 h-3.5 mr-1" />
-                        Member since {item.sellerCreatedAt ? new Date(item.sellerCreatedAt).getFullYear() : "2024"}
+                        Member since {item.sellerCreatedAt ? new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' }).format(new Date(item.sellerCreatedAt)) : "May 2026"}
                       </div>
                     </div>
                   </div>
                   <ExternalLink className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
                 </CardContent>
               </Card>
+              </Link>
             </div>
 
             <Separator className="bg-border/50 my-6" />

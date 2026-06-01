@@ -52,15 +52,34 @@ export default async function Home(props: Props) {
     era: d.era || "Modern (2010+)"
   }));
 
+  // Helper to dedupe by title and remove white-background/undesired cards
+  const filterAndDedupe = (items: any[]) => {
+    const seenTitles = new Set();
+    return items.filter(item => {
+      // Remove known white background / visually plain cards
+      if (item.title.includes("Luka Doncic")) return false;
+      
+      // Dedupe by card title (case-insensitive approximation)
+      const baseTitle = item.title.replace(/\\(.*?\\)|#\\d+/g, '').trim().toLowerCase();
+      if (seenTitles.has(baseTitle)) return false;
+      
+      seenTitles.add(baseTitle);
+      return true;
+    });
+  };
+
+  const cleanListings = filterAndDedupe(listingsData);
+
   // "Recently added" - sorted natively via DB query ordering (first 16)
-  const recentListings = listingsData.slice(0, 16);
+  const recentListings = cleanListings.slice(0, 16);
+  const recentIds = new Set(recentListings.map(l => l.id));
 
   // Recommendations Engine integration
   const { userId } = await auth();
   const prefs = await getUserPreferences();
   const rawRecommended = await getRecommendedListings(userId, 20);
   
-  const recommendedMapped = rawRecommended.map((d: any) => ({
+  const rawRecommendedMapped = rawRecommended.map((d: any) => ({
     id: d.id,
     title: d.title,
     category: d.category as any,
@@ -80,6 +99,9 @@ export default async function Home(props: Props) {
     gradeTier: d.gradeTier || "Raw / Ungraded",
     era: d.era || "Modern (2010+)"
   }));
+
+  // Dedupe recommended and ensure no cross-row overlap with recentListings
+  const recommendedMapped = filterAndDedupe(rawRecommendedMapped).filter((item: any) => !recentIds.has(item.id)).slice(0, 16);
 
   const hasPreferences = !!(prefs && prefs.sportCategories && prefs.sportCategories.length > 0);
   const isPersonalized = userId && hasPreferences;

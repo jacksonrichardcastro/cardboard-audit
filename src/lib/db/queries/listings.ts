@@ -116,6 +116,7 @@ export async function getListingById(id: number) {
         photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE card_id = ${listings.cardId}), '[]'::json)`,
         sellerId: listings.sellerId,
         sellerName: profiles.businessName,
+        sellerHandle: profiles.handle,
         sellerVerified: profiles.identityVerified,
         shipsFrom: listings.shipsFrom,
         shippingEstimate: listings.shippingEstimate,
