@@ -121,10 +121,12 @@ export function ActiveListingsGrid({ isOwner, listings }: ActiveListingsGridProp
             {/* STRICT V16 CONFIRMATION: BIN + Offer Flow (No "Bid Now") */}
             <div className="grid grid-cols-2 gap-2 px-2.5 pb-2.5">
               <Button onClick={(e) => handleAction(e, listing.id)} className="h-7 w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-[9px] sm:text-[10px] md:text-xs font-semibold px-1 sm:px-2 rounded z-20 relative">
-                Buy Now
+                <span className="sm:hidden">Buy</span>
+                <span className="hidden sm:inline">Buy Now</span>
               </Button>
               <Button onClick={(e) => handleAction(e, listing.id)} variant="outline" className="h-7 w-full border-white/10 bg-white/5 hover:bg-white/10 text-white text-[9px] sm:text-[10px] md:text-xs font-semibold px-1 sm:px-2 rounded z-20 relative">
-                Make Offer
+                <span className="sm:hidden">Offer</span>
+                <span className="hidden sm:inline">Make Offer</span>
               </Button>
             </div>
           </div>

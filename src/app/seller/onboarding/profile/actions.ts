@@ -34,6 +34,7 @@ export async function saveProfile(data: { handle: string; displayName: string; b
       locationCity: data.city || null,
       locationState: data.state || null,
       applicationStatus: 'pending',
+      profileSetupCompleted: true,
     })
     .onConflictDoUpdate({
       target: profiles.userId,
@@ -43,6 +44,7 @@ export async function saveProfile(data: { handle: string; displayName: string; b
         bio: data.bio || null,
         locationCity: data.city || null,
         locationState: data.state || null,
+        profileSetupCompleted: true,
       },
     });
 

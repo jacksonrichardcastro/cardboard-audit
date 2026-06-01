@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EditProfileForm } from "@/app/edit-profile/EditProfileForm";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { StorefrontUrlWidget } from "@/components/seller/StorefrontUrlWidget";
 
 export default async function SellerDashboardPage() {
   const { userId } = await auth();
@@ -70,6 +71,7 @@ export default async function SellerDashboardPage() {
 
         <TabsContent value="settings" className="space-y-6">
           <div className="max-w-2xl">
+            {seller.handle && <StorefrontUrlWidget handle={seller.handle} />}
             <h2 className="text-xl font-semibold mb-6">Storefront Profile</h2>
             <EditProfileForm 
               initialData={{

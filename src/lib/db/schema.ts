@@ -28,6 +28,7 @@ export const profiles = pgTable("profiles", {
   stripeConnectAccountId: varchar("stripe_connect_account_id", { length: 255 }),
   kycStatus: varchar("kyc_status", { length: 20 }).notNull().default("pending"),
   approvalStatus: varchar("approval_status", { length: 20 }).notNull().default("unsubmitted"),
+  profileSetupCompleted: boolean("profile_setup_completed").notNull().default(false),
   tosAcceptedAt: timestamp("tos_accepted_at"),
   photoGuidelinesAcceptedAt: timestamp("photo_guidelines_accepted_at"),
   approvedAt: timestamp("approved_at"),

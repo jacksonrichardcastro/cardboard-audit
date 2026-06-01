@@ -15,6 +15,7 @@ export default function NewListingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const draftIdParam = searchParams.get("draftId");
+  const mode = searchParams.get("mode");
   
   const [step, setStep] = useState(1);
   const [draftId, setDraftId] = useState<number | null>(draftIdParam ? parseInt(draftIdParam) : null);
@@ -41,7 +42,8 @@ export default function NewListingPage() {
 
     photos: [] as { kind: string; url: string; sortOrder: number }[],
 
-    shippingMethod: "seller_managed"
+    shippingMethod: "seller_managed",
+    mode: mode || "listing"
   });
 
   useEffect(() => {
@@ -134,12 +136,16 @@ export default function NewListingPage() {
       const isDemo = searchParams.get("demo") === "1";
       // Perform final save before publish
       await updateDraft(draftId, formData);
-      const listingId = await publishDraft(draftId, isDemo);
+      const id = await publishDraft(draftId, isDemo);
       if (isDemo) {
-        alert("Demo Mode: Submission blocked. This would have redirected to /listings/" + listingId);
+        alert("Demo Mode: Submission blocked. This would have redirected to /listings/" + id);
         setIsPublishing(false);
       } else {
-        router.push(`/listings/${listingId}`);
+        if (mode === "binder") {
+          router.push(`/`); // Could go to profile if we had handle, home is safe
+        } else {
+          router.push(`/listings/${id}`);
+        }
       }
     } catch (err: any) {
       console.error(err);
@@ -363,23 +369,25 @@ export default function NewListingPage() {
 
         {step === 4 && (
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold border-b pb-2">Step 4: Price & Description</h2>
+            <h2 className="text-xl font-semibold border-b pb-2">Step 4: {mode === 'binder' ? 'Description' : 'Price & Description'}</h2>
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Price (USD) *</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
-                  <Input 
-                    type="number" 
-                    min="1.00" 
-                    step="0.01" 
-                    value={formData.price} 
-                    onChange={e => handleChange("price", e.target.value)} 
-                    placeholder="0.00" 
-                    className="pl-7"
-                  />
+              {mode !== 'binder' && (
+                <div className="space-y-2">
+                  <Label>Price (USD) *</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
+                    <Input 
+                      type="number" 
+                      min="1.00" 
+                      step="0.01" 
+                      value={formData.price} 
+                      onChange={e => handleChange("price", e.target.value)} 
+                      placeholder="0.00" 
+                      className="pl-7"
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
               <div className="space-y-2">
                 <Label>Description</Label>
                 <Textarea 
@@ -392,12 +400,23 @@ export default function NewListingPage() {
             </div>
             <div className="flex justify-between pt-4">
               <Button variant="outline" onClick={() => setStep(3)}>Back</Button>
-              <Button onClick={() => setStep(5)} disabled={!formData.price || parseFloat(formData.price) < 1}>Next: Shipping</Button>
+              {mode === 'binder' ? (
+                <div className="text-right">
+                  <Button 
+                    onClick={handlePublish}
+                    disabled={isPublishing || !draftId}
+                  >
+                    {isPublishing ? "Saving..." : "Save to Binder"}
+                  </Button>
+                </div>
+              ) : (
+                <Button onClick={() => setStep(5)} disabled={!formData.price || parseFloat(formData.price) < 1}>Next: Shipping</Button>
+              )}
             </div>
           </div>
         )}
 
-        {step === 5 && (
+        {step === 5 && mode !== 'binder' && (
           <div className="space-y-6">
             <h2 className="text-xl font-semibold border-b pb-2">Step 5: Shipping</h2>
             <div className="space-y-4">

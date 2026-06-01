@@ -65,7 +65,7 @@ export async function syncUserFromClerk() {
         kycStatus: "verified",
         approvalStatus: "approved",
         applicationStatus: "approved",
-        handle: email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + Math.floor(Math.random() * 1000),
+        handle: `user-${user.id}`.toLowerCase(),
       })
       .onConflictDoNothing();
 

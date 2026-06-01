@@ -97,13 +97,22 @@ export function EditProfileForm({ initialData }: EditProfileFormProps) {
             )}
           </div>
           <div className="flex-1 space-y-2">
-            <Input 
-              type="file" 
-              accept="image/*" 
-              onChange={handleFileUpload} 
-              disabled={isUploading || isLoading} 
-              className="bg-zinc-900 border-white/10 text-zinc-300"
-            />
+            <div className="relative">
+              <input 
+                type="file" 
+                id="profile-upload"
+                accept="image/*" 
+                onChange={handleFileUpload} 
+                disabled={isUploading || isLoading} 
+                className="sr-only"
+              />
+              <label 
+                htmlFor="profile-upload"
+                className="flex items-center justify-center w-full h-10 px-4 py-2 text-sm font-medium text-white bg-zinc-900 border border-white/10 rounded-md hover:bg-zinc-800 cursor-pointer transition-colors"
+              >
+                Choose Image
+              </label>
+            </div>
             {isUploading && <p className="text-xs text-[#7C3AED] flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Uploading securely...</p>}
             <p className="text-xs text-zinc-500">You can also paste a direct URL below:</p>
             <Input 
@@ -155,13 +164,22 @@ export function EditProfileForm({ initialData }: EditProfileFormProps) {
                 )}
               </div>
               <div className="flex-1 space-y-2">
-                <Input 
-                  type="file" 
-                  accept="image/*" 
-                  onChange={handleBannerUpload} 
-                  disabled={isUploading || isLoading} 
-                  className="bg-zinc-900 border-white/10 text-zinc-300"
-                />
+                <div className="relative">
+                  <input 
+                    type="file" 
+                    id="banner-upload"
+                    accept="image/*" 
+                    onChange={handleBannerUpload} 
+                    disabled={isUploading || isLoading} 
+                    className="sr-only"
+                  />
+                  <label 
+                    htmlFor="banner-upload"
+                    className="flex items-center justify-center w-full h-10 px-4 py-2 text-sm font-medium text-white bg-zinc-900 border border-white/10 rounded-md hover:bg-zinc-800 cursor-pointer transition-colors"
+                  >
+                    Choose Image
+                  </label>
+                </div>
                 {isUploading && <p className="text-xs text-[#7C3AED] flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Uploading securely...</p>}
                 <p className="text-xs text-zinc-500">You can also paste a direct URL below:</p>
                 <Input 

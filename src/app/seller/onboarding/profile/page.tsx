@@ -38,7 +38,7 @@ export default function ProfileSetupPage() {
     try {
       setError(null);
       await saveProfile(data);
-      router.push("/seller/onboarding/stripe");
+      router.push("/");
     } catch (e: any) {
       setError(e.message || "Failed to save profile");
     }

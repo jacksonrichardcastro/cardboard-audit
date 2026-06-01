@@ -156,31 +156,35 @@ export async function publishDraft(draftId: number, isDemo: boolean = false) {
       await tx.insert(itemPhotos).values(photosToInsert);
     }
 
-    // c. Insert Listing
-    const priceCents = Math.round(parseFloat(formData.price || "0") * 100);
-    const [newListing] = await tx.insert(listings).values({
-      sellerId: userId,
-      cardId: newCard.id,
-      title: canonicalTitle,
-      category: "Trading Cards",
-      set: formData.set || null,
-      year: formData.year || null,
-      cardNumber: formData.cardNumber || null,
-      condition: formData.condition || "Ungraded",
-      gradingCompany: formData.gradingCompany || null,
-      grade: formData.grade || null,
-      description: formData.description || null,
-      priceCents,
-      quantity: 1,
-      edition: formData.edition || null,
-      graded: formData.graded || false,
-      shippingMethod: formData.shippingMethod || "seller_managed",
-    }).returning();
+    // c. Insert Listing if not binder mode
+    let returnId = newCard.id; // Default return cardId for binder
+    if (formData.mode !== "binder") {
+      const priceCents = Math.round(parseFloat(formData.price || "0") * 100);
+      const [newListing] = await tx.insert(listings).values({
+        sellerId: userId,
+        cardId: newCard.id,
+        title: canonicalTitle,
+        category: "Trading Cards",
+        set: formData.set || null,
+        year: formData.year || null,
+        cardNumber: formData.cardNumber || null,
+        condition: formData.condition || "Ungraded",
+        gradingCompany: formData.gradingCompany || null,
+        grade: formData.grade || null,
+        description: formData.description || null,
+        priceCents,
+        quantity: 1,
+        edition: formData.edition || null,
+        graded: formData.graded || false,
+        shippingMethod: formData.shippingMethod || "seller_managed",
+      }).returning();
+      returnId = newListing.id;
+    }
 
     // d. Delete Draft
     await tx.delete(listingDrafts).where(eq(listingDrafts.id, draftId));
 
-    return newListing.id;
+    return returnId;
   });
 
   // Revalidate cache paths

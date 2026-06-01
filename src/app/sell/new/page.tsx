@@ -16,7 +16,7 @@ export default async function NewListingServerPage({ searchParams }: { searchPar
     where: eq(profiles.userId, userId),
   });
 
-  if (!seller || seller.applicationStatus !== "approved") {
+  if (!seller) {
     if (!isDemo) {
       redirect("/seller/become");
     }

@@ -142,12 +142,20 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
       </div>
 
       {/* Profile Details */}
-      <div className="relative z-10 mt-10 md:mt-12 flex flex-col items-center text-center px-4">
-        <div className="flex flex-row flex-wrap justify-center items-center gap-2 md:gap-3 mb-2">
-          <h1 className="text-xl md:text-2xl font-light font-[family-name:var(--font-display)] text-white tracking-[0.2em] uppercase text-center">
-            {name}
-          </h1>
-          <div className="flex items-center gap-2">
+      <div className="relative z-10 mt-10 md:mt-12 flex flex-col items-center text-center px-4 w-full">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center w-full max-w-3xl mb-2 gap-2 md:gap-4">
+          {/* Empty left column to perfectly balance the right column */}
+          <div className="flex justify-end"></div>
+
+          {/* Centered Name */}
+          <div className="flex justify-center items-center">
+            <h1 className="text-xl md:text-2xl font-light font-[family-name:var(--font-display)] text-white tracking-[0.2em] uppercase text-center truncate px-2">
+              {name}
+            </h1>
+          </div>
+
+          {/* Flanking Status/Icon */}
+          <div className="flex items-center justify-start gap-2">
           {isOwner ? (
             <DropdownMenu>
               <DropdownMenuTrigger className="focus:outline-none" disabled={isPending}>

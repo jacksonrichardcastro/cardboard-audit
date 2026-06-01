@@ -1,16 +1,13 @@
-import * as dotenv from 'dotenv';
-dotenv.config({ path: '.env.local' });
+import { config } from "dotenv";
+config({ path: ".env.local" });
 import { db } from "./src/lib/db";
 import { sql } from "drizzle-orm";
 
-async function main() {
+async function run() {
   console.log("Running migration...");
-  await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "welcome_modal_dismissed" boolean NOT NULL DEFAULT false;`);
-  console.log("Migration successful.");
+  await db.execute(sql`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS profile_setup_completed boolean NOT NULL DEFAULT false;`);
+  console.log("Migration completed.");
   process.exit(0);
 }
 
-main().catch((err) => {
-  console.error("Migration failed:", err);
-  process.exit(1);
-});
+run().catch(console.error);

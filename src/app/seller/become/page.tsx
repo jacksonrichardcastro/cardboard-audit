@@ -1,7 +1,27 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import { db } from "@/lib/db";
+import { users, profiles } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 
-export default function BecomeSellerPage() {
+export default async function BecomeSellerPage() {
+  const { userId } = await auth();
+  if (userId) {
+    const userRow = await db.query.users.findFirst({
+      where: eq(users.id, userId)
+    });
+    if (userRow?.accountType === "seller" || userRow?.role === "seller") {
+      const profile = await db.query.profiles.findFirst({
+        where: eq(profiles.userId, userId)
+      });
+      if (profile && profile.handle) {
+        redirect(`/${profile.handle}`);
+      }
+    }
+  }
+
   return (
     <div className="container mx-auto px-4 py-12 md:py-24 max-w-4xl min-h-[70vh] flex flex-col items-center justify-center text-center">
       <h1 className="text-4xl font-extrabold tracking-tight md:text-5xl lg:text-6xl text-white mb-6">
