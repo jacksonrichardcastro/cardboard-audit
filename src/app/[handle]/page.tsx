@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { RESERVED_HANDLES } from "@/lib/reserved-handles";
 import { db } from "@/lib/db";
 import { profiles, listings, users, cards, itemPhotos } from "@/lib/db/schema";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and, inArray, sql } from "drizzle-orm";
 import { Metadata } from "next";
 import Link from "next/link";
 import { SellerHero } from "@/components/shared/SellerHero";
