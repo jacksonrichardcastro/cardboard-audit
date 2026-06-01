@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useClerk } from "@clerk/nextjs";
+import { useClerk, useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -29,9 +29,16 @@ export function NavAuthControls({
   isAdmin?: boolean;
 }) {
   const { signOut } = useClerk();
+  const { user } = useUser();
 
   if (isSignedIn) {
     const hasValidHandle = userProfile?.handle && userProfile.handle !== "kyc_user";
+    
+    // Desktop avatar fallback logic
+    const initial = user?.firstName?.charAt(0).toUpperCase() 
+      || user?.lastName?.charAt(0).toUpperCase() 
+      || user?.primaryEmailAddress?.emailAddress?.charAt(0).toUpperCase() 
+      || "U";
     
     return (
       <DropdownMenu>
@@ -39,18 +46,14 @@ export function NavAuthControls({
             <Avatar className="h-8 w-8 hover:opacity-90 transition-opacity">
               <AvatarImage src={userProfile?.avatarUrl || ""} alt={userProfile?.displayName || userProfile?.handle || "User"} />
               <AvatarFallback className="bg-violet-100 text-violet-900 dark:bg-violet-900/30 dark:text-violet-300">
-                {userProfile?.displayName 
-                  ? userProfile.displayName.charAt(0).toUpperCase() 
-                  : userProfile?.handle 
-                    ? userProfile.handle.charAt(0).toUpperCase() 
-                    : "U"}
+                {initial}
               </AvatarFallback>
             </Avatar>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" align="end">
           {isAdmin && (
             <>
-              <DropdownMenuItem className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
+              <DropdownMenuItem asChild className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
                 <Link href="/admin" className="w-full flex items-center px-2 py-1.5 text-violet-500 font-semibold">
                   <ShieldCheck className="mr-2 h-4 w-4" />
                   <span>Admin Dashboard</span>
@@ -60,21 +63,21 @@ export function NavAuthControls({
             </>
           )}
 
-          <DropdownMenuItem className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
+          <DropdownMenuItem asChild className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
             <Link href="/seller/dashboard" className="w-full flex items-center px-2 py-1.5">
               <User className="mr-2 h-4 w-4" />
               <span>Dashboard</span>
             </Link>
           </DropdownMenuItem>
           
-          <DropdownMenuItem className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
+          <DropdownMenuItem asChild className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
             <Link href="/offers" className="w-full flex items-center px-2 py-1.5">
               <Tag className="mr-2 h-4 w-4" />
               <span>My Offers</span>
             </Link>
           </DropdownMenuItem>
           
-          <DropdownMenuItem className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
+          <DropdownMenuItem asChild className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
             {hasValidHandle ? (
               <Link href={`/${userProfile.handle}`} className="w-full flex items-center px-2 py-1.5">
                 <User className="mr-2 h-4 w-4" />
