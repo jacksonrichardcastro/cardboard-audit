@@ -125,7 +125,7 @@ export async function getListingById(id: number) {
       .from(listings)
       .innerJoin(profiles, eq(listings.sellerId, profiles.userId))
       .innerJoin(users, eq(profiles.userId, users.id))
-      .where(and(eq(listings.id, id), eq(listings.status, "active")))
+      .where(eq(listings.id, id))
       .limit(1);
       return record;
     });
