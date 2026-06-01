@@ -15,7 +15,7 @@ export default async function DraftsPage() {
     where: eq(profiles.userId, userId),
   });
 
-  if (!seller || seller.applicationStatus !== "approved") {
+  if (!seller) {
     redirect("/seller/become");
   }
 

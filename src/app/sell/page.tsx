@@ -16,7 +16,7 @@ export default async function SellPage() {
     where: eq(profiles.userId, userId),
   });
 
-  if (!seller || seller.applicationStatus !== "approved") {
+  if (!seller) {
     redirect("/seller/become");
   }
 

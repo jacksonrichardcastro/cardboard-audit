@@ -107,8 +107,8 @@ export async function publishDraft(draftId: number, isDemo: boolean = false) {
     where: eq(profiles.userId, userId),
   });
 
-  if (!seller || seller.applicationStatus !== "approved") {
-    throw new Error("Only approved sellers can publish listings.");
+  if (!seller) {
+    throw new Error("Only registered sellers can publish listings.");
   }
 
   // Demo bypass: just return a fake ID without DB writes
