@@ -7,8 +7,9 @@ export function ListingGallery({ photos, title }: { photos: string[], title: str
   const [activeIndex, setActiveIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
-  // Fallback if empty
-  const validPhotos = photos && photos.length > 0 ? photos : ['https://placehold.co/400x550'];
+  // Dedupe photos to prevent redundant thumbnails
+  const uniquePhotos = Array.from(new Set(photos || []));
+  const validPhotos = uniquePhotos.length > 0 ? uniquePhotos : ['https://placehold.co/400x550'];
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

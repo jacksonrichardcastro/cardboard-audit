@@ -61,8 +61,17 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   };
 
   const dbRelated = await getTrendingListings({ category: item.category });
-  const relatedListings = dbRelated
-    .filter((i: any) => i.id !== item.id)
+  
+  const seenRelatedTitles = new Set<string>();
+  const diverseRelated = dbRelated.filter((i: any) => {
+    if (i.id === item.id) return false;
+    const baseTitle = i.title.split('#')[0].split('(')[0].trim().toLowerCase();
+    if (seenRelatedTitles.has(baseTitle)) return false;
+    seenRelatedTitles.add(baseTitle);
+    return true;
+  });
+
+  const relatedListings = diverseRelated
     .map((d: any) => ({
       id: d.id,
       title: d.title,
