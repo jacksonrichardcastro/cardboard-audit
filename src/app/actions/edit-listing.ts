@@ -69,6 +69,11 @@ export async function updateListing(listingId: number, data: any) {
       description: data.description || null,
       graded: data.graded || false,
       edition: data.edition || null,
+      set: data.set || null,
+      year: data.year || null,
+      cardNumber: data.cardNumber || null,
+      gradingCompany: data.gradingCompany || null,
+      grade: data.grade || null,
     })
     .where(eq(listings.id, listingId));
 

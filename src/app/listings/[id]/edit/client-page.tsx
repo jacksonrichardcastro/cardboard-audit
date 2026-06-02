@@ -14,20 +14,36 @@ export default function EditListingClient({ listing, card }: { listing: any, car
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
 
+  // Helper to extract subject from title
+  const getSubject = () => {
+    let extracted = (listing.title || card.title || "");
+    const y = listing.year || card.year;
+    const s = listing.set || card.set;
+    const e = listing.edition;
+    const c = listing.cardNumber || card.cardNumber;
+    
+    if (y) extracted = extracted.replace(y, "");
+    if (s) extracted = extracted.replace(s, "");
+    if (e) extracted = extracted.replace(e, "");
+    if (c) extracted = extracted.replace(`#${c}`, "").replace(c, "");
+    
+    return extracted.trim().replace(/\s+/g, ' ');
+  };
+
   // Initialize form data from DB
   const [formData, setFormData] = useState({
-    subject: card.subject || "",
-    set: card.set || "",
-    year: card.year || "",
-    cardNumber: card.cardNumber || "",
-    edition: card.edition || "",
-    graded: card.graded || false,
-    gradingCompany: card.gradingCompany || "",
-    grade: card.grade || "",
-    condition: card.condition || "",
+    subject: getSubject(),
+    set: listing.set || card.set || "",
+    year: listing.year || card.year || "",
+    cardNumber: listing.cardNumber || card.cardNumber || "",
+    edition: listing.edition || "",
+    graded: listing.graded || card.graded || false,
+    gradingCompany: listing.gradingCompany || card.gradingCompany || "",
+    grade: listing.grade || card.grade || "",
+    condition: listing.condition || card.condition || "",
     price: (listing.priceCents / 100).toFixed(2),
     shippingMethod: listing.shippingMethod || "Standard (USPS Ground Advantage)",
-    description: card.description || "",
+    description: listing.description || card.description || "",
     photos: (card.photos || []).sort((a: any, b: any) => a.sortOrder - b.sortOrder).map((p: any) => ({
       kind: p.kind,
       sortOrder: p.sortOrder,

@@ -19,13 +19,27 @@ export default function EditBinderClient({ card }: { card: any }) {
     l.status === 'active' || l.status === 'pending_marketplace_activation'
   );
 
+  // Helper to extract subject from title
+  const getSubject = () => {
+    let extracted = card.title || "";
+    const y = card.year;
+    const s = card.set;
+    const c = card.cardNumber;
+    
+    if (y) extracted = extracted.replace(y, "");
+    if (s) extracted = extracted.replace(s, "");
+    if (c) extracted = extracted.replace(`#${c}`, "").replace(c, "");
+    
+    return extracted.trim().replace(/\s+/g, ' ');
+  };
+
   // Initialize form data from DB
   const [formData, setFormData] = useState({
-    subject: card.subject || "",
+    subject: getSubject(),
     set: card.set || "",
     year: card.year || "",
     cardNumber: card.cardNumber || "",
-    edition: card.edition || "",
+    edition: "", // Binder cards do not store edition on the card directly right now
     graded: card.graded || false,
     gradingCompany: card.gradingCompany || "",
     grade: card.grade || "",
