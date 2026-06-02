@@ -5,13 +5,14 @@ import { auth } from "@clerk/nextjs/server";
 import { notFound, redirect } from "next/navigation";
 import EditBinderClient from "./client-page";
 
-export default async function EditBinderPage({ params }: { params: { id: string } }) {
+export default async function EditBinderPage({ params }: { params: Promise<{ id: string }> }) {
   const { userId } = await auth();
   if (!userId) {
     redirect("/sign-in");
   }
 
-  const id = parseInt(params.id);
+  const { id: paramId } = await params;
+  const id = parseInt(paramId);
   if (isNaN(id)) return notFound();
 
   const card = await db.query.cards.findFirst({
