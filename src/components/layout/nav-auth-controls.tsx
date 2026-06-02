@@ -36,8 +36,8 @@ export function NavAuthControls({
   if (isSignedIn) {
     // Desktop avatar fallback logic
     const initial = user?.firstName?.charAt(0).toUpperCase() 
-      || user?.lastName?.charAt(0).toUpperCase() 
       || user?.primaryEmailAddress?.emailAddress?.charAt(0).toUpperCase() 
+      || user?.lastName?.charAt(0).toUpperCase() 
       || "U";
     
     return (
