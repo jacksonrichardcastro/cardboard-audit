@@ -108,7 +108,7 @@ export function ActiveListingsGrid({ isOwner, listings }: ActiveListingsGridProp
                   }
                 />
                 <button 
-                  onClick={(e) => { e.preventDefault(); router.push(`/sell/new?draftId=${listing.id}&mode=edit`); }}
+                  onClick={(e) => { e.preventDefault(); router.push(`/listings/${listing.id}/edit`); }}
                   className="bg-black/60 hover:bg-black/80 backdrop-blur-md p-1.5 rounded-md border border-white/10 text-white transition-colors w-full opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
                 >
                   <Edit2 className="w-4 h-4 mx-auto" />

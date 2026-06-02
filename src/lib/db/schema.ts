@@ -69,6 +69,7 @@ export const cards = pgTable("cards", {
   gradingCompany: varchar("grading_company", { length: 100 }),
   grade: varchar("grade", { length: 50 }),
   description: text("description"),
+  isPrivate: boolean("is_private").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Lock, Star } from "lucide-react";
+import { Lock, Star, Edit2 } from "lucide-react";
 import { setGrailCard } from "@/app/actions/profile";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -110,6 +110,17 @@ export function BinderGrid({ isOwner, sellerName, collectionValueCents, grailCar
                 <div className="absolute top-2 right-2 z-30 bg-[#7C3AED] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md uppercase tracking-wider">
                   Listed
                 </div>
+              )}
+
+              {/* Edit Affordance for Owners */}
+              {isOwner && (
+                <Link
+                  href={`/binder/${card.id}/edit`}
+                  className="absolute bottom-2 right-2 z-30 p-2 bg-black/60 text-zinc-300 hover:text-white rounded-full hover:bg-black/80 transition-all backdrop-blur-sm shadow-md border border-white/10 opacity-0 group-hover:opacity-100"
+                  title="Edit Card"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </Link>
               )}
 
               {/* V16 Grail Centerpiece Styling */}

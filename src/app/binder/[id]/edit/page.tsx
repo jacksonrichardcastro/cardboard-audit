@@ -1,0 +1,38 @@
+import { db } from "@/lib/db";
+import { cards } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
+import { auth } from "@clerk/nextjs/server";
+import { notFound, redirect } from "next/navigation";
+import EditBinderClient from "./client-page";
+
+export default async function EditBinderPage({ params }: { params: { id: string } }) {
+  const { userId } = await auth();
+  if (!userId) {
+    redirect("/sign-in");
+  }
+
+  const id = parseInt(params.id);
+  if (isNaN(id)) return notFound();
+
+  const card = await db.query.cards.findFirst({
+    where: eq(cards.id, id),
+    with: {
+      photos: true,
+      listings: true, // Needed to check if tied to an active listing
+      owner: {
+        with: {
+          profile: true
+        }
+      }
+    },
+  });
+
+  if (!card) return notFound();
+  
+  if (card.ownerId !== userId) {
+    // redirect non-owners back to public view of owner's binder
+    redirect(`/${card.owner?.profile?.handle || ''}?tab=binder`); 
+  }
+
+  return <EditBinderClient card={card} />;
+}
