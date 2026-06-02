@@ -42,7 +42,7 @@ export default function NewListingPage() {
 
     photos: [] as { kind: string; url: string; sortOrder: number }[],
 
-    shippingMethod: "seller_managed",
+    shippingMethod: "Standard (USPS Ground Advantage)",
     mode: mode || "listing"
   });
 
@@ -394,6 +394,21 @@ export default function NewListingPage() {
                       className="pl-7"
                     />
                   </div>
+                </div>
+              )}
+              {mode !== 'binder' && (
+                <div className="space-y-2">
+                  <Label>Shipping Method</Label>
+                  <select 
+                    value={formData.shippingMethod}
+                    onChange={e => handleChange("shippingMethod", e.target.value)}
+                    className="w-full h-10 px-3 bg-background border rounded-md"
+                  >
+                    <option value="Standard (USPS Ground Advantage)">Standard (USPS Ground Advantage)</option>
+                    <option value="Tracked First Class">Tracked First Class</option>
+                    <option value="Priority Mail">Priority Mail</option>
+                    <option value="Local Pickup Only">Local Pickup Only</option>
+                  </select>
                 </div>
               )}
               <div className="space-y-2">

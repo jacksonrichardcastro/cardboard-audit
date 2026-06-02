@@ -77,6 +77,7 @@ export default async function SellerDashboardPage() {
               initialData={{
                 bio: seller.bio,
                 locationCity: seller.locationCity,
+                locationState: seller.locationState,
                 profilePhotoUrl: seller.profilePhotoUrl,
                 headerStyle: seller.headerStyle,
                 bannerImageUrl: seller.bannerImageUrl,

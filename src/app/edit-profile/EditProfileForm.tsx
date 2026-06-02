@@ -13,6 +13,7 @@ interface EditProfileFormProps {
   initialData: {
     bio: string | null;
     locationCity: string | null;
+    locationState: string | null;
     profilePhotoUrl: string | null;
     headerStyle?: string | null;
     bannerImageUrl?: string | null;
@@ -34,6 +35,7 @@ export function EditProfileForm({ initialData }: EditProfileFormProps) {
   const [formData, setFormData] = useState({
     bio: initialData.bio || "",
     locationCity: initialData.locationCity || "",
+    locationState: initialData.locationState || "",
     profilePhotoUrl: initialData.profilePhotoUrl || "",
     headerStyle: initialData.headerStyle || "cards",
     bannerImageUrl: initialData.bannerImageUrl || "",
@@ -233,16 +235,29 @@ export function EditProfileForm({ initialData }: EditProfileFormProps) {
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="locationCity">Location (City)</Label>
-        <Input 
-          id="locationCity"
-          value={formData.locationCity}
-          onChange={(e) => setFormData({ ...formData, locationCity: e.target.value })}
-          placeholder="e.g., Los Angeles"
-          className="bg-zinc-900 border-white/10"
-          disabled={isLoading}
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="locationCity">Location (City)</Label>
+          <Input 
+            id="locationCity"
+            value={formData.locationCity}
+            onChange={(e) => setFormData({ ...formData, locationCity: e.target.value })}
+            placeholder="e.g., Los Angeles"
+            className="bg-zinc-900 border-white/10"
+            disabled={isLoading}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="locationState">Location (State)</Label>
+          <Input 
+            id="locationState"
+            value={formData.locationState}
+            onChange={(e) => setFormData({ ...formData, locationState: e.target.value })}
+            placeholder="e.g., CA"
+            className="bg-zinc-900 border-white/10"
+            disabled={isLoading}
+          />
+        </div>
       </div>
 
       <div className="pt-4 flex items-center justify-end">

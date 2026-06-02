@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Mail, ChevronDown } from "lucide-react";
+import { CheckCircle2, Mail, ChevronDown, MapPin } from "lucide-react";
 import Link from "next/link";
 import { 
   DropdownMenu, 
@@ -42,9 +42,11 @@ interface SellerHeroProps {
   heroCards?: { id: string; url: string }[];
   customizerNode?: React.ReactNode;
   presenceStatus?: string | null;
+  locationCity?: string | null;
+  locationState?: string | null;
 }
 
-export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerImageUrl, isOwner, sellerId, heroCards = [], customizerNode, badges = [], presenceStatus = "online" }: SellerHeroProps) {
+export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerImageUrl, isOwner, sellerId, heroCards = [], customizerNode, badges = [], presenceStatus = "online", locationCity, locationState }: SellerHeroProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -187,6 +189,13 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
             <Badge variant="secondary" className={`flex items-center gap-1.5 rounded-sm font-semibold tracking-wider text-xs px-2 py-0.5 uppercase border ${getStatusBadgeColor(presenceStatus || "online")}`}>
               <span className={`w-1.5 h-1.5 rounded-full inline-block ${getStatusColor(presenceStatus || "online")}`}></span>
               {presenceStatus || "online"}
+            </Badge>
+          )}
+
+          {(locationCity || locationState) && (
+            <Badge variant="outline" className="flex items-center gap-1 rounded-sm font-semibold tracking-wider text-xs px-2 py-0.5 text-zinc-400 border-zinc-800">
+              <MapPin className="w-3 h-3" />
+              {[locationCity, locationState].filter(Boolean).join(", ")}
             </Badge>
           )}
 

@@ -59,7 +59,7 @@ export async function updateHeaderCustomization(cardIds: number[]) {
   return { success: true };
 }
 
-export async function updateSellerProfile(data: { bio?: string; locationCity?: string; profilePhotoUrl?: string; headerStyle?: string; bannerImageUrl?: string; presenceStatus?: string | null }) {
+export async function updateSellerProfile(data: { bio?: string; locationCity?: string; locationState?: string; profilePhotoUrl?: string; headerStyle?: string; bannerImageUrl?: string; presenceStatus?: string | null }) {
   const { userId } = await auth();
   if (!userId) {
     throw new Error("Unauthorized");
@@ -70,6 +70,7 @@ export async function updateSellerProfile(data: { bio?: string; locationCity?: s
     .set({
       bio: data.bio,
       locationCity: data.locationCity,
+      locationState: data.locationState,
       profilePhotoUrl: data.profilePhotoUrl,
       headerStyle: data.headerStyle,
       bannerImageUrl: data.bannerImageUrl,

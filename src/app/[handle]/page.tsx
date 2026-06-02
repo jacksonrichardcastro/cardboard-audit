@@ -266,6 +266,8 @@ export default async function SellerStorePage(props: Props) {
           sellerId={seller.userId}
           badges={(seller.badges as string[]) || []}
           presenceStatus={seller.presenceStatus}
+          locationCity={seller.locationCity}
+          locationState={seller.locationState}
           heroCards={formattedHeroCards}
           customizerNode={isOwner ? <HeaderCustomizer cards={binderCards} selectedIds={headerIds as number[]} /> : undefined}
         />

@@ -59,7 +59,10 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
     shippingEstimate: dbItem.shippingEstimate,
     sellerCreatedAt: dbItem.sellerCreatedAt,
     sellerAvatarUrl: dbItem.sellerAvatarUrl,
+    shippingMethod: dbItem.shippingMethod,
   };
+
+  const isOwner = userId === dbItem.sellerId;
 
   const dbRelated = await getTrendingListings({ category: item.category });
   
@@ -135,6 +138,16 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.1] text-foreground">
                   {item.title}
                 </h1>
+                {isOwner && (
+                  <div className="mt-4">
+                    <Link 
+                      href={`/sell/new?draftId=${item.id}&mode=edit`}
+                      className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
+                    >
+                      Edit Listing
+                    </Link>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-end gap-3 pt-2">
@@ -200,8 +213,8 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                 <CardContent className="p-4 sm:p-5 flex items-start gap-4">
                   <MapPin className="w-6 h-6 text-muted-foreground shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="font-semibold text-foreground">Ships from {item.shipsFrom || "Los Angeles, CA"}</h4>
-                    <p className="text-sm text-muted-foreground mt-1">Estimated delivery: {item.shippingEstimate || "3-5 business days via USPS Priority"}</p>
+                    <h4 className="font-semibold text-foreground">Ships from {item.shipsFrom || "United States"}</h4>
+                    <p className="text-sm text-muted-foreground mt-1">Shipping method: {item.shippingMethod || "Standard (USPS Ground Advantage)"}</p>
                   </div>
                 </CardContent>
               </Card>

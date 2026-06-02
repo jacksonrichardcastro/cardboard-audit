@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Star, Flame } from "lucide-react";
+import { Star, Flame, Edit2 } from "lucide-react";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
@@ -94,18 +94,26 @@ export function ActiveListingsGrid({ isOwner, listings }: ActiveListingsGridProp
             </Link>
 
             {isOwner && (
-              <RunDiscountModal
-                listingId={listing.id}
-                listingPriceCents={listing.priceCents}
-                currentType={listing.discountType}
-                currentAmount={listing.discountAmount}
-                currentUntil={listing.discountActiveUntil}
-                triggerNode={
-                  <button className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 backdrop-blur-md p-1.5 rounded-md border border-white/10 text-white z-20 transition-colors">
-                    <Flame className="w-4 h-4 text-orange-500" />
-                  </button>
-                }
-              />
+              <div className="absolute top-2 right-2 flex flex-col gap-1.5 z-20">
+                <RunDiscountModal
+                  listingId={listing.id}
+                  listingPriceCents={listing.priceCents}
+                  currentType={listing.discountType}
+                  currentAmount={listing.discountAmount}
+                  currentUntil={listing.discountActiveUntil}
+                  triggerNode={
+                    <button className="bg-black/60 hover:bg-black/80 backdrop-blur-md p-1.5 rounded-md border border-white/10 text-white transition-colors w-full">
+                      <Flame className="w-4 h-4 text-orange-500 mx-auto" />
+                    </button>
+                  }
+                />
+                <button 
+                  onClick={(e) => { e.preventDefault(); router.push(`/sell/new?draftId=${listing.id}&mode=edit`); }}
+                  className="bg-black/60 hover:bg-black/80 backdrop-blur-md p-1.5 rounded-md border border-white/10 text-white transition-colors w-full opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
+                >
+                  <Edit2 className="w-4 h-4 mx-auto" />
+                </button>
+              </div>
             )}
             {listing.discountType && listing.discountAmount && (
               <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-sm border border-white/10 flex items-center gap-1 z-10 pointer-events-none">

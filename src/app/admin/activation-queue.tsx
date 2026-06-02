@@ -21,6 +21,8 @@ export default function ActivationQueue({ listings }: { listings: PendingListing
   const [sortField, setSortField] = useState<"createdAt" | "title" | "price">("createdAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<"all" | "single">("all");
+  const [targetListing, setTargetListing] = useState<PendingListing | null>(null);
   const [isActivating, setIsActivating] = useState(false);
 
   const uniqueSellers = Array.from(new Set(listings.map(l => l.sellerHandle))).filter(Boolean);
@@ -55,9 +57,25 @@ export default function ActivationQueue({ listings }: { listings: PendingListing
     }
   };
 
-  const handleActivateOne = async (id: number) => {
-    await activateListing(id);
+  const handleActivateOne = async () => {
+    if (!targetListing) return;
+    setIsActivating(true);
+    await activateListing(targetListing.id);
+    setIsActivating(false);
+    setIsModalOpen(false);
+    setTargetListing(null);
     router.refresh();
+  };
+
+  const openActivateOneModal = (listing: PendingListing) => {
+    setTargetListing(listing);
+    setModalMode("single");
+    setIsModalOpen(true);
+  };
+
+  const openActivateAllModal = () => {
+    setModalMode("all");
+    setIsModalOpen(true);
   };
 
   const handleActivateAll = async () => {
@@ -92,7 +110,7 @@ export default function ActivationQueue({ listings }: { listings: PendingListing
             ))}
           </select>
           <button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={openActivateAllModal}
             className="h-10 px-4 rounded-md bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors whitespace-nowrap"
           >
             Activate All
@@ -135,7 +153,7 @@ export default function ActivationQueue({ listings }: { listings: PendingListing
                     View
                   </a>
                   <button 
-                    onClick={() => handleActivateOne(l.id)}
+                    onClick={() => openActivateOneModal(l)}
                     className="text-xs bg-violet-600 hover:bg-violet-700 text-white px-3 py-1.5 rounded-md transition-colors"
                   >
                     Activate
@@ -150,23 +168,27 @@ export default function ActivationQueue({ listings }: { listings: PendingListing
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
           <div className="bg-zinc-900 border border-white/10 rounded-xl p-6 max-w-md w-full shadow-2xl">
-            <h3 className="text-xl font-bold mb-2">Activate All Listings?</h3>
+            <h3 className="text-xl font-bold mb-2">Activate listings for the public marketplace?</h3>
             <p className="text-muted-foreground mb-6">
-              You are about to activate <strong className="text-white">{filtered.length}</strong> pending listings from <strong className="text-white">{uniqueSellers.length}</strong> unique sellers. These will instantly become visible in the public marketplace catalog.
+              {modalMode === "all" ? (
+                `This will move ${filtered.length} listings from Beta storefront-only visibility to the public marketplace catalog. This action cannot be undone via the dashboard.`
+              ) : (
+                `This will move 1 listing from Beta storefront-only visibility to the public marketplace catalog. This action cannot be undone via the dashboard.`
+              )}
             </p>
             <div className="flex justify-end gap-3">
               <button 
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => { setIsModalOpen(false); setTargetListing(null); }}
                 className="px-4 py-2 text-sm font-medium hover:bg-white/5 rounded-md"
               >
                 Cancel
               </button>
               <button 
-                onClick={handleActivateAll}
+                onClick={modalMode === "all" ? handleActivateAll : handleActivateOne}
                 disabled={isActivating}
                 className="px-4 py-2 text-sm font-medium bg-green-600 hover:bg-green-700 text-white rounded-md disabled:opacity-50"
               >
-                {isActivating ? "Activating..." : "Confirm & Activate All"}
+                {isActivating ? "Activating..." : `Yes, activate ${modalMode === "all" ? filtered.length : 1} ${modalMode === "all" && filtered.length !== 1 ? 'listings' : 'listing'}`}
               </button>
             </div>
           </div>
