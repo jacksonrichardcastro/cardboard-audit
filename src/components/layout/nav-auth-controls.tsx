@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useClerk, useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ export function NavAuthControls({
 }) {
   const { signOut } = useClerk();
   const { user } = useUser();
+  const router = useRouter();
 
   if (isSignedIn) {
     const hasValidHandle = userProfile?.handle && userProfile.handle !== "kyc_user";
@@ -53,42 +55,35 @@ export function NavAuthControls({
         <DropdownMenuContent className="w-56" align="end">
           {isAdmin && (
             <>
-              <DropdownMenuItem asChild className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
-                <Link href="/admin" className="w-full flex items-center px-2 py-1.5 text-violet-500 font-semibold">
+              <DropdownMenuItem onSelect={() => router.push("/admin")} className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
+                <div className="w-full flex items-center px-2 py-1.5 text-violet-500 font-semibold">
                   <ShieldCheck className="mr-2 h-4 w-4" />
                   <span>Admin Dashboard</span>
-                </Link>
+                </div>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
             </>
           )}
 
-          <DropdownMenuItem asChild className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
-            <Link href="/seller/dashboard" className="w-full flex items-center px-2 py-1.5">
+          <DropdownMenuItem onSelect={() => router.push("/seller/dashboard")} className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
+            <div className="w-full flex items-center px-2 py-1.5">
               <User className="mr-2 h-4 w-4" />
               <span>Dashboard</span>
-            </Link>
+            </div>
           </DropdownMenuItem>
           
-          <DropdownMenuItem asChild className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
-            <Link href="/offers" className="w-full flex items-center px-2 py-1.5">
+          <DropdownMenuItem onSelect={() => router.push("/offers")} className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
+            <div className="w-full flex items-center px-2 py-1.5">
               <Tag className="mr-2 h-4 w-4" />
               <span>My Offers</span>
-            </Link>
+            </div>
           </DropdownMenuItem>
           
-          <DropdownMenuItem asChild className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
-            {hasValidHandle ? (
-              <Link href={`/${userProfile.handle}`} className="w-full flex items-center px-2 py-1.5">
-                <User className="mr-2 h-4 w-4" />
-                <span>My Profile</span>
-              </Link>
-            ) : (
-              <Link href="/seller/onboarding/profile" className="w-full flex items-center px-2 py-1.5">
-                <User className="mr-2 h-4 w-4" />
-                <span>Set Up Profile</span>
-              </Link>
-            )}
+          <DropdownMenuItem onSelect={() => router.push(hasValidHandle ? `/${userProfile.handle}` : "/seller/onboarding/profile")} className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
+            <div className="w-full flex items-center px-2 py-1.5">
+              <User className="mr-2 h-4 w-4" />
+              <span>{hasValidHandle ? "My Profile" : "Set Up Profile"}</span>
+            </div>
           </DropdownMenuItem>
           
           <DropdownMenuSeparator />

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Flame, Menu, User, Tag, ShieldCheck, LogOut } from "lucide-react";
@@ -18,6 +19,7 @@ export function MobileMenu({
 }) {
   const [open, setOpen] = useState(false);
   const { signOut } = useClerk();
+  const router = useRouter();
 
   const handleLinkClick = () => {
     setOpen(false);
@@ -98,15 +100,15 @@ export function MobileMenu({
                 </Link>
 
                 {hasValidHandle ? (
-                  <Link href={`/${userProfile.handle}`} onClick={handleLinkClick} className="text-sm font-medium flex items-center gap-2 pl-4 hover:text-violet-400">
+                  <button onClick={() => { handleLinkClick(); router.push(`/${userProfile.handle}`); }} className="text-sm font-medium flex items-center gap-2 pl-4 hover:text-violet-400 w-full text-left">
                     <User className="w-4 h-4" />
                     My Profile
-                  </Link>
+                  </button>
                 ) : (
-                  <Link href="/seller/onboarding/profile" onClick={handleLinkClick} className="text-sm font-medium flex items-center gap-2 pl-4 hover:text-violet-400">
+                  <button onClick={() => { handleLinkClick(); router.push("/seller/onboarding/profile"); }} className="text-sm font-medium flex items-center gap-2 pl-4 hover:text-violet-400 w-full text-left">
                     <User className="w-4 h-4" />
                     Set Up Profile
-                  </Link>
+                  </button>
                 )}
 
                 <div className="h-px bg-border/50 mx-4 mt-2 mb-2" />
