@@ -121,6 +121,7 @@ export async function getListingById(id: number) {
         sellerAvatarUrl: profiles.profilePhotoUrl,
         shipsFrom: listings.shipsFrom,
         shippingEstimate: listings.shippingEstimate,
+        shippingMethod: listings.shippingMethod,
         sellerCreatedAt: users.createdAt,
       })
       .from(listings)
