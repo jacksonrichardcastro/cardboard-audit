@@ -312,6 +312,13 @@ export const itemPhotos = pgTable("item_photos", {
   cardSortIdx: index("idx_item_photos_card_id_sort").on(table.cardId, table.sortOrder),
 }));
 
+export const itemPhotosRelations = relations(itemPhotos, ({ one }) => ({
+  card: one(cards, {
+    fields: [itemPhotos.cardId],
+    references: [cards.id],
+  }),
+}));
+
 export const listingReviews = pgTable("listing_reviews", {
   id: serial("id").primaryKey(),
   listingId: integer("listing_id").notNull().references(() => listings.id, { onDelete: "cascade" }),
