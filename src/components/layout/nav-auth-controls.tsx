@@ -53,7 +53,7 @@ export function NavAuthControls({
         <DropdownMenuContent className="w-56" align="end">
           {isAdmin && (
             <>
-              <DropdownMenuItem onSelect={() => router.push("/admin")} className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
+              <DropdownMenuItem onClick={() => router.push("/admin")} className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
                 <div className="w-full flex items-center px-2 py-1.5 text-violet-500 font-semibold">
                   <ShieldCheck className="mr-2 h-4 w-4" />
                   <span>Admin Dashboard</span>
@@ -63,21 +63,21 @@ export function NavAuthControls({
             </>
           )}
 
-          <DropdownMenuItem onSelect={() => router.push("/seller/dashboard")} className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
+          <DropdownMenuItem onClick={() => router.push("/seller/dashboard")} className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
             <div className="w-full flex items-center px-2 py-1.5">
               <User className="mr-2 h-4 w-4" />
               <span>Dashboard</span>
             </div>
           </DropdownMenuItem>
           
-          <DropdownMenuItem onSelect={() => router.push("/offers")} className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
+          <DropdownMenuItem onClick={() => router.push("/offers")} className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
             <div className="w-full flex items-center px-2 py-1.5">
               <Tag className="mr-2 h-4 w-4" />
               <span>My Offers</span>
             </div>
           </DropdownMenuItem>
           
-          <DropdownMenuItem onSelect={() => router.push("/me")} className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
+          <DropdownMenuItem onClick={() => router.push("/me")} className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
             <div className="w-full flex items-center px-2 py-1.5">
               <User className="mr-2 h-4 w-4" />
               <span>My Profile</span>
