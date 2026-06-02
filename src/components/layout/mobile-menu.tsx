@@ -30,8 +30,6 @@ export function MobileMenu({
     signOut({ redirectUrl: "/" });
   };
 
-  const hasValidHandle = userProfile?.handle && userProfile.handle !== "kyc_user";
-
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger 
@@ -99,17 +97,10 @@ export function MobileMenu({
                   My Offers
                 </Link>
 
-                {hasValidHandle ? (
-                  <button onClick={() => { handleLinkClick(); router.push(`/${userProfile.handle}`); }} className="text-sm font-medium flex items-center gap-2 pl-4 hover:text-violet-400 w-full text-left">
-                    <User className="w-4 h-4" />
-                    My Profile
-                  </button>
-                ) : (
-                  <button onClick={() => { handleLinkClick(); router.push("/seller/onboarding/profile"); }} className="text-sm font-medium flex items-center gap-2 pl-4 hover:text-violet-400 w-full text-left">
-                    <User className="w-4 h-4" />
-                    Set Up Profile
-                  </button>
-                )}
+                <button onClick={() => { handleLinkClick(); router.push("/me"); }} className="text-sm font-medium flex items-center gap-2 pl-4 hover:text-violet-400 w-full text-left">
+                  <User className="w-4 h-4" />
+                  My Profile
+                </button>
 
                 <div className="h-px bg-border/50 mx-4 mt-2 mb-2" />
 

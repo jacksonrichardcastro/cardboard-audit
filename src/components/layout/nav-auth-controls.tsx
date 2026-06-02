@@ -34,8 +34,6 @@ export function NavAuthControls({
   const router = useRouter();
 
   if (isSignedIn) {
-    const hasValidHandle = userProfile?.handle && userProfile.handle !== "kyc_user";
-    
     // Desktop avatar fallback logic
     const initial = user?.firstName?.charAt(0).toUpperCase() 
       || user?.lastName?.charAt(0).toUpperCase() 
@@ -79,10 +77,10 @@ export function NavAuthControls({
             </div>
           </DropdownMenuItem>
           
-          <DropdownMenuItem onSelect={() => router.push(hasValidHandle ? `/${userProfile.handle}` : "/seller/onboarding/profile")} className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
+          <DropdownMenuItem onSelect={() => router.push("/me")} className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
             <div className="w-full flex items-center px-2 py-1.5">
               <User className="mr-2 h-4 w-4" />
-              <span>{hasValidHandle ? "My Profile" : "Set Up Profile"}</span>
+              <span>My Profile</span>
             </div>
           </DropdownMenuItem>
           

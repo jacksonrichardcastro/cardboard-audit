@@ -21,14 +21,20 @@ export async function syncUserFromClerk() {
   const { userId } = await auth();
   if (!userId) return null;
 
-  // Fast path — if the user already exists in the local users table, skip.
-  const [existing] = await db
+  // Fast path — if the user and profile already exist in the local db, skip.
+  const [existingUser] = await db
     .select()
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
+    
+  const [existingProfile] = await db
+    .select()
+    .from(profiles)
+    .where(eq(profiles.userId, userId))
+    .limit(1);
 
-  if (existing) return userId;
+  if (existingUser && existingProfile) return userId;
 
   // Slow path — user not in local db yet.
   try {
