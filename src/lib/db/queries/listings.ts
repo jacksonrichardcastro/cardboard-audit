@@ -1,4 +1,4 @@
-import { eq, desc, ilike, and, gte, lte, sql, like, between } from "drizzle-orm";
+import { eq, desc, ilike, and, gte, lte, sql, like, between, inArray, not } from "drizzle-orm";
 import { withUserContext } from "@/lib/db";
 import { listings, profiles, itemPhotos, users } from "@/lib/db/schema";
 import { unstable_cache } from "next/cache";
@@ -13,12 +13,23 @@ export async function getTrendingListings(params?: {
   grade?: string;
   era?: string;
   price?: string;
+  excludeSellerId?: string;
+  includePending?: boolean;
 }) {
   try {
+    const statusFilter = params?.includePending 
+      ? inArray(listings.status, ["active", "pending_marketplace_activation"])
+      : eq(listings.status, "active");
+
     const filters: any[] = [
-      eq(listings.status, "active"),
+      statusFilter,
+      eq(listings.isDemo, false),
       sql`EXISTS (SELECT 1 FROM item_photos WHERE card_id = ${listings.cardId})`
     ];
+
+    if (params?.excludeSellerId) {
+      filters.push(not(eq(listings.sellerId, params.excludeSellerId)));
+    }
     if (params?.category) filters.push(eq(listings.category, params.category));
     if (params?.minPrice) filters.push(gte(listings.priceCents, Number(params.minPrice) * 100));
     if (params?.maxPrice) filters.push(lte(listings.priceCents, Number(params.maxPrice) * 100));

@@ -64,7 +64,11 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
   const isOwner = userId === dbItem.sellerId;
 
-  const dbRelated = await getTrendingListings({ category: item.category });
+  const dbRelated = await getTrendingListings({ 
+    category: item.category,
+    includePending: true,
+    excludeSellerId: userId || undefined
+  });
   
   const seenRelatedTitles = new Set<string>();
   const diverseRelated = dbRelated.filter((i: any) => {
