@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { RESERVED_HANDLES } from "@/lib/reserved-handles";
 import { db } from "@/lib/db";
 import { QuickUploadModal } from "@/components/sell/QuickUploadModal";
-import { profiles, listings, users, cards, itemPhotos } from "@/lib/db/schema";
+import { profiles, listings, users, cards, itemPhotos, categories } from "@/lib/db/schema";
 import { eq, desc, and, inArray, sql } from "drizzle-orm";
 import { Metadata } from "next";
 import Link from "next/link";
@@ -256,19 +256,19 @@ export default async function SellerStorePage(props: Props) {
 
   // Alternate them manually to prevent any clumping
   const alternatingCards: any[] = [];
-  const categories: Record<string, any[]> = { "Sports": [], "TCG": [], "Other": [] };
+  const demoCategories: Record<string, any[]> = { "Sports": [], "TCG": [], "Other": [] };
   dedupedHeroCardsData.forEach(c => {
     const cat = c.category || "Other";
-    if (!categories[cat]) categories[cat] = [];
-    categories[cat].push(c);
+    if (!demoCategories[cat]) demoCategories[cat] = [];
+    demoCategories[cat].push(c);
   });
   
   let added = true;
   while (added) {
     added = false;
-    for (const key of Object.keys(categories)) {
-      if (categories[key].length > 0) {
-        alternatingCards.push(categories[key].shift());
+    for (const key of Object.keys(demoCategories)) {
+      if (demoCategories[key].length > 0) {
+        alternatingCards.push(demoCategories[key].shift());
         added = true;
       }
     }
