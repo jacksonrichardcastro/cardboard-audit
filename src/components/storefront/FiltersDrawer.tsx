@@ -134,10 +134,10 @@ export function FiltersDrawer() {
     <>
       <button 
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#7C3AED] text-[#7C3AED] hover:bg-[#7C3AED]/10 transition-colors text-xs font-semibold"
+        className="flex items-center justify-center w-11 h-11 rounded-full border border-[#7C3AED] text-[#7C3AED] hover:bg-[#7C3AED]/10 transition-colors shrink-0"
+        title="Filters"
       >
-        <Filter className="w-3.5 h-3.5" />
-        Filters
+        <Filter className="w-5 h-5" />
       </button>
 
       {/* Portal for Overlay and Drawer */}

@@ -14,7 +14,6 @@ import { getPossessiveName } from "@/lib/utils/formatters";
 import { Lock, Plus, ListTree, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HeaderCustomizer } from "@/components/shared/HeaderCustomizer";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { StorefrontControls } from "@/components/storefront/StorefrontControls";
 import { BinderValueToggle } from "@/components/shared/binder-value-toggle";
 import { FiltersDrawer } from "@/components/storefront/FiltersDrawer";
@@ -189,12 +188,14 @@ export default async function SellerStorePage(props: Props) {
   });
 
   const isOwner = seller.userId === userId;
+  const isPreview = searchParams.preview === "true";
+  const displayAsOwner = isOwner && !isPreview;
   const sellerName = seller.displayName || seller.businessName || "Seller";
   const possessiveName = getPossessiveName(sellerName, isOwner);
   const grailId = seller.grailCardId || (binderCards.length > 0 ? binderCards[0].id : null);
   
   let pendingCategoryCount = 0;
-  if (isOwner && storefrontLayout === "categories") {
+  if (displayAsOwner && storefrontLayout === "categories") {
     const categorizedCardIds = new Set();
     userCategories.forEach(c => {
       if (c.memberships) {
@@ -297,7 +298,7 @@ export default async function SellerStorePage(props: Props) {
           avatarUrl={seller.profilePhotoUrl}
           headerStyle={seller.headerStyle}
           bannerImageUrl={seller.bannerImageUrl}
-          isOwner={isOwner}
+          isOwner={displayAsOwner}
           sellerId={seller.userId}
           badges={(seller.badges as string[]) || []}
           presenceStatus={seller.presenceStatus}
@@ -309,27 +310,16 @@ export default async function SellerStorePage(props: Props) {
       <main className="max-w-7xl mx-auto px-4 md:px-8 pb-12">
         
         {isOwner && (
-          <div className="flex justify-end pt-4">
-            <Sheet>
-              <SheetTrigger className="flex items-center gap-2 px-4 py-2 border border-white/20 bg-zinc-900/80 backdrop-blur-sm text-white hover:bg-white/10 rounded-full text-sm font-medium transition-colors">
-                <Settings className="w-4 h-4" />
-                Manage Storefront
-              </SheetTrigger>
-              <SheetContent className="bg-zinc-950 border-zinc-800 text-white flex flex-col">
-                <SheetHeader>
-                  <SheetTitle className="text-white">Manage Storefront</SheetTitle>
-                </SheetHeader>
-                <div className="flex-1 py-6 flex flex-col gap-6">
-                  <div className="space-y-4">
-                    <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Appearance</h3>
-                    <div className="flex flex-col gap-3 items-start">
-                      <StorefrontControls layout={storefrontLayout as "grid" | "categories"} sellerId={seller.userId} />
-                      <HeaderCustomizer cards={binderCards} selectedIds={headerIds as number[]} />
-                    </div>
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
+          <div className="flex justify-end pt-4 relative">
+            <StorefrontControls layout={storefrontLayout as "grid" | "categories"} sellerId={seller.userId} isPreview={isPreview} cards={binderCards} headerIds={headerIds as number[]} />
+          </div>
+        )}
+
+        {isPreview && (
+          <div className="fixed top-[max(env(safe-area-inset-top),20px)] left-1/2 -translate-x-1/2 z-[100]">
+            <Link href={`/${seller.handle}`} className="flex items-center gap-2 px-4 py-2 bg-white text-black font-semibold rounded-full shadow-lg hover:bg-zinc-200 transition-colors text-sm">
+              Exit Preview
+            </Link>
           </div>
         )}
 
@@ -355,11 +345,11 @@ export default async function SellerStorePage(props: Props) {
           </div>
 
           <div className="pb-4 flex items-center z-10 gap-2">
-            {isOwner && currentTab !== "blog" && currentTab !== "ratings" && (
-              <QuickUploadModal label={`Add to ${currentTabInfo.label}`} />
+            {displayAsOwner && currentTab !== "blog" && currentTab !== "ratings" && (
+              <QuickUploadModal />
             )}
             <FiltersDrawer />
-            <BinderValueToggle isOwner={isOwner} />
+            <BinderValueToggle isOwner={displayAsOwner} />
           </div>
         </div>
 
@@ -374,13 +364,14 @@ export default async function SellerStorePage(props: Props) {
               <CategoryRows 
                 categories={userCategories} 
                 cards={binderCards} 
-                isOwner={isOwner} 
+                isOwner={displayAsOwner} 
                 sellerName={sellerName}
                 tab="binder"
+                allBinderCards={binderCards}
               />
             ) : (
               <BinderGrid 
-                isOwner={isOwner}
+                isOwner={displayAsOwner}
                 sellerName={sellerName}
                 cards={binderCards} 
                 activeListings={activeListings}
@@ -389,23 +380,23 @@ export default async function SellerStorePage(props: Props) {
             )
           )}
 
-          {currentTab === "binder" && seller.binderPrivate && !isOwner && (
+          {currentTab === "binder" && seller.binderPrivate && !displayAsOwner && (
             <div className="text-center py-24 bg-zinc-950/50 rounded-xl border border-white/5">
               <Lock className="w-8 h-8 text-zinc-500 mx-auto mb-4" />
               <p className="text-lg text-zinc-400">{sellerName}'s binder is private.</p>
             </div>
           )}
 
-          {currentTab === "binder" && seller.binderPrivate && isOwner && (
+          {currentTab === "binder" && seller.binderPrivate && displayAsOwner && (
             <div className="mb-4 p-4 bg-violet-500/10 border border-violet-500/20 rounded-lg text-violet-200 text-sm flex items-center justify-center gap-2">
               <Lock className="w-4 h-4" />
               Your binder is currently private. Only you can see this tab.
             </div>
           )}
 
-          {currentTab === "binder" && seller.binderPrivate && isOwner && (
+          {currentTab === "binder" && seller.binderPrivate && displayAsOwner && (
             <BinderGrid 
-              isOwner={isOwner}
+              isOwner={displayAsOwner}
               sellerName={sellerName}
               cards={binderCards} 
               activeListings={activeListings}
@@ -418,13 +409,14 @@ export default async function SellerStorePage(props: Props) {
               <CategoryRows 
                 categories={userCategories} 
                 cards={activeListings as any[]} 
-                isOwner={isOwner}
+                isOwner={displayAsOwner}
                 sellerName={sellerName}
                 tab="storefront"
+                allBinderCards={binderCards}
               />
             ) : (
               <ActiveListingsGrid 
-                isOwner={isOwner}
+                isOwner={displayAsOwner}
                 listings={activeListings} 
               />
             )
@@ -435,9 +427,10 @@ export default async function SellerStorePage(props: Props) {
               <CategoryRows 
                 categories={userCategories} 
                 cards={[]} 
-                isOwner={isOwner}
+                isOwner={displayAsOwner}
                 sellerName={sellerName}
                 tab="storefront"
+                allBinderCards={binderCards}
               />
             ) : (
               <div className="text-center py-24 bg-zinc-950/50 rounded-xl border border-white/5 flex flex-col items-center">

@@ -17,11 +17,10 @@ export function QuickUploadModal({ label = "Add" }: { label?: string }) {
         render={
           <Button 
             variant="outline" 
-            size="sm" 
-            className="flex items-center gap-1.5 h-8 bg-zinc-900 border-white/10 hover:bg-zinc-800 text-zinc-300"
+            size="icon" 
+            className="h-11 w-11 bg-zinc-900 border-white/10 hover:bg-zinc-800 text-zinc-300 rounded-full shrink-0"
           >
-            <Plus className="w-3.5 h-3.5" />
-            <span className="text-xs font-medium">{label}</span>
+            <Plus className="w-5 h-5" />
           </Button>
         }
       />

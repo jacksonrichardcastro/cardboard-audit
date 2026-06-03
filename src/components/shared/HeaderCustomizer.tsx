@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { useState, useTransition, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Check, Edit3, Loader2 } from "lucide-react";
 import { updateHeaderCustomization, updateSellerProfile } from "@/app/actions/profile";
@@ -15,13 +15,25 @@ interface Card {
 interface HeaderCustomizerProps {
   cards: Card[];
   selectedIds: number[];
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function HeaderCustomizer({ cards, selectedIds }: HeaderCustomizerProps) {
-  const [open, setOpen] = useState(false);
+export function HeaderCustomizer({ cards, selectedIds, open = false, onOpenChange }: HeaderCustomizerProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = onOpenChange ? open : internalOpen;
+  const setOpen = onOpenChange ? onOpenChange : setInternalOpen;
+  
   const [localSelection, setLocalSelection] = useState<number[]>(selectedIds);
   const [isPending, startTransition] = useTransition();
   const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+
+  // Sync local selection when opening
+  useEffect(() => {
+    if (isOpen) {
+      setLocalSelection(selectedIds);
+    }
+  }, [isOpen, selectedIds]);
 
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -84,16 +96,8 @@ export function HeaderCustomizer({ cards, selectedIds }: HeaderCustomizerProps) 
   };
 
   return (
-    <Dialog open={open} onOpenChange={(val) => {
-      if (val) setLocalSelection(selectedIds);
-      setOpen(val);
-    }}>
-      <DialogTrigger className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-sm border border-white/20 text-white text-xs font-semibold hover:bg-white/10 transition-colors">
-        <Edit3 className="w-3.5 h-3.5" />
-        Customize Header
-      </DialogTrigger>
-      
-      <DialogContent className="max-w-3xl bg-zinc-950 border-zinc-800 text-white">
+    <Dialog open={isOpen} onOpenChange={setOpen}>
+      <DialogContent className="max-w-3xl bg-zinc-950 border-zinc-800 text-white z-[120]">
         <DialogHeader>
           <DialogTitle className="text-xl">Customize Header Cards</DialogTitle>
           <p className="text-sm text-zinc-400">

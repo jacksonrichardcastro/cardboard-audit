@@ -18,18 +18,13 @@ export function BinderValueToggle({ isOwner }: { isOwner: boolean }) {
   return (
     <button
       onClick={() => setIsPrivate(!isPrivate)}
-      className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 transition-colors rounded-lg border border-white/5 cursor-pointer"
+      className="flex items-center justify-center w-11 h-11 bg-zinc-900 hover:bg-zinc-800 transition-colors rounded-full border border-white/5 cursor-pointer shrink-0"
+      title={isPrivate ? "Private Value" : "Tracker Coming Soon"}
     >
       {isPrivate ? (
-        <>
-          <Lock className="w-4 h-4 text-zinc-500" />
-          <span className="text-xs font-semibold text-zinc-400">Private Value</span>
-        </>
+        <Lock className="w-5 h-5 text-zinc-500" />
       ) : (
-        <>
-          <Unlock className="w-4 h-4 text-violet-400" />
-          <span className="text-xs font-semibold text-violet-400">Tracker Coming Soon</span>
-        </>
+        <Unlock className="w-5 h-5 text-violet-400" />
       )}
     </button>
   );
