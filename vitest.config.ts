@@ -14,6 +14,6 @@ export default defineConfig({
     },
   },
   test: {
-    exclude: ['**/*.spec.ts', 'node_modules/**/*']
+    exclude: ['**/*.spec.ts', 'node_modules/**/*', '.venv_rembg/**/*']
   }
 })
