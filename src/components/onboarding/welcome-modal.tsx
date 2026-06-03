@@ -60,13 +60,13 @@ export function WelcomeModal({ isFoundingSeller }: { isFoundingSeller: boolean }
             ) : (
               <div className="text-sm text-zinc-300 space-y-3">
                 <p>
-                  Trax is a premium trading card marketplace, in early Beta. Sellers are still populating their storefronts — the marketplace fills out as more list cards.
+                  Trax is a premium trading card marketplace, in early Beta. Our marketplace isn't live yet, but feel free to explore.
                 </p>
                 <div className="bg-white/5 border border-white/10 rounded-lg p-3 text-xs text-zinc-400">
                   <span className="text-white font-medium block mb-1">You can:</span>
                   <ul className="list-disc pl-4 space-y-1">
                     <li>Browse listings + see what early sellers have up</li>
-                    <li>Customize your binder to track the cards you own</li>
+                    <li>Customize your binder to track your cards.</li>
                     <li>Open your own storefront if you want to sell</li>
                   </ul>
                 </div>
