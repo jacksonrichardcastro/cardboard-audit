@@ -18,7 +18,20 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   title: "Trax — By the hobby. For the hobby.",
-  description: "The trading card marketplace where serious collectors find their holy grails. Vetted sellers, full transparency, fair fees.",
+  description: "Premium trading card marketplace. By the hobby. For the hobby.",
+  metadataBase: new URL('https://trax.cards'),
+  openGraph: { 
+    title: 'Trax — By the hobby. For the hobby.', 
+    description: 'Premium trading card marketplace. By the hobby. For the hobby.', 
+    url: 'https://trax.cards', 
+    siteName: 'Trax', 
+    type: 'website' 
+  },
+  twitter: { 
+    card: 'summary_large_image', 
+    title: 'Trax — By the hobby. For the hobby.', 
+    description: 'Premium trading card marketplace. By the hobby. For the hobby.' 
+  }
 };
 
 export default function RootLayout({
