@@ -7,6 +7,7 @@ export const users = pgTable("users", {
   role: varchar("role", { length: 50 }).notNull().default("buyer"), // legacy role field
   accountType: varchar("account_type", { length: 20 }).notNull().default("buyer"), // buyer, seller
   welcomeModalDismissed: boolean("welcome_modal_dismissed").notNull().default(false),
+  isFoundingSeller: boolean("is_founding_seller").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

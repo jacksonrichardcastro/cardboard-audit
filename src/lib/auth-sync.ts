@@ -3,19 +3,7 @@ import { users, profiles } from "@/lib/db/schema";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 
-const ALLOWLIST = [
-  "superiorparadigm@gmail.com", "hiimwage@gmail.com", "AVIIICollectibles@gmail.com",
-  "trey@dealercompassgroup.com", "mattrennick89@gmail.com", "cd3.cards@gmail.com",
-  "terrapincards@gmail.com", "Patrick2e65@gmail.com", "hobbychad@proton.me",
-  "Essantiago09@att.net", "marty.truax@gmail.com", "madmancardstx@gmail.com",
-  "christiangarcia6610@gmail.com", "rabermudez@gmail.com", "rc_magnate@yahoo.com",
-  "ckraker27@gmail.com", "gotdemcards@gmail.com", "abjeffcoat@gmail.com",
-  "darin.bergmann@gmail.com", "Daniel.C.Sturman@gmail.com", "shuakop@gmail.com",
-  "Joeblemaire@gmail.com", "sneakordz@gmail.com", "Junkforcozy@gmail.com",
-  "Cris.a.1996@hotmail.com", "nadroj117@gmail.com", "HitMachineSports@Gmail.com",
-  "rkgreen19@gmail.com", "raptordelivery1@gmail.com", "Greenescardco@hotmail.com",
-  "itsgreeny17@gmail.com", "ShopHPM@gmail.com"
-].map(e => e.toLowerCase());
+import { FOUNDING_SELLER_EMAILS } from "@/lib/founding-sellers";
 
 export async function syncUserFromClerk() {
   const { userId } = await auth();
@@ -46,6 +34,7 @@ export async function syncUserFromClerk() {
 
     // Fix S: ALL new signups default to Seller role + Verified KYC + Approved status
     const initialRole = "seller";
+    const isFoundingSeller = FOUNDING_SELLER_EMAILS.includes(email as any);
 
     await db
       .insert(users)
@@ -53,11 +42,12 @@ export async function syncUserFromClerk() {
         id: user.id, 
         email, 
         role: initialRole, 
-        accountType: initialRole 
+        accountType: initialRole,
+        isFoundingSeller
       })
       .onConflictDoUpdate({
         target: users.id,
-        set: { email },
+        set: { email, isFoundingSeller },
       });
 
     const defaultName = user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : email.split('@')[0];

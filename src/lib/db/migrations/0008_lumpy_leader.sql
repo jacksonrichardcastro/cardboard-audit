@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "is_founding_seller" boolean DEFAULT false NOT NULL;

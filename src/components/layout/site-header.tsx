@@ -20,6 +20,7 @@ export async function SiteHeader() {
 
   let userProfile: { handle: string | null; displayName: string | null; avatarUrl: string | null } | null = null;
   let showWelcomeModal = false;
+  let isFoundingSeller = false;
 
   if (userId) {
     await syncUserFromClerk();
@@ -30,6 +31,7 @@ export async function SiteHeader() {
 
     if (userRow && userRow.accountType === "seller" && !userRow.welcomeModalDismissed && !isAdmin) {
       showWelcomeModal = true;
+      isFoundingSeller = userRow.isFoundingSeller;
     }
     
     const profileRow = await db.query.profiles.findFirst({
@@ -46,7 +48,7 @@ export async function SiteHeader() {
 
   return (
     <>
-      {showWelcomeModal && <WelcomeModal />}
+      {showWelcomeModal && <WelcomeModal isFoundingSeller={isFoundingSeller} />}
       <header className="sticky top-0 z-[120] h-16 border-b border-white/10 bg-background">
       <div className="flex h-full w-full items-center justify-between px-4 md:px-6 lg:px-8">
         <div className="flex items-center gap-5">

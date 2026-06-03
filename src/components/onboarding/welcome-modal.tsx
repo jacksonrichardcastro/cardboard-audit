@@ -7,7 +7,7 @@ import { dismissWelcomeModal } from "@/app/actions/user";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 
-export function WelcomeModal() {
+export function WelcomeModal({ isFoundingSeller }: { isFoundingSeller: boolean }) {
   const [open, setOpen] = useState(true);
   const [isPending, startTransition] = useTransition();
 
@@ -31,25 +31,51 @@ export function WelcomeModal() {
         
         <div className="p-6">
           <DialogHeader className="mb-4 text-center">
-            <DialogTitle className="text-xl font-medium tracking-wide text-white">Welcome to Trax</DialogTitle>
-            <DialogDescription className="text-zinc-400 mt-2 text-sm leading-relaxed">
-              Founding Seller Access — Beta Phase
-            </DialogDescription>
+            <DialogTitle className="text-xl font-medium tracking-wide text-white">
+              {isFoundingSeller ? "Welcome to Trax" : "Welcome to Trax Beta."}
+            </DialogTitle>
+            {isFoundingSeller && (
+              <DialogDescription className="text-zinc-400 mt-2 text-sm leading-relaxed">
+                Founding Seller Access — Beta Phase
+              </DialogDescription>
+            )}
           </DialogHeader>
 
           <div className="space-y-4 mb-6">
-            <p className="text-sm text-zinc-300 text-center">
-              You are among the first to experience the Trax Marketplace. As a Founding Seller, your profile is pre-verified and ready to go.
-            </p>
-            <div className="bg-white/5 border border-white/10 rounded-lg p-3 text-xs text-zinc-400">
-              <span className="text-white font-medium block mb-1">What to do next:</span>
-              <ul className="list-disc pl-4 space-y-1">
-                <li>Customize your storefront — header style, display name, online status, bio</li>
-                <li>Populate your binder with the cards in your collection</li>
-                <li>Draft listings for your storefront — set prices, conditions, specials</li>
-                <li>Share your storefront link</li>
-              </ul>
-            </div>
+            {isFoundingSeller ? (
+              <>
+                <p className="text-sm text-zinc-300 text-center">
+                  You are among the first to experience the Trax Marketplace. As a Founding Seller, your profile is pre-verified and ready to go.
+                </p>
+                <div className="bg-white/5 border border-white/10 rounded-lg p-3 text-xs text-zinc-400">
+                  <span className="text-white font-medium block mb-1">What to do next:</span>
+                  <ul className="list-disc pl-4 space-y-1">
+                    <li>Customize your storefront — header style, display name, online status, bio</li>
+                    <li>Populate your binder with the cards in your collection</li>
+                    <li>Draft listings for your storefront — set prices, conditions, specials</li>
+                    <li>Share your storefront link</li>
+                  </ul>
+                </div>
+              </>
+            ) : (
+              <div className="text-sm text-zinc-300 space-y-3">
+                <p>
+                  Trax is a premium trading card marketplace, in early Beta. Sellers are still populating their storefronts — the marketplace fills out as more list cards.
+                </p>
+                <div className="bg-white/5 border border-white/10 rounded-lg p-3 text-xs text-zinc-400">
+                  <span className="text-white font-medium block mb-1">You can:</span>
+                  <ul className="list-disc pl-4 space-y-1">
+                    <li>Browse listings + see what early sellers have up</li>
+                    <li>Customize your binder to track the cards you own</li>
+                    <li>Open your own storefront if you want to sell</li>
+                  </ul>
+                </div>
+                <p>
+                  We ship improvements daily based on seller feedback. Reply to any X post or DM @TraxMarketplace if you spot something off or have an ask.
+                </p>
+                <p className="text-zinc-500 pt-1">— Jackson</p>
+              </div>
+            )}
           </div>
 
           <Button 
