@@ -11,6 +11,7 @@ import { syncUserFromClerk } from "@/lib/auth-sync";
 import { WelcomeModal } from "@/components/onboarding/welcome-modal";
 import { MobileMenu } from "./mobile-menu";
 import { TraxLogo } from "./TraxLogo";
+import { HotPill } from "@/components/shared/HotPill";
 
 export async function SiteHeader() {
   const { userId } = await auth();
@@ -58,8 +59,7 @@ export async function SiteHeader() {
               href="/for-you"
               className="px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground flex items-center gap-1.5"
             >
-              <Flame className="w-4 h-4 text-violet-600 fill-violet-600" />
-              {isSignedIn ? "For You" : "Hot"}
+              <HotPill text={isSignedIn ? "For You" : "Hot"} />
             </Link>
             <Link
               href="/tracker"

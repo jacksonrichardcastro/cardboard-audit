@@ -7,6 +7,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 import { Button } from "@/components/ui/button";
 import { Flame, Menu, User, Tag, ShieldCheck, LogOut } from "lucide-react";
 import { useClerk } from "@clerk/nextjs";
+import { HotPill } from "@/components/shared/HotPill";
 
 export function MobileMenu({ 
   isSignedIn, 
@@ -44,8 +45,7 @@ export function MobileMenu({
         <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
         <div className="flex flex-col gap-6 pt-[max(env(safe-area-inset-top),5rem)] pb-safe pl-4 pr-4">
           <Link href="/for-you" onClick={handleLinkClick} className="text-sm font-medium flex items-center gap-1.5 pl-4">
-            <Flame className="w-4 h-4 text-violet-600 fill-violet-600" />
-            {isSignedIn ? "For You" : "Hot"}
+            <HotPill text={isSignedIn ? "For You" : "Hot"} />
           </Link>
           <Link href="/tracker" onClick={handleLinkClick} className="text-sm font-medium inline-flex items-center gap-2 pl-4">
             Tracker

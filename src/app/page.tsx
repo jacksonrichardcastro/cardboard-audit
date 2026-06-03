@@ -14,7 +14,7 @@ import { auth } from "@clerk/nextjs/server";
 import { getRecommendedListings } from "@/lib/recommendations/score";
 import { getUserPreferences } from "@/app/actions/preferences";
 import { ForYouClient } from "@/components/recommendations/ForYouClient";
-
+import { HotPill } from "@/components/shared/HotPill";
 interface Props {
   searchParams: Promise<Record<string, string | undefined>>;
 }
@@ -146,6 +146,8 @@ export default async function Home(props: Props) {
     displayText = `${total.toLocaleString()} cards available right now`;
   }
 
+  const hasSearchQuery = !!(searchParams.sport || searchParams.listing_type || searchParams.grade || searchParams.era || searchParams.price || searchParams.q);
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white relative">
       {/* Ambient background glow */}
@@ -203,8 +205,18 @@ export default async function Home(props: Props) {
 
             {/* Horizontal Dashboard Rails */}
             <CardRail 
-              title={dbListings.length > 0 ? "Trending" : "No Results"} 
-              icon={dbListings.length > 0 ? <Flame className="w-6 h-6 text-violet-600 fill-violet-600" /> : undefined}
+              title={
+                !hasSearchQuery 
+                  ? "Trending Now" 
+                  : dbListings.length > 0 
+                    ? "Search Results" 
+                    : "No Results"
+              } 
+              icon={
+                !hasSearchQuery 
+                  ? <HotPill text="Hot" />
+                  : undefined
+              }
               listings={recentListings} 
               seeAllHref="/for-you" 
             />
