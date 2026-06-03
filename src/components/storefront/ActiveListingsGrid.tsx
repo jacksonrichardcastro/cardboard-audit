@@ -71,22 +71,33 @@ export function ActiveListingsGrid({ isOwner, listings }: ActiveListingsGridProp
                 <h3 className="text-[11px] md:text-sm font-medium line-clamp-1 text-zinc-300 mb-1.5">
                   {listing.title}
                 </h3>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex flex-col">
-                    {listing.discountType && listing.discountAmount && (
+                <div className="flex flex-col gap-1 mb-2">
+                  {listing.discountType && listing.discountAmount ? (
+                    <div className="flex flex-col">
                       <span className="text-[10px] md:text-xs text-zinc-500 line-through">
                         ${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
-                    )}
-                    <p className={`text-sm md:text-[15px] font-bold ${listing.discountType ? "text-[#7C3AED]" : "text-white"}`}>
-                      ${((listing.discountType === 'percent' 
-                        ? listing.priceCents * (1 - (listing.discountAmount || 0) / 10000)
-                        : listing.discountType === 'dollar'
-                        ? Math.max(0, listing.priceCents - (listing.discountAmount || 0))
-                        : listing.priceCents) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <p className="text-sm md:text-[15px] font-bold text-[#7C3AED]">
+                          ${((listing.discountType === 'percent' 
+                            ? listing.priceCents * (1 - (listing.discountAmount || 0) / 10000)
+                            : listing.discountType === 'dollar'
+                            ? Math.max(0, listing.priceCents - (listing.discountAmount || 0))
+                            : listing.priceCents) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                        <div className="bg-[#7C3AED]/20 border border-[#7C3AED]/50 text-[#7C3AED] text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider whitespace-nowrap">
+                          {listing.discountType === 'percent' 
+                            ? `${listing.discountAmount / 100}% OFF` 
+                            : `$${(listing.discountAmount / 100).toFixed(0)} OFF`}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm md:text-[15px] font-bold text-white">
+                      ${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
-                  </div>
-                  <p className="text-[10px] md:text-[11px] text-zinc-500 truncate ml-1.5">
+                  )}
+                  <p className="text-[10px] md:text-[11px] text-zinc-500 truncate">
                     {listing.grade ? `${listing.gradingCompany} ${listing.grade}` : listing.condition}
                   </p>
                 </div>
@@ -104,8 +115,8 @@ export function ActiveListingsGrid({ isOwner, listings }: ActiveListingsGridProp
               </div>
             )}
             
-            <div className="absolute top-2 left-2 z-20 flex flex-col items-start gap-1.5">
-              {isOwner && (
+            {isOwner && (
+              <div className="absolute top-2 left-2 z-20">
                 <RunDiscountModal
                   listingId={listing.id}
                   listingPriceCents={listing.priceCents}
@@ -118,18 +129,8 @@ export function ActiveListingsGrid({ isOwner, listings }: ActiveListingsGridProp
                     </button>
                   }
                 />
-              )}
-              {listing.discountType && listing.discountAmount && (
-                <div className="bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-sm border border-white/10 flex items-center gap-1 shadow-md pointer-events-none">
-                  <Flame className="w-3 h-3 text-orange-500" />
-                  <span className="text-[10px] font-bold text-white">
-                    {listing.discountType === 'percent' 
-                      ? `${listing.discountAmount / 100}% OFF` 
-                      : `$${(listing.discountAmount / 100).toFixed(0)} OFF`}
-                  </span>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
             
             {/* STRICT V16 CONFIRMATION: BIN + Offer Flow (No "Bid Now") */}
             <div className="grid grid-cols-2 gap-2 px-2.5 pb-2.5">

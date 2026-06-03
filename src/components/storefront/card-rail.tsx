@@ -51,37 +51,38 @@ export function CardRail({ title, icon, listings, seeAllHref }: CardRailProps) {
                       (e.currentTarget as HTMLImageElement).style.visibility = "hidden";
                     }}
                   />
-                  {listing.discountType && listing.discountAmount && (
-                    <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-sm border border-white/10 flex items-center gap-1 z-10 pointer-events-none">
-                      <Flame className="w-3 h-3 text-orange-500" />
-                      <span className="text-[10px] font-bold text-white">
-                        {listing.discountType === 'percent' 
-                          ? `${listing.discountAmount / 100}% OFF` 
-                          : `$${(listing.discountAmount / 100).toFixed(0)} OFF`}
-                      </span>
-                    </div>
-                  )}
                 </div>
                 <div className="p-2 space-y-1">
                   <h3 className="text-sm font-medium line-clamp-1 text-foreground" title={listing.title}>
                     {listing.title}
                   </h3>
-                  <div className="flex items-center justify-between">
-                    <div className="flex flex-col">
-                      {listing.discountType && listing.discountAmount && (
+                  <div className="flex flex-col gap-1">
+                    {listing.discountType && listing.discountAmount ? (
+                      <div className="flex flex-col">
                         <span className="text-[10px] text-muted-foreground line-through">
                           ${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
-                      )}
-                      <p className={`text-base font-semibold ${listing.discountType ? "text-primary" : "text-foreground"}`}>
-                        ${((listing.discountType === 'percent' 
-                          ? listing.priceCents * (1 - (listing.discountAmount || 0) / 10000)
-                          : listing.discountType === 'dollar'
-                          ? Math.max(0, listing.priceCents - (listing.discountAmount || 0))
-                          : listing.priceCents) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <p className="text-base font-semibold text-primary">
+                            ${((listing.discountType === 'percent' 
+                              ? listing.priceCents * (1 - (listing.discountAmount || 0) / 10000)
+                              : listing.discountType === 'dollar'
+                              ? Math.max(0, listing.priceCents - (listing.discountAmount || 0))
+                              : listing.priceCents) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </p>
+                          <div className="bg-primary/20 border border-primary/50 text-primary text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider whitespace-nowrap">
+                            {listing.discountType === 'percent' 
+                              ? `${listing.discountAmount / 100}% OFF` 
+                              : `$${(listing.discountAmount / 100).toFixed(0)} OFF`}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-base font-semibold text-foreground">
+                        ${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
-                    </div>
-                    <p className="text-xs text-muted-foreground truncate ml-2">
+                    )}
+                    <p className="text-xs text-muted-foreground truncate">
                       {listing.grade ? `${listing.gradingCompany} ${listing.grade}` : listing.condition}
                     </p>
                   </div>
