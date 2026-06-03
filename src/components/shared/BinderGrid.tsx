@@ -116,7 +116,7 @@ export function BinderGrid({ isOwner, sellerName, collectionValueCents, grailCar
               {isOwner && (
                 <Link
                   href={`/binder/${card.id}/edit`}
-                  className="absolute bottom-2 right-2 z-30 p-2 bg-black/60 text-zinc-300 hover:text-white rounded-full hover:bg-black/80 transition-all backdrop-blur-sm shadow-md border border-white/10 opacity-0 group-hover:opacity-100"
+                  className="absolute bottom-2 right-2 z-30 p-2 bg-black/60 text-zinc-300 hover:text-white rounded-full hover:bg-black/80 transition-all backdrop-blur-sm shadow-md border border-white/10"
                   title="Edit Card"
                 >
                   <Edit2 className="w-4 h-4" />

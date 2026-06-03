@@ -154,14 +154,21 @@ export default function EditListingClient({ listing, card }: { listing: any, car
 
       {/* Fixed Footer */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border z-10 flex justify-center shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
-        <div className="flex justify-between w-full max-w-2xl">
+        <div className="flex justify-between items-center w-full max-w-2xl">
           <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-          <Button 
-            onClick={handleSave} 
-            disabled={isSaving || formData.photos.length === 0 || !formData.subject || !formData.set || !formData.price}
-          >
-            {isSaving ? "Saving..." : "Save Changes"}
-          </Button>
+          <div className="flex items-center gap-4">
+            {formData.photos.length < (formData.graded ? 1 : 2) && (
+              <span className="text-destructive text-sm font-medium">
+                {formData.graded ? "Slabbed cards require at least 1 photo." : "Raw cards require at least 2 photos."}
+              </span>
+            )}
+            <Button 
+              onClick={handleSave} 
+              disabled={isSaving || formData.photos.length < (formData.graded ? 1 : 2) || !formData.subject || !formData.set || !formData.price}
+            >
+              {isSaving ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
