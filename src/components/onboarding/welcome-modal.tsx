@@ -59,7 +59,7 @@ export function WelcomeModal({ isFoundingSeller }: { isFoundingSeller: boolean }
               </>
             ) : (
               <div className="text-sm text-zinc-300 space-y-3">
-                <p>
+                <p className="text-center">
                   Trax is a premium trading card marketplace, in early Beta. Our marketplace isn't live yet, but feel free to explore.
                 </p>
                 <div className="bg-white/5 border border-white/10 rounded-lg p-3 text-xs text-zinc-400">
@@ -70,10 +70,10 @@ export function WelcomeModal({ isFoundingSeller }: { isFoundingSeller: boolean }
                     <li>Open your own storefront if you want to sell</li>
                   </ul>
                 </div>
-                <p>
+                <p className="text-center">
                   We ship improvements daily based on seller feedback. Reply to any X post or DM @TraxMarketplace if you spot something off or have an ask.
                 </p>
-                <p className="text-zinc-500 pt-1">— Jackson</p>
+                <p className="text-zinc-500 pt-1 text-center">— Jackson</p>
               </div>
             )}
           </div>

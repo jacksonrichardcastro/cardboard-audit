@@ -46,7 +46,7 @@ export default function ProfileSetupPage() {
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-2xl">
-      <h1 className="text-3xl font-bold tracking-tight mb-8">Set up your seller profile</h1>
+      <h1 className="text-3xl font-bold tracking-tight mb-8">Set up your profile</h1>
       
       {error && <div className="p-4 mb-6 bg-red-500/20 text-red-400 rounded">{error}</div>}
 
