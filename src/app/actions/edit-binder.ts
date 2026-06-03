@@ -141,3 +141,21 @@ export async function updateBinderCard(cardId: number, data: any) {
   
   return { success: true };
 }
+
+export async function removeCardAction(cardId: number) {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  const card = await db.query.cards.findFirst({
+    where: eq(cards.id, cardId),
+  });
+
+  if (!card || card.ownerId !== userId) {
+    throw new Error("Forbidden: Non-owner attempt");
+  }
+
+  await db.delete(cards).where(eq(cards.id, cardId));
+  return { success: true };
+}

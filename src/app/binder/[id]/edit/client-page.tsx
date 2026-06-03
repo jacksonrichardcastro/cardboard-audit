@@ -6,6 +6,7 @@ import { updateBinderCard } from "@/app/actions/edit-binder";
 import { ListingFormFields } from "@/components/sell/ListingFormFields";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { RemoveCardModal } from "@/components/listings/RemoveCardModal";
 
 export default function EditBinderClient({ card }: { card: any }) {
   const router = useRouter();
@@ -220,6 +221,18 @@ export default function EditBinderClient({ card }: { card: any }) {
             </Button>
           </div>
         </div>
+      </div>
+
+      <div className="flex justify-center mt-12 mb-8">
+        <RemoveCardModal 
+          cardId={card.id} 
+          onSuccessRedirectUrl={`/${card.owner?.profile?.handle || ''}?tab=binder`}
+          triggerNode={
+            <Button type="button" variant="destructive" className="w-full max-w-xs">
+              Remove Card
+            </Button>
+          }
+        />
       </div>
     </div>
   );

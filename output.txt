@@ -1,0 +1,97 @@
+FOREIGN KEY CONSTRAINTS:
+Table: category_memberships, FK: card_id, ON DELETE: CASCADE
+Table: category_memberships, FK: category_id, ON DELETE: CASCADE
+Table: cards, FK: owner_id, ON DELETE: NO ACTION
+Table: item_photos, FK: card_id, ON DELETE: CASCADE
+Table: listings, FK: card_id, ON DELETE: CASCADE
+Table: listings, FK: seller_id, ON DELETE: NO ACTION
+
+Table: cards
+┌─────────┬───────────────────┬───────────────────────────────┬─────────────┐
+│ (index) │ column_name       │ data_type                     │ is_nullable │
+├─────────┼───────────────────┼───────────────────────────────┼─────────────┤
+│ 0       │ 'id'              │ 'integer'                     │ 'NO'        │
+│ 1       │ 'owner_id'        │ 'character varying'           │ 'NO'        │
+│ 2       │ 'title'           │ 'character varying'           │ 'NO'        │
+│ 3       │ 'category'        │ 'character varying'           │ 'NO'        │
+│ 4       │ 'subcategory'     │ 'character varying'           │ 'YES'       │
+│ 5       │ 'set'             │ 'character varying'           │ 'YES'       │
+│ 6       │ 'year'            │ 'character varying'           │ 'YES'       │
+│ 7       │ 'card_number'     │ 'character varying'           │ 'YES'       │
+│ 8       │ 'condition'       │ 'character varying'           │ 'NO'        │
+│ 9       │ 'grading_company' │ 'character varying'           │ 'YES'       │
+│ 10      │ 'grade'           │ 'character varying'           │ 'YES'       │
+│ 11      │ 'description'     │ 'text'                        │ 'YES'       │
+│ 12      │ 'created_at'      │ 'timestamp without time zone' │ 'NO'        │
+│ 13      │ 'updated_at'      │ 'timestamp without time zone' │ 'NO'        │
+│ 14      │ 'deleted_at'      │ 'timestamp without time zone' │ 'YES'       │
+│ 15      │ 'sport'           │ 'character varying'           │ 'YES'       │
+│ 16      │ 'listing_type'    │ 'character varying'           │ 'YES'       │
+│ 17      │ 'grade_tier'      │ 'character varying'           │ 'YES'       │
+│ 18      │ 'era'             │ 'character varying'           │ 'YES'       │
+│ 19      │ 'is_private'      │ 'boolean'                     │ 'NO'        │
+└─────────┴───────────────────┴───────────────────────────────┴─────────────┘
+
+Table: listings
+┌─────────┬─────────────────────────┬───────────────────────────────┬─────────────┐
+│ (index) │ column_name             │ data_type                     │ is_nullable │
+├─────────┼─────────────────────────┼───────────────────────────────┼─────────────┤
+│ 0       │ 'id'                    │ 'integer'                     │ 'NO'        │
+│ 1       │ 'seller_id'             │ 'character varying'           │ 'NO'        │
+│ 2       │ 'card_id'               │ 'integer'                     │ 'NO'        │
+│ 3       │ 'title'                 │ 'character varying'           │ 'NO'        │
+│ 4       │ 'category'              │ 'character varying'           │ 'NO'        │
+│ 5       │ 'subcategory'           │ 'character varying'           │ 'YES'       │
+│ 6       │ 'set'                   │ 'character varying'           │ 'YES'       │
+│ 7       │ 'year'                  │ 'character varying'           │ 'YES'       │
+│ 8       │ 'card_number'           │ 'character varying'           │ 'YES'       │
+│ 9       │ 'condition'             │ 'character varying'           │ 'NO'        │
+│ 10      │ 'grading_company'       │ 'character varying'           │ 'YES'       │
+│ 11      │ 'grade'                 │ 'character varying'           │ 'YES'       │
+│ 12      │ 'description'           │ 'text'                        │ 'YES'       │
+│ 13      │ 'price_cents'           │ 'integer'                     │ 'NO'        │
+│ 14      │ 'quantity'              │ 'integer'                     │ 'NO'        │
+│ 15      │ 'status'                │ 'character varying'           │ 'NO'        │
+│ 16      │ 'edition'               │ 'character varying'           │ 'YES'       │
+│ 17      │ 'graded'                │ 'boolean'                     │ 'NO'        │
+│ 18      │ 'shipping_method'       │ 'character varying'           │ 'YES'       │
+│ 19      │ 'review_notes'          │ 'text'                        │ 'YES'       │
+│ 20      │ 'published_at'          │ 'timestamp without time zone' │ 'YES'       │
+│ 21      │ 'updated_at'            │ 'timestamp without time zone' │ 'NO'        │
+│ 22      │ 'deleted_at'            │ 'timestamp without time zone' │ 'YES'       │
+│ 23      │ 'created_at'            │ 'timestamp without time zone' │ 'NO'        │
+│ 24      │ 'sport'                 │ 'character varying'           │ 'YES'       │
+│ 25      │ 'listing_type'          │ 'character varying'           │ 'YES'       │
+│ 26      │ 'grade_tier'            │ 'character varying'           │ 'YES'       │
+│ 27      │ 'era'                   │ 'character varying'           │ 'YES'       │
+│ 28      │ 'ships_from'            │ 'character varying'           │ 'YES'       │
+│ 29      │ 'shipping_estimate'     │ 'character varying'           │ 'YES'       │
+│ 30      │ 'discount_type'         │ 'character varying'           │ 'YES'       │
+│ 31      │ 'discount_amount'       │ 'integer'                     │ 'YES'       │
+│ 32      │ 'discount_active_until' │ 'timestamp without time zone' │ 'YES'       │
+│ 33      │ 'is_demo'               │ 'boolean'                     │ 'NO'        │
+└─────────┴─────────────────────────┴───────────────────────────────┴─────────────┘
+
+Table: item_photos
+┌─────────┬────────────────┬───────────────────────────────┬─────────────┐
+│ (index) │ column_name    │ data_type                     │ is_nullable │
+├─────────┼────────────────┼───────────────────────────────┼─────────────┤
+│ 0       │ 'id'           │ 'integer'                     │ 'NO'        │
+│ 1       │ 'card_id'      │ 'integer'                     │ 'NO'        │
+│ 2       │ 'kind'         │ 'character varying'           │ 'NO'        │
+│ 3       │ 'sort_order'   │ 'integer'                     │ 'NO'        │
+│ 4       │ 'storage_path' │ 'text'                        │ 'NO'        │
+│ 5       │ 'width'        │ 'integer'                     │ 'YES'       │
+│ 6       │ 'height'       │ 'integer'                     │ 'YES'       │
+│ 7       │ 'captured_at'  │ 'timestamp without time zone' │ 'YES'       │
+│ 8       │ 'created_at'   │ 'timestamp without time zone' │ 'NO'        │
+└─────────┴────────────────┴───────────────────────────────┴─────────────┘
+
+Table: category_memberships
+┌─────────┬───────────────┬───────────────────────────────┬─────────────┐
+│ (index) │ column_name   │ data_type                     │ is_nullable │
+├─────────┼───────────────┼───────────────────────────────┼─────────────┤
+│ 0       │ 'card_id'     │ 'integer'                     │ 'NO'        │
+│ 1       │ 'category_id' │ 'integer'                     │ 'NO'        │
+│ 2       │ 'added_at'    │ 'timestamp without time zone' │ 'NO'        │
+└─────────┴───────────────┴───────────────────────────────┴─────────────┘

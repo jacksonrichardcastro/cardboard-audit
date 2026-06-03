@@ -7,7 +7,11 @@ import { ListingFormFields } from "@/components/sell/ListingFormFields";
 import { Button } from "@/components/ui/button";
 import { RemoveListingModal } from "@/components/listings/RemoveListingModal";
 
-export default function EditListingClient({ listing, card }: { listing: any, card: any }) {
+export default function EditListingClient({ listing, card, handle }: { 
+  listing: any, 
+  card: any,
+  handle?: string
+}) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -174,7 +178,7 @@ export default function EditListingClient({ listing, card }: { listing: any, car
       <div className="flex justify-center mt-12 mb-8">
         <RemoveListingModal 
           listingId={listing.id} 
-          onSuccessRedirectUrl="/seller/dashboard?tab=listings"
+          onSuccessRedirectUrl={handle ? `/${handle}` : "/seller/dashboard?tab=listings"}
           triggerNode={
             <Button type="button" variant="destructive" className="w-full max-w-xs">
               Remove Listing

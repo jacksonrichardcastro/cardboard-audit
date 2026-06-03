@@ -32,5 +32,10 @@ export default async function EditListingPage({ params }: { params: Promise<{ id
     redirect(`/listings/${id}`); // redirect non-owners back to public view
   }
 
-  return <EditListingClient listing={listing} card={listing.card} />;
+  const { profiles } = await import("@/lib/db/schema");
+  const sellerProfile = await db.query.profiles.findFirst({
+    where: eq(profiles.userId, userId),
+  });
+
+  return <EditListingClient listing={listing} card={listing.card} handle={sellerProfile?.handle ?? undefined} />;
 }
