@@ -71,6 +71,24 @@ export function CategoryRows({ categories, cards, isOwner, sellerName, tab, allB
     ? allBinderCards.filter(card => !activeCategory.memberships?.some((m: any) => m.cardId === card.id))
     : [];
 
+  // Robust photo URL extractor
+  const getPhotoUrl = (photosRaw: any) => {
+    let photos = photosRaw;
+    if (typeof photos === 'string') {
+      try { photos = JSON.parse(photos); } catch (e) {}
+    }
+    if (Array.isArray(photos) && photos.length > 0) {
+      const first = photos[0];
+      if (typeof first === 'string' && first.trim() !== '') return first;
+      if (first && typeof first === 'object') {
+        if (typeof first.storagePath === 'string') return first.storagePath;
+        if (typeof first.storage_path === 'string') return first.storage_path;
+        if (typeof first.url === 'string') return first.url;
+      }
+    }
+    return 'https://placehold.co/400x550';
+  };
+
   return (
     <>
       <div className="flex flex-col gap-12">
@@ -96,9 +114,7 @@ export function CategoryRows({ categories, cards, isOwner, sellerName, tab, allB
                 <div className="w-full overflow-x-auto pb-4 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   <div className="flex gap-3 w-max">
                     {categoryCards.map(item => {
-                      const photoUrl = (Array.isArray(item.photos) && item.photos.length > 0 && item.photos[0] !== null) 
-                        ? item.photos[0] 
-                        : 'https://placehold.co/400x550';
+                      const photoUrl = getPhotoUrl(item.photos);
 
                       if (tab === "storefront") {
                         // Active Listings Card
@@ -198,9 +214,7 @@ export function CategoryRows({ categories, cards, isOwner, sellerName, tab, allB
           <div className="grid grid-cols-3 md:grid-cols-4 gap-4 max-h-[60vh] overflow-y-auto py-4 pr-2">
             {pickerCards.map(card => {
               const isSelected = selectedCardIds.includes(card.id);
-              const photoUrl = (Array.isArray(card.photos) && card.photos.length > 0 && card.photos[0]) 
-                ? card.photos[0] 
-                : 'https://placehold.co/400x550';
+              const photoUrl = getPhotoUrl(card.photos);
 
               return (
                 <div 

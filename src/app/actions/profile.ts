@@ -106,3 +106,25 @@ export async function updatePresenceStatus(status: "online" | "away" | "offline"
 
   return { success: true };
 }
+
+export async function removeProfilePhoto() {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  // Server-side auth check: implicitly enforced by eq(profiles.userId, userId)
+  await db
+    .update(profiles)
+    .set({ profilePhotoUrl: null })
+    .where(eq(profiles.userId, userId));
+
+  const [seller] = await db.select({ handle: profiles.handle }).from(profiles).where(eq(profiles.userId, userId)).limit(1);
+  if (seller?.handle) {
+    revalidatePath(`/${seller.handle}`);
+  }
+  revalidatePath("/edit-profile");
+  revalidatePath("/seller/dashboard");
+
+  return { success: true };
+}

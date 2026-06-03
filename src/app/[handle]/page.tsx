@@ -11,7 +11,7 @@ import { ActiveListingsGrid } from "@/components/storefront/ActiveListingsGrid";
 import { BinderGrid } from "@/components/shared/BinderGrid";
 import { auth } from "@clerk/nextjs/server";
 import { getPossessiveName } from "@/lib/utils/formatters";
-import { Lock, Plus, ListTree, Settings } from "lucide-react";
+import { Lock, Plus, ListTree, Settings, Edit3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HeaderCustomizer } from "@/components/shared/HeaderCustomizer";
 import { StorefrontControls } from "@/components/storefront/StorefrontControls";
@@ -305,23 +305,30 @@ export default async function SellerStorePage(props: Props) {
           locationCity={seller.locationCity}
           locationState={seller.locationState}
           heroCards={formattedHeroCards}
+          customizerNode={
+            displayAsOwner ? (
+              <HeaderCustomizer 
+                cards={binderCards} 
+                selectedIds={headerIds}
+                triggerNode={
+                  <button className="absolute top-2 right-2 z-50 p-2 bg-black/60 text-zinc-300 hover:text-white rounded-full hover:bg-black/80 transition-all backdrop-blur-sm shadow-md border border-white/10" title="Customize Header">
+                    <Edit3 className="w-4 h-4" /> 
+                  </button>
+                }
+              />
+            ) : null
+          }
         />
 
       <main className="max-w-7xl mx-auto px-4 md:px-8 pb-12">
         
         {isOwner && (
           <div className="flex justify-end pt-4 relative">
-            <StorefrontControls layout={storefrontLayout as "grid" | "categories"} sellerId={seller.userId} isPreview={isPreview} cards={binderCards} headerIds={headerIds as number[]} />
+            <StorefrontControls layout={storefrontLayout as "grid" | "categories"} sellerId={seller.userId} sellerHandle={seller.handle || ''} isPreview={isPreview} cards={binderCards} headerIds={headerIds as number[]} />
           </div>
         )}
 
-        {isPreview && (
-          <div className="fixed top-[max(env(safe-area-inset-top),20px)] left-1/2 -translate-x-1/2 z-[100]">
-            <Link href={`/${seller.handle}`} className="flex items-center gap-2 px-4 py-2 bg-white text-black font-semibold rounded-full shadow-lg hover:bg-zinc-200 transition-colors text-sm">
-              Exit Preview
-            </Link>
-          </div>
-        )}
+
 
         {/* Navigation Tabs Row */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-white/10 mb-6 mt-0 pt-6 md:pt-8 gap-4 relative">

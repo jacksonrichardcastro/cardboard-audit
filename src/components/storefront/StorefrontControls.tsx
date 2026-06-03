@@ -4,7 +4,7 @@ import { eq, desc } from "drizzle-orm";
 import { StorefrontControlsClient } from "./StorefrontControlsClient";
 import { auth } from "@clerk/nextjs/server";
 
-export async function StorefrontControls({ layout, sellerId, isPreview, cards: binderCards, headerIds }: { layout: "grid" | "categories", sellerId: string, isPreview: boolean, cards: any[], headerIds: number[] }) {
+export async function StorefrontControls({ layout, sellerId, sellerHandle, isPreview, cards: binderCards, headerIds }: { layout: "grid" | "categories", sellerId: string, sellerHandle: string, isPreview: boolean, cards: any[], headerIds: number[] }) {
   const { userId } = await auth();
   if (userId !== sellerId) return null;
   
@@ -31,5 +31,5 @@ export async function StorefrontControls({ layout, sellerId, isPreview, cards: b
   const brands = Array.from(new Set(userCards.map(c => c.set).filter(Boolean))).sort();
   const grades = Array.from(new Set(userCards.map(c => c.gradeTier).filter(Boolean))).sort();
 
-  return <StorefrontControlsClient layout={layout} categories={userCategories} sports={sports as string[]} years={years as string[]} brands={brands as string[]} grades={grades as string[]} isPreview={isPreview} binderCards={binderCards} headerIds={headerIds} />;
+  return <StorefrontControlsClient layout={layout} categories={userCategories} sports={sports as string[]} years={years as string[]} brands={brands as string[]} grades={grades as string[]} isPreview={isPreview} binderCards={binderCards} headerIds={headerIds} sellerHandle={sellerHandle} />;
 }

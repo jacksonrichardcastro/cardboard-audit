@@ -9,9 +9,10 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { updatePresenceStatus } from "@/app/actions/profile";
-import { useTransition } from "react";
+import { updatePresenceStatus, updateSellerProfile, removeProfilePhoto } from "@/app/actions/profile";
+import { useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { Loader2, User, Trash, Image as ImageIcon } from "lucide-react";
 
 interface BadgeConfig {
   id: string;
@@ -49,6 +50,7 @@ interface SellerHeroProps {
 export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerImageUrl, isOwner, sellerId, heroCards = [], customizerNode, badges = [], presenceStatus = "online", locationCity, locationState }: SellerHeroProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleStatusChange = (status: "online" | "away" | "offline") => {
     startTransition(async () => {
@@ -57,6 +59,52 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
         router.refresh();
       } catch (err) {
         console.error("Failed to update status", err);
+      }
+    });
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    startTransition(async () => {
+      try {
+        const res = await fetch("/api/storage/profile", {
+          method: "POST",
+          body: JSON.stringify({ kind: "avatar" }),
+          headers: { "Content-Type": "application/json" }
+        });
+
+        if (!res.ok) throw new Error("Failed to get secure upload URL");
+        
+        const { signedUrl, publicUrl } = await res.json();
+        
+        const uploadRes = await fetch(signedUrl, {
+          method: "PUT",
+          body: file,
+          headers: { "Content-Type": file.type }
+        });
+
+        if (!uploadRes.ok) throw new Error("Failed to upload image to bucket");
+
+        await updateSellerProfile({ profilePhotoUrl: publicUrl });
+        router.refresh();
+      } catch (err) {
+        console.error(err);
+        alert("Failed to upload profile photo.");
+      }
+    });
+  };
+
+  const handleAvatarRemove = () => {
+    if (!confirm("Remove profile photo?")) return;
+    startTransition(async () => {
+      try {
+        await removeProfilePhoto();
+        router.refresh();
+      } catch (err) {
+        console.error(err);
+        alert("Failed to remove profile photo.");
       }
     });
   };
@@ -129,17 +177,57 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
 
         {/* Profile Avatar (overlapping the shelf) */}
         <div className="absolute left-1/2 bottom-0 translate-y-1/2 -translate-x-1/2 z-20">
-          {avatarUrl ? (
-            <img 
-              src={avatarUrl} 
-              alt={name} 
-              className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-4 border-black shadow-2xl bg-zinc-900" 
-            />
-          ) : (
-            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-black shadow-2xl bg-zinc-800 flex items-center justify-center text-2xl md:text-3xl font-bold text-white">
-              {name.charAt(0).toUpperCase()}
-            </div>
-          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger disabled={isPending} className="focus:outline-none transition-transform hover:scale-105">
+              <div className="relative group/avatar">
+                {avatarUrl ? (
+                  <img 
+                    src={avatarUrl} 
+                    alt={name} 
+                    className={`w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-4 border-black shadow-2xl bg-zinc-900 ${isPending ? 'opacity-50' : ''}`} 
+                  />
+                ) : (
+                  <div className={`w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-black shadow-2xl bg-zinc-800 flex items-center justify-center text-2xl md:text-3xl font-bold text-white ${isPending ? 'opacity-50' : ''}`}>
+                    {name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                {isPending && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Loader2 className="w-6 h-6 animate-spin text-white" />
+                  </div>
+                )}
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" className="bg-[#7C3AED]/10 backdrop-blur-md border border-[#7C3AED]/30 text-white min-w-[160px] z-[120]">
+              {avatarUrl && (
+                <DropdownMenuItem className="cursor-pointer focus:bg-[#7C3AED]/15 focus:text-white" onClick={() => window.open(avatarUrl, "_blank")}>
+                  <User className="w-4 h-4 mr-2 text-zinc-400" />
+                  View Photo
+                </DropdownMenuItem>
+              )}
+              {isOwner && (
+                <>
+                  <DropdownMenuItem className="cursor-pointer focus:bg-[#7C3AED]/15 focus:text-[#7C3AED] text-[#7C3AED]" onClick={() => fileInputRef.current?.click()}>
+                    <ImageIcon className="w-4 h-4 mr-2" />
+                    Change Photo
+                  </DropdownMenuItem>
+                  {avatarUrl && (
+                    <DropdownMenuItem className="cursor-pointer focus:bg-red-500/15 focus:text-red-400 text-red-400" onClick={handleAvatarRemove}>
+                      <Trash className="w-4 h-4 mr-2" />
+                      Remove
+                    </DropdownMenuItem>
+                  )}
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <input 
+            type="file" 
+            accept="image/*" 
+            ref={fileInputRef} 
+            onChange={handleAvatarUpload} 
+            className="hidden" 
+          />
         </div>
       </div>
 

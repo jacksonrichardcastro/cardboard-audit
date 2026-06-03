@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Check, Edit3, Loader2 } from "lucide-react";
 import { updateHeaderCustomization, updateSellerProfile } from "@/app/actions/profile";
@@ -17,9 +17,10 @@ interface HeaderCustomizerProps {
   selectedIds: number[];
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  triggerNode?: React.ReactElement;
 }
 
-export function HeaderCustomizer({ cards, selectedIds, open = false, onOpenChange }: HeaderCustomizerProps) {
+export function HeaderCustomizer({ cards, selectedIds, open = false, onOpenChange, triggerNode }: HeaderCustomizerProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = onOpenChange ? open : internalOpen;
   const setOpen = onOpenChange ? onOpenChange : setInternalOpen;
@@ -97,6 +98,7 @@ export function HeaderCustomizer({ cards, selectedIds, open = false, onOpenChang
 
   return (
     <Dialog open={isOpen} onOpenChange={setOpen}>
+      {triggerNode && <DialogTrigger render={triggerNode} />}
       <DialogContent className="max-w-3xl bg-zinc-950 border-zinc-800 text-white z-[120]">
         <DialogHeader>
           <DialogTitle className="text-xl">Customize Header Cards</DialogTitle>
