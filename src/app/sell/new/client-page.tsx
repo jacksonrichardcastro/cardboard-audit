@@ -11,7 +11,7 @@ import { PhotoCapture, type CapturedPhoto } from "@/components/sell/photo-captur
 import { createDraft, updateDraft, loadDraft, publishDraft } from "../actions";
 import { Loader2, ImagePlus } from "lucide-react";
 
-export default function NewListingPage() {
+export default function NewListingPage({ categories = [], storefrontLayout = "grid" }: { categories?: any[], storefrontLayout?: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const draftIdParam = searchParams.get("draftId");
@@ -43,6 +43,7 @@ export default function NewListingPage() {
     photos: [] as { kind: string; url: string; sortOrder: number }[],
 
     shippingMethod: "Standard (USPS Ground Advantage)",
+    categoryId: "",
     mode: mode || "listing"
   });
 
@@ -144,13 +145,20 @@ export default function NewListingPage() {
     try {
       const isDemo = searchParams.get("demo") === "1";
       // Perform final save before publish
-      await updateDraft(draftId, formData);
+      
+      // If category doesn't exist was selected, force it to binder mode
+      let publishMode = mode;
+      if (formData.categoryId === "not_exist") {
+        publishMode = "binder";
+      }
+
+      await updateDraft(draftId, { ...formData, mode: publishMode });
       const id = await publishDraft(draftId, isDemo);
       if (isDemo) {
         alert("Demo Mode: Submission blocked. This would have redirected to /listings/" + id);
         setIsPublishing(false);
       } else {
-        if (mode === "binder") {
+        if (publishMode === "binder") {
           router.push(`/`); // Could go to profile if we had handle, home is safe
         } else {
           router.push(`/listings/${id}`);
@@ -425,24 +433,94 @@ export default function NewListingPage() {
               <Button variant="outline" onClick={() => setStep(3)}>Back</Button>
               {mode === 'binder' ? (
                 <div className="text-right">
-                  <Button 
-                    onClick={handlePublish}
-                    disabled={isPublishing || !draftId}
-                  >
-                    {isPublishing ? "Saving..." : "Save to Binder"}
-                  </Button>
+                  {storefrontLayout === "categories" ? (
+                    <Button onClick={() => setStep(5)}>Next: Category</Button>
+                  ) : (
+                    <Button 
+                      onClick={handlePublish}
+                      disabled={isPublishing || !draftId}
+                    >
+                      {isPublishing ? "Saving..." : "Save to Binder"}
+                    </Button>
+                  )}
                 </div>
               ) : (
-                <Button onClick={() => setStep(5)} disabled={!formData.price || parseFloat(formData.price) < 1}>Next: Shipping</Button>
+                <Button onClick={() => setStep(5)} disabled={!formData.price || parseFloat(formData.price) < 1}>
+                  {storefrontLayout === "categories" ? "Next: Category & Shipping" : "Next: Shipping"}
+                </Button>
               )}
+            </div>
+          </div>
+        )}
+
+        {step === 5 && mode === 'binder' && storefrontLayout === 'categories' && (
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold border-b pb-2">Step 5: Category</h2>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Storefront Category</Label>
+                <select 
+                  value={formData.categoryId || ''}
+                  onChange={e => {
+                    handleChange("categoryId", e.target.value);
+                  }}
+                  className="w-full h-10 px-3 bg-background border rounded-md"
+                >
+                  <option value="">No Category</option>
+                  {categories.map(c => (
+                    <option key={c.id} value={c.id.toString()}>{c.name}</option>
+                  ))}
+                  <option value="not_exist">Category doesn't exist</option>
+                </select>
+                {formData.categoryId === "not_exist" && (
+                  <p className="text-sm text-yellow-500 mt-2">
+                    Card will be saved to your binder. You can create the category later and add it.
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="flex justify-between pt-4">
+              <Button variant="outline" onClick={() => setStep(4)}>Back</Button>
+              <div className="text-right">
+                <Button 
+                  onClick={handlePublish}
+                  disabled={isPublishing || !draftId}
+                >
+                  {isPublishing ? "Saving..." : "Save to Binder"}
+                </Button>
+              </div>
             </div>
           </div>
         )}
 
         {step === 5 && mode !== 'binder' && (
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold border-b pb-2">Step 5: Shipping</h2>
+            <h2 className="text-xl font-semibold border-b pb-2">Step 5: {storefrontLayout === "categories" ? "Category & Shipping" : "Shipping"}</h2>
             <div className="space-y-4">
+              {storefrontLayout === "categories" && (
+                <div className="space-y-2 mb-6 p-4 border rounded-lg bg-muted/10">
+                  <Label>Storefront Category</Label>
+                  <select 
+                    value={formData.categoryId || ''}
+                    onChange={e => {
+                      handleChange("categoryId", e.target.value);
+                    }}
+                    className="w-full h-10 px-3 mt-2 bg-background border rounded-md"
+                  >
+                    <option value="">No Category</option>
+                    {categories.map(c => (
+                      <option key={c.id} value={c.id.toString()}>{c.name}</option>
+                    ))}
+                    <option value="not_exist">Category doesn't exist</option>
+                  </select>
+                  {formData.categoryId === "not_exist" && (
+                    <p className="text-sm text-yellow-500 mt-2">
+                      Card will be saved to your binder instead of publishing to the marketplace. You can create the category later and list it.
+                    </p>
+                  )}
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label>Shipping Method</Label>
                 <select 
@@ -464,7 +542,7 @@ export default function NewListingPage() {
                   onClick={handlePublish}
                   disabled={isPublishing || !draftId}
                 >
-                  {isPublishing ? "Publishing..." : "Review & Publish"}
+                  {isPublishing ? "Publishing..." : formData.categoryId === "not_exist" ? "Save to Binder" : "Review & Publish"}
                 </Button>
               </div>
             </div>

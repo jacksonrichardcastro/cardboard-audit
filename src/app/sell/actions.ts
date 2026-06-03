@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { listingDrafts, profiles, cards, listings, itemPhotos } from "@/lib/db/schema";
+import { listingDrafts, profiles, cards, listings, itemPhotos, categoryMemberships } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
@@ -184,6 +184,14 @@ export async function publishDraft(draftId: number, isDemo: boolean = false) {
     // d. Set Grail if null
     if (!seller.grailCardId) {
       await tx.update(profiles).set({ grailCardId: newCard.id }).where(eq(profiles.userId, userId));
+    }
+
+    // Assign to category if selected
+    if (formData.categoryId && formData.categoryId !== "not_exist") {
+      await tx.insert(categoryMemberships).values({
+        cardId: newCard.id,
+        categoryId: parseInt(formData.categoryId, 10)
+      }).onConflictDoNothing();
     }
 
     // e. Delete Draft

@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, timestamp, json, varchar, boolean, index, unique, uuid } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, timestamp, json, varchar, boolean, index, unique, uuid, primaryKey } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 
 export const users = pgTable("users", {
@@ -8,6 +8,7 @@ export const users = pgTable("users", {
   accountType: varchar("account_type", { length: 20 }).notNull().default("buyer"), // buyer, seller
   welcomeModalDismissed: boolean("welcome_modal_dismissed").notNull().default(false),
   isFoundingSeller: boolean("is_founding_seller").notNull().default(false),
+  storefrontLayout: varchar("storefront_layout", { length: 20 }).notNull().default("grid"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -233,6 +234,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     fields: [users.id],
     references: [profiles.userId],
   }),
+  categories: many(categories),
   cards: many(cards),
   listings: many(listings),
   ordersAsBuyer: many(orders, { relationName: "buyer" }),
@@ -252,7 +254,8 @@ export const cardsRelations = relations(cards, ({ one, many }) => ({
     references: [users.id],
   }),
   photos: many(itemPhotos),
-  listings: many(listings)
+  listings: many(listings),
+  categoryMemberships: many(categoryMemberships),
 }));
 
 export const ordersRelations = relations(orders, ({ one, many }) => ({
@@ -356,6 +359,45 @@ export const viewHistory = pgTable("view_history", {
   viewedAt: timestamp("viewed_at").notNull().defaultNow(),
 }, (table) => ({
   userViewedAtIdx: index("view_history_user_viewed_at_idx").on(table.userId, sql`${table.viewedAt} DESC`),
+}));
+
+export const categories = pgTable("categories", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 100 }).notNull(),
+  isAutoManaged: boolean("is_auto_managed").notNull().default(false),
+  displayOrder: integer("display_order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  userOrderIdx: index("categories_user_order_idx").on(table.userId, table.displayOrder),
+}));
+
+export const categoryMemberships = pgTable("category_memberships", {
+  cardId: integer("card_id").notNull().references(() => cards.id, { onDelete: "cascade" }),
+  categoryId: integer("category_id").notNull().references(() => categories.id, { onDelete: "cascade" }),
+  addedAt: timestamp("added_at").notNull().defaultNow(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.cardId, table.categoryId] }),
+  categoryIdx: index("idx_category_memberships_category_id").on(table.categoryId),
+}));
+
+export const categoriesRelations = relations(categories, ({ one, many }) => ({
+  user: one(users, {
+    fields: [categories.userId],
+    references: [users.id],
+  }),
+  memberships: many(categoryMemberships),
+}));
+
+export const categoryMembershipsRelations = relations(categoryMemberships, ({ one }) => ({
+  card: one(cards, {
+    fields: [categoryMemberships.cardId],
+    references: [cards.id],
+  }),
+  category: one(categories, {
+    fields: [categoryMemberships.categoryId],
+    references: [categories.id],
+  }),
 }));
 
 // Chunk E: Make Offer Flow

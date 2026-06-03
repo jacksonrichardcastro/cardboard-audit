@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { profiles, users } from "@/lib/db/schema";
+import { profiles, users, categories } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import ClientPage from "./client-page";
 
@@ -26,5 +26,13 @@ export default async function NewListingServerPage({ searchParams }: { searchPar
     }
   }
 
-  return <ClientPage />;
+  const userCategories = await db.query.categories.findMany({
+    where: eq(categories.userId, userId),
+    orderBy: (c) => [c.displayOrder],
+  });
+
+  const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
+  const storefrontLayout = user?.storefrontLayout || "grid";
+
+  return <ClientPage categories={userCategories} storefrontLayout={storefrontLayout} />;
 }

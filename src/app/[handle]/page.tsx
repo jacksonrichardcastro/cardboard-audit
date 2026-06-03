@@ -11,12 +11,14 @@ import { ActiveListingsGrid } from "@/components/storefront/ActiveListingsGrid";
 import { BinderGrid } from "@/components/shared/BinderGrid";
 import { auth } from "@clerk/nextjs/server";
 import { getPossessiveName } from "@/lib/utils/formatters";
-import { Lock, Plus } from "lucide-react";
+import { Lock, Plus, ListTree } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HeaderCustomizer } from "@/components/shared/HeaderCustomizer";
+import { StorefrontControls } from "@/components/storefront/StorefrontControls";
 import { BinderValueToggle } from "@/components/shared/binder-value-toggle";
 import { FiltersDrawer } from "@/components/storefront/FiltersDrawer";
 import { ActiveFilterChips } from "@/components/storefront/ActiveFilterChips";
+import { CategoryRows } from "@/components/storefront/CategoryRows";
 import { like, lte, gte, between } from "drizzle-orm";
 
 interface Props {
@@ -34,7 +36,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
   const [profileRecord] = await db.select({
     profile: profiles,
-    accountType: users.accountType
+    accountType: users.accountType,
+    storefrontLayout: users.storefrontLayout
   })
   .from(profiles)
   .innerJoin(users, eq(profiles.userId, users.id))
@@ -68,7 +71,8 @@ export default async function SellerStorePage(props: Props) {
   
   const [profileRecord] = await db.select({
     profile: profiles,
-    accountType: users.accountType
+    accountType: users.accountType,
+    storefrontLayout: users.storefrontLayout
   })
   .from(profiles)
   .innerJoin(users, eq(profiles.userId, users.id))
@@ -80,6 +84,7 @@ export default async function SellerStorePage(props: Props) {
   }
   const seller = profileRecord.profile;
   const isSellerLayout = profileRecord.accountType === "seller" && seller.kycStatus === "verified";
+  const storefrontLayout = profileRecord.storefrontLayout;
   
   const currentTab = searchParams.tab || (isSellerLayout ? "active-listings" : "collection");
 
@@ -174,20 +179,49 @@ export default async function SellerStorePage(props: Props) {
     .where(eq(cards.ownerId, seller.userId))
     .orderBy(desc(cards.createdAt));
 
+  const userCategories = await db.query.categories.findMany({
+    where: eq(categories.userId, seller.userId),
+    orderBy: (c) => [c.displayOrder],
+    with: {
+      memberships: true
+    }
+  });
+
   const isOwner = seller.userId === userId;
   const sellerName = seller.displayName || seller.businessName;
   const possessiveName = getPossessiveName(sellerName, isOwner);
   const grailId = seller.grailCardId || (binderCards.length > 0 ? binderCards[0].id : null);
   
+  let pendingCategoryCount = 0;
+  if (isOwner && storefrontLayout === "categories") {
+    const categorizedCardIds = new Set();
+    userCategories.forEach(c => {
+      if (c.memberships) {
+        c.memberships.forEach((m: any) => categorizedCardIds.add(m.cardId));
+      }
+    });
+    pendingCategoryCount = binderCards.filter(c => !categorizedCardIds.has(c.id)).length;
+  }
+  
   const tabs = isSellerLayout 
     ? [
         { id: "storefront", label: "Storefront", possessive: "Storefront" },
-        { id: "binder", label: "Binder", possessive: "Binder" },
+        { id: "binder", label: pendingCategoryCount > 0 ? (
+          <span className="flex items-center gap-1.5">
+            Binder
+            <span className="bg-[#7C3AED]/20 border border-[#7C3AED]/30 text-[#7C3AED] px-1.5 py-[1px] rounded font-bold text-[10px] leading-none">{pendingCategoryCount} waiting</span>
+          </span>
+        ) : "Binder", possessive: "Binder" },
         { id: "ratings", label: "Ratings", possessive: "Ratings" },
         { id: "blog", label: "Blog", possessive: "Blog" }
       ]
     : [
-        { id: "collection", label: "Collection", possessive: "Binder" },
+        { id: "collection", label: pendingCategoryCount > 0 ? (
+          <span className="flex items-center gap-1.5">
+            Collection
+            <span className="bg-[#7C3AED]/20 border border-[#7C3AED]/30 text-[#7C3AED] px-1.5 py-[1px] rounded font-bold text-[10px] leading-none">{pendingCategoryCount} waiting</span>
+          </span>
+        ) : "Collection", possessive: "Binder" },
         { id: "active-listings", label: "Active Listings", possessive: "Listings" },
         { id: "ratings", label: "Ratings", possessive: "Ratings" },
         { id: "blog", label: "Blog", possessive: "Blog" }
@@ -269,7 +303,12 @@ export default async function SellerStorePage(props: Props) {
           locationCity={seller.locationCity}
           locationState={seller.locationState}
           heroCards={formattedHeroCards}
-          customizerNode={isOwner ? <HeaderCustomizer cards={binderCards} selectedIds={headerIds as number[]} /> : undefined}
+          customizerNode={isOwner ? (
+            <div className="absolute top-4 right-4 z-40 flex items-center gap-2">
+              <StorefrontControls layout={storefrontLayout as "grid" | "categories"} sellerId={seller.userId} />
+              <HeaderCustomizer cards={binderCards} selectedIds={headerIds as number[]} />
+            </div>
+          ) : undefined}
         />
 
       <main className="max-w-7xl mx-auto px-4 md:px-8 pb-12">
@@ -311,13 +350,23 @@ export default async function SellerStorePage(props: Props) {
           )}
 
           {(currentTab === "collection" || (currentTab === "binder" && !seller.binderPrivate)) && (
-            <BinderGrid 
-              isOwner={isOwner}
-              sellerName={sellerName}
-              cards={binderCards} 
-              activeListings={activeListings}
-              grailCardId={grailId}
-            />
+            storefrontLayout === "categories" && userCategories.length > 0 ? (
+              <CategoryRows 
+                categories={userCategories} 
+                cards={binderCards} 
+                isOwner={isOwner} 
+                sellerName={sellerName}
+                tab="binder"
+              />
+            ) : (
+              <BinderGrid 
+                isOwner={isOwner}
+                sellerName={sellerName}
+                cards={binderCards} 
+                activeListings={activeListings}
+                grailCardId={grailId}
+              />
+            )
           )}
 
           {currentTab === "binder" && seller.binderPrivate && !isOwner && (
@@ -345,17 +394,37 @@ export default async function SellerStorePage(props: Props) {
           )}
 
           {(currentTab === "storefront" || currentTab === "active-listings") && activeListings.length > 0 && (
-            <ActiveListingsGrid 
-              isOwner={isOwner}
-              listings={activeListings} 
-            />
+            storefrontLayout === "categories" && userCategories.length > 0 ? (
+              <CategoryRows 
+                categories={userCategories} 
+                cards={activeListings as any[]} 
+                isOwner={isOwner}
+                sellerName={sellerName}
+                tab="storefront"
+              />
+            ) : (
+              <ActiveListingsGrid 
+                isOwner={isOwner}
+                listings={activeListings} 
+              />
+            )
           )}
 
           {(currentTab === "storefront" || currentTab === "active-listings") && activeListings.length === 0 && (
-            <div className="text-center py-24 bg-zinc-950/50 rounded-xl border border-white/5 flex flex-col items-center">
-              <p className="text-lg text-zinc-500 mb-2">No listings yet. Draft your first listing to get started.</p>
-              {!isSellerLayout && <p className="text-sm text-zinc-600">Want to sell on Trax? Upgrade to a Seller account.</p>}
-            </div>
+            storefrontLayout === "categories" && userCategories.length > 0 ? (
+              <CategoryRows 
+                categories={userCategories} 
+                cards={[]} 
+                isOwner={isOwner}
+                sellerName={sellerName}
+                tab="storefront"
+              />
+            ) : (
+              <div className="text-center py-24 bg-zinc-950/50 rounded-xl border border-white/5 flex flex-col items-center">
+                <p className="text-lg text-zinc-500 mb-2">No listings yet. Draft your first listing to get started.</p>
+                {!isSellerLayout && <p className="text-sm text-zinc-600">Want to sell on Trax? Upgrade to a Seller account.</p>}
+              </div>
+            )
           )}
 
           {currentTab === "ratings" && (
