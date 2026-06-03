@@ -85,8 +85,8 @@ export function CategoryManager({ open, onOpenChange, categories, sports, years,
   const hasAutoDataCategory = categories.some(c => !CURATED_CATEGORIES.some(curated => curated.name === c.name));
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
-      <DialogContent hideOverlay={true} className="max-w-md bg-[#7C3AED]/5 backdrop-blur-3xl border-[#7C3AED]/30 text-white shadow-2xl z-[120]">
+    <Dialog open={open} onOpenChange={onOpenChange} modal={false} disablePointerDismissal>
+      <DialogContent hideOverlay={true} className="max-w-md !bg-violet-600/10 backdrop-blur-3xl border-[#7C3AED]/30 text-white shadow-2xl z-[120]">
         <DialogHeader>
           <DialogTitle className="text-xl">Manage Categories</DialogTitle>
           <p className="text-sm text-zinc-300">

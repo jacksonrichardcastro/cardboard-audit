@@ -29,6 +29,7 @@ function FilterSection({ title, defaultExpanded = false, children }: FilterSecti
 
 import { createPortal } from "react-dom";
 import { useFiltersStore } from "@/store/useFiltersStore";
+import { toast } from "sonner";
 
 export function FiltersDrawer() {
   const router = useRouter();
@@ -96,7 +97,8 @@ export function FiltersDrawer() {
   };
 
   const applyFilters = () => {
-    router.replace(`${pathname}?${localParams.toString()}`);
+    // TEMP Beta intercept — replace with real filter logic once inventory > N listings
+    toast("Filters coming soon!");
     setIsOpen(false);
   };
 
@@ -152,7 +154,7 @@ export function FiltersDrawer() {
           )}
 
       {/* Drawer */}
-      <div className={`fixed top-16 right-0 h-[calc(100vh-64px)] w-full sm:w-[360px] bg-[#0A0A0A] border-l border-white/10 z-[210] transform transition-transform duration-250 ease-[cubic-bezier(0.32,0.72,0,1)] flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`fixed top-16 right-0 h-[calc(100dvh-64px)] w-full sm:w-[360px] bg-[#0A0A0A] border-l border-white/10 z-[210] transform transition-transform duration-250 ease-[cubic-bezier(0.32,0.72,0,1)] flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         
         {/* Header */}
         <div className="p-5 border-b border-white/10 flex items-center justify-between bg-[#0A0A0A] shrink-0">

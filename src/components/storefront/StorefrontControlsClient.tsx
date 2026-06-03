@@ -48,8 +48,8 @@ export function StorefrontControlsClient({ layout, categories, sports, years, br
       if (el && wrapper) {
         const elRect = el.getBoundingClientRect();
         const wrapperRect = wrapper.getBoundingClientRect();
-        // position slightly below the status row, relative to the wrapper
-        setArrowTop((elRect.bottom - wrapperRect.top) + 2);
+        // Nudge up so the arrow visually centers in the gap
+        setArrowTop((elRect.bottom - wrapperRect.top) - 14);
       }
     };
 
@@ -77,7 +77,7 @@ export function StorefrontControlsClient({ layout, categories, sports, years, br
       {isPreview && (
         <button 
           onClick={() => setShowChrome(!showChrome)}
-          className="absolute right-0 z-[100] p-2 bg-[#7C3AED]/20 text-[#7C3AED] hover:bg-[#7C3AED]/30 hover:text-white backdrop-blur-md rounded-l-lg border-y border-l border-[#7C3AED]/30 transition-all shadow-lg flex items-center justify-center"
+          className="absolute right-0 z-[100] p-2 bg-[#7C3AED]/20 text-[#7C3AED] hover:bg-[#7C3AED]/30 hover:text-white backdrop-blur-md rounded-l-lg border-y border-l border-[#7C3AED]/30 transition-all shadow-lg flex items-center justify-center -mt-4"
           title="Toggle Screenshot Mode"
           style={{ top: `${arrowTop}px` }}
         >
@@ -99,7 +99,7 @@ export function StorefrontControlsClient({ layout, categories, sports, years, br
             </Button>
           )
         } />
-        <DropdownMenuContent align="end" className="w-56 bg-[#7C3AED]/5 backdrop-blur-3xl border border-[#7C3AED]/30 text-white z-[110]">
+        <DropdownMenuContent align="end" className="w-56 !bg-violet-600/10 backdrop-blur-3xl border border-[#7C3AED]/30 text-white z-[110]">
           <div className="px-2 py-1.5 text-xs font-semibold text-zinc-500 uppercase tracking-wider">
             Layout
           </div>
