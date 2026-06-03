@@ -83,7 +83,7 @@ export function WelcomeModal({ isFoundingSeller }: { isFoundingSeller: boolean }
             disabled={isPending}
             className="w-full rounded-full bg-violet-600 hover:bg-violet-700 text-white transition-colors font-semibold tracking-wide h-11"
           >
-            {isPending ? "Setting up..." : "Take me to Trax!"}
+            {isPending ? "Setting up..." : "Get started."}
           </Button>
         </div>
       </DialogContent>
