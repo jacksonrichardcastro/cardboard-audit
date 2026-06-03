@@ -61,8 +61,26 @@ export default function EditBinderClient({ card }: { card: any }) {
         e.returnValue = '';
       }
     };
+    
+    const handleClick = (e: MouseEvent) => {
+      if (!isDirty) return;
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a');
+      if (anchor && anchor.href && anchor.target !== '_blank' && !anchor.hasAttribute('download')) {
+        if (!window.confirm('Leave site? Changes you made may not be saved.')) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }
+    };
+
     window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('click', handleClick, { capture: true });
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('click', handleClick, { capture: true });
+    };
   }, [isDirty]);
 
   const handleChange = (field: string, value: any) => {

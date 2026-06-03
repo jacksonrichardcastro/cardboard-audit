@@ -105,23 +105,26 @@ export function BinderGrid({ isOwner, sellerName, collectionValueCents, grailCar
                 </button>
               )}
 
-              {/* LISTED Indicator Pill */}
-              {isListed && (
-                <div className="absolute top-2 right-2 z-30 bg-[#7C3AED] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md uppercase tracking-wider">
-                  Listed
-                </div>
-              )}
+              {/* Top-Right Badges & Actions */}
+              <div className="absolute top-2 right-2 z-30 flex flex-col items-end gap-1.5">
+                {/* LISTED Indicator Pill */}
+                {isListed && (
+                  <div className="bg-[#7C3AED] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md uppercase tracking-wider">
+                    Listed
+                  </div>
+                )}
 
-              {/* Edit Affordance for Owners */}
-              {isOwner && (
-                <Link
-                  href={`/binder/${card.id}/edit`}
-                  className="absolute bottom-2 right-2 z-30 p-2 bg-black/60 text-zinc-300 hover:text-white rounded-full hover:bg-black/80 transition-all backdrop-blur-sm shadow-md border border-white/10"
-                  title="Edit Card"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </Link>
-              )}
+                {/* Edit Affordance for Owners */}
+                {isOwner && (
+                  <Link
+                    href={`/binder/${card.id}/edit`}
+                    className="p-2 bg-black/60 text-zinc-300 hover:text-white rounded-full hover:bg-black/80 transition-all backdrop-blur-sm shadow-md border border-white/10"
+                    title="Edit Card"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </Link>
+                )}
+              </div>
 
               {/* V16 Grail Centerpiece Styling */}
               <div className={`relative aspect-[5/7] w-full rounded-lg overflow-hidden border transition-all duration-300 ${
