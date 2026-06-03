@@ -67,13 +67,13 @@ export function ActiveListingsGrid({ isOwner, listings }: ActiveListingsGridProp
                   loading="lazy"
                 />
               </div>
-              <div className="p-2.5">
-                <h3 className="text-[11px] md:text-sm font-medium line-clamp-1 text-zinc-300 mb-1.5">
+              <div className="p-2.5 text-center flex flex-col items-center">
+                <h3 className="text-[11px] md:text-sm font-medium line-clamp-1 text-zinc-300 mb-1.5 w-full">
                   {listing.title}
                 </h3>
-                <div className="flex flex-col gap-1 mb-2">
+                <div className="flex flex-col gap-1 mb-2 w-full items-center">
                   {listing.discountType && listing.discountAmount ? (
-                    <div className="flex items-center gap-1.5 w-full">
+                    <div className="flex items-center justify-center gap-1.5 w-full">
                       <span className="text-[10px] md:text-[11px] text-zinc-500 line-through shrink-0">
                         ${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                       </span>
@@ -84,18 +84,18 @@ export function ActiveListingsGrid({ isOwner, listings }: ActiveListingsGridProp
                           ? Math.max(0, listing.priceCents - (listing.discountAmount || 0))
                           : listing.priceCents) / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                       </p>
-                      <div className="bg-[#7C3AED]/20 border border-[#7C3AED]/50 text-[#7C3AED] text-[8px] md:text-[9px] font-bold px-1 py-0.5 rounded-sm uppercase tracking-wider whitespace-nowrap ml-auto">
+                      <div className="bg-[#7C3AED]/20 border border-[#7C3AED]/50 text-[#7C3AED] text-[8px] md:text-[9px] font-bold px-1 py-0.5 rounded-sm uppercase tracking-wider whitespace-nowrap shrink-0">
                         {listing.discountType === 'percent' 
                           ? `${listing.discountAmount / 100}%` 
-                          : `$${(listing.discountAmount / 100).toFixed(0)}`} OFF
+                          : `$${(listing.discountAmount / 100).toFixed(0)}`}
                       </div>
                     </div>
                   ) : (
-                    <p className="text-sm md:text-[15px] font-bold text-white">
+                    <p className="text-sm md:text-[15px] font-bold text-white text-center w-full">
                       ${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   )}
-                  <p className="text-[10px] md:text-[11px] text-zinc-500 truncate">
+                  <p className="text-[10px] md:text-[11px] text-zinc-500 truncate w-full text-center">
                     {listing.grade ? `${listing.gradingCompany} ${listing.grade}` : listing.condition}
                   </p>
                 </div>
