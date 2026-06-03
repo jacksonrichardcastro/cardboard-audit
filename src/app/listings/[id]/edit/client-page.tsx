@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { updateListing } from "@/app/actions/edit-listing";
 import { ListingFormFields } from "@/components/sell/ListingFormFields";
 import { Button } from "@/components/ui/button";
+import { RemoveListingModal } from "@/components/listings/RemoveListingModal";
 
 export default function EditListingClient({ listing, card }: { listing: any, card: any }) {
   const router = useRouter();
@@ -167,6 +168,18 @@ export default function EditListingClient({ listing, card }: { listing: any, car
           isUploadingFiles={isUploadingFiles}
           draftId={card.id} 
           mode="listing"
+        />
+      </div>
+
+      <div className="flex justify-center mt-12 mb-8">
+        <RemoveListingModal 
+          listingId={listing.id} 
+          onSuccessRedirectUrl="/seller/dashboard?tab=active"
+          triggerNode={
+            <Button type="button" variant="destructive" className="w-full max-w-xs">
+              Remove Listing
+            </Button>
+          } 
         />
       </div>
 

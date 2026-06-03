@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
-import { ShieldCheck, MapPin, CalendarDays, ExternalLink, ChevronRight, Home, Expand, Flame } from "lucide-react";
+import { ShieldCheck, MapPin, CalendarDays, ExternalLink, ChevronRight, Home, Expand, Flame, Trash2 } from "lucide-react";
 import { notFound } from "next/navigation";
 import { BuyNowButton } from "@/components/storefront/buy-now-button";
 import { MakeOfferButton } from "@/components/storefront/make-offer-button";
@@ -13,6 +13,7 @@ import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import Image from "next/image"; // Will use img securely with static Next boundaries as specified earlier to bypass proxy issues if any, but since they are in public/, we can use img
 import { ListingGallery } from "@/components/listings/listing-gallery";
+import { RemoveListingModal } from "@/components/listings/RemoveListingModal";
 
 export default async function ListingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -143,13 +144,23 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                   {item.title}
                 </h1>
                 {isOwner && (
-                  <div className="mt-4">
+                  <div className="mt-4 flex items-center gap-2">
                     <Link 
                       href={`/listings/${item.id}/edit`}
                       className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
                     >
                       Edit Listing
                     </Link>
+                    <RemoveListingModal 
+                      listingId={item.id}
+                      onSuccessRedirectUrl="/seller/dashboard?tab=active"
+                      triggerNode={
+                        <button className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-red-900/50 bg-red-950/20 hover:bg-red-900/40 text-red-500 hover:text-red-400 h-10 px-4 py-2">
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Remove
+                        </button>
+                      }
+                    />
                   </div>
                 )}
               </div>

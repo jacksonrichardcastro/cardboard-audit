@@ -134,3 +134,44 @@ export async function updateListing(listingId: number, data: any) {
   
   return { success: true };
 }
+
+export async function removeListingAction(listingId: number, mode: 'unlist' | 'delete') {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  // Verify ownership
+  const listing = await db.query.listings.findFirst({
+    where: eq(listings.id, listingId),
+    with: {
+      card: true,
+    }
+  });
+
+  // Server-side auth check
+  if (!listing || listing.sellerId !== userId || !listing.card || listing.card.ownerId !== userId) {
+    throw new Error("Forbidden: Non-owner attempt");
+  }
+
+  const cardId = listing.cardId;
+
+  if (mode === 'unlist') {
+    if (listing.status !== 'unlisted') {
+      await db.update(listings)
+        .set({ status: 'unlisted', updatedAt: new Date() })
+        .where(eq(listings.id, listingId));
+    }
+  } else if (mode === 'delete') {
+    // Deleting the card automatically cascades to listings, item_photos, category_memberships
+    await db.delete(cards).where(eq(cards.id, cardId));
+  } else {
+    throw new Error("Invalid mode");
+  }
+
+  revalidatePath(`/listings/${listingId}`);
+  revalidatePath(`/listings/${listingId}/edit`);
+  revalidatePath(`/`);
+  
+  return { success: true };
+}
