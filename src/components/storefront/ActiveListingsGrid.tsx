@@ -94,7 +94,18 @@ export function ActiveListingsGrid({ isOwner, listings }: ActiveListingsGridProp
             </Link>
 
             {isOwner && (
-              <div className="absolute top-2 right-2 flex flex-col gap-1.5 z-20">
+              <div className="absolute top-2 right-2 z-20">
+                <button 
+                  onClick={(e) => { e.preventDefault(); router.push(`/listings/${listing.id}/edit`); }}
+                  className="bg-black/60 hover:bg-black/80 backdrop-blur-md p-1.5 rounded-full border border-white/10 text-white transition-colors opacity-100 lg:opacity-0 lg:group-hover:opacity-100 shadow-md"
+                >
+                  <Edit2 className="w-4 h-4 mx-auto" />
+                </button>
+              </div>
+            )}
+            
+            <div className="absolute top-2 left-2 z-20 flex flex-col items-start gap-1.5">
+              {isOwner && (
                 <RunDiscountModal
                   listingId={listing.id}
                   listingPriceCents={listing.priceCents}
@@ -102,29 +113,23 @@ export function ActiveListingsGrid({ isOwner, listings }: ActiveListingsGridProp
                   currentAmount={listing.discountAmount}
                   currentUntil={listing.discountActiveUntil}
                   triggerNode={
-                    <button className="bg-black/60 hover:bg-black/80 backdrop-blur-md p-1.5 rounded-md border border-white/10 text-white transition-colors w-full">
+                    <button className="bg-black/60 hover:bg-black/80 backdrop-blur-md p-1.5 rounded-full border border-white/10 text-white transition-colors shadow-md">
                       <Flame className="w-4 h-4 text-orange-500 mx-auto" />
                     </button>
                   }
                 />
-                <button 
-                  onClick={(e) => { e.preventDefault(); router.push(`/listings/${listing.id}/edit`); }}
-                  className="bg-black/60 hover:bg-black/80 backdrop-blur-md p-1.5 rounded-md border border-white/10 text-white transition-colors w-full opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
-                >
-                  <Edit2 className="w-4 h-4 mx-auto" />
-                </button>
-              </div>
-            )}
-            {listing.discountType && listing.discountAmount && (
-              <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-sm border border-white/10 flex items-center gap-1 z-10 pointer-events-none">
-                <Flame className="w-3 h-3 text-orange-500" />
-                <span className="text-[10px] font-bold text-white">
-                  {listing.discountType === 'percent' 
-                    ? `${listing.discountAmount / 100}% OFF` 
-                    : `$${(listing.discountAmount / 100).toFixed(0)} OFF`}
-                </span>
-              </div>
-            )}
+              )}
+              {listing.discountType && listing.discountAmount && (
+                <div className="bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-sm border border-white/10 flex items-center gap-1 shadow-md pointer-events-none">
+                  <Flame className="w-3 h-3 text-orange-500" />
+                  <span className="text-[10px] font-bold text-white">
+                    {listing.discountType === 'percent' 
+                      ? `${listing.discountAmount / 100}% OFF` 
+                      : `$${(listing.discountAmount / 100).toFixed(0)} OFF`}
+                  </span>
+                </div>
+              )}
+            </div>
             
             {/* STRICT V16 CONFIRMATION: BIN + Offer Flow (No "Bid Now") */}
             <div className="grid grid-cols-2 gap-2 px-2.5 pb-2.5">

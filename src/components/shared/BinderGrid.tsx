@@ -91,29 +91,19 @@ export function BinderGrid({ isOwner, sellerName, collectionValueCents, grailCar
                 <button 
                   onClick={(e) => handleSetGrail(e, card.id)}
                   disabled={isPending}
-                  className={`absolute top-2 left-2 z-30 p-2 rounded-md backdrop-blur-sm transition-all hover:scale-105 flex flex-col items-center gap-1 ${
+                  className={`absolute top-2 left-2 z-30 p-2 rounded-full backdrop-blur-sm transition-all hover:scale-105 shadow-md border ${
                     grailCardId === card.id 
-                      ? 'bg-[#D4AF37]/20 text-[#D4AF37]' 
-                      : 'bg-black/60 text-[#7C3AED] hover:bg-[#7C3AED]/20 border border-transparent hover:border-[#7C3AED]/50'
+                      ? 'bg-[#D4AF37]/20 text-[#D4AF37] border-[#D4AF37]/50' 
+                      : 'bg-black/60 text-[#7C3AED] hover:bg-[#7C3AED]/20 border-white/10 hover:border-[#7C3AED]/50'
                   }`}
                   title={grailCardId === card.id ? "Currently your Grail" : "Set as Grail"}
                 >
                   <Star className="w-4 h-4" fill={grailCardId === card.id ? "currentColor" : "none"} />
-                  <span className="text-[9px] font-medium tracking-wider uppercase">
-                    {grailCardId === card.id ? "Your Grail" : "List as Grail"}
-                  </span>
                 </button>
               )}
 
               {/* Top-Right Badges & Actions */}
               <div className="absolute top-2 right-2 z-30 flex flex-col items-end gap-1.5">
-                {/* LISTED Indicator Pill */}
-                {isListed && (
-                  <div className="bg-[#7C3AED] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md uppercase tracking-wider">
-                    Listed
-                  </div>
-                )}
-
                 {/* Edit Affordance for Owners */}
                 {isOwner && (
                   <Link
@@ -155,14 +145,20 @@ export function BinderGrid({ isOwner, sellerName, collectionValueCents, grailCar
                 <h3 className="text-xs font-semibold line-clamp-1 text-zinc-300" title={card.title}>
                   {card.title}
                 </h3>
-                <div className={`flex items-center ${isGrail ? 'justify-center' : 'justify-between'}`}>
+                <div className={`flex flex-col gap-1 mt-1 ${isGrail ? 'items-center' : 'items-start'}`}>
                   <p className="text-[10px] text-zinc-500 uppercase tracking-wider">
                     {card.grade ? `${card.gradingCompany} ${card.grade}` : card.condition}
                   </p>
+                  
                   {isListed && !isGrail && (
-                    <p className="text-xs font-bold text-[#7C3AED]">
-                      ${(activeListing!.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 0 })}
-                    </p>
+                    <div className="flex items-center justify-between w-full mt-0.5">
+                      <div className="bg-[#7C3AED]/20 border border-[#7C3AED]/50 text-[#7C3AED] text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
+                        Listed
+                      </div>
+                      <p className="text-xs font-bold text-[#7C3AED]">
+                        ${(activeListing!.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 0 })}
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>
