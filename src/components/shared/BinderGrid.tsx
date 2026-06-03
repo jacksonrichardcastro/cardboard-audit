@@ -86,36 +86,6 @@ export function BinderGrid({ isOwner, sellerName, collectionValueCents, grailCar
               className={`relative flex flex-col group mx-auto transition-all duration-300 ${isGrail ? 'col-span-2 md:col-span-1 order-first md:order-none w-[80%] md:w-[85%] z-10' : 'w-[80%] sm:w-[65%]'}`}
             >
               
-              {/* MVP Grail Toggle for Owners */}
-              {isOwner && (
-                <button 
-                  onClick={(e) => handleSetGrail(e, card.id)}
-                  disabled={isPending}
-                  className={`absolute top-2 left-2 z-30 p-2 rounded-full backdrop-blur-sm transition-all hover:scale-105 shadow-md border ${
-                    grailCardId === card.id 
-                      ? 'bg-[#D4AF37]/20 text-[#D4AF37] border-[#D4AF37]/50' 
-                      : 'bg-black/60 text-[#7C3AED] hover:bg-[#7C3AED]/20 border-white/10 hover:border-[#7C3AED]/50'
-                  }`}
-                  title={grailCardId === card.id ? "Currently your Grail" : "Set as Grail"}
-                >
-                  <Star className="w-4 h-4" fill={grailCardId === card.id ? "currentColor" : "none"} />
-                </button>
-              )}
-
-              {/* Top-Right Badges & Actions */}
-              <div className="absolute top-2 right-2 z-30 flex flex-col items-end gap-1.5">
-                {/* Edit Affordance for Owners */}
-                {isOwner && (
-                  <Link
-                    href={`/binder/${card.id}/edit`}
-                    className="p-2 bg-black/60 text-zinc-300 hover:text-white rounded-full hover:bg-black/80 transition-all backdrop-blur-sm shadow-md border border-white/10"
-                    title="Edit Card"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </Link>
-                )}
-              </div>
-
               {/* V16 Grail Centerpiece Styling */}
               <div className={`relative aspect-[5/7] w-full rounded-lg overflow-hidden border transition-all duration-300 ${
                   isGrail 
@@ -125,7 +95,7 @@ export function BinderGrid({ isOwner, sellerName, collectionValueCents, grailCar
               >
                 {/* Top-edge sweep ribbon for Grail */}
                 {isGrail && (
-                  <div className="absolute top-0 left-0 w-full bg-gradient-to-r from-transparent via-[#D4AF37]/90 to-transparent text-black text-center py-1 z-30 backdrop-blur-sm">
+                  <div className="absolute top-0 left-0 w-full bg-gradient-to-r from-transparent via-[#D4AF37]/90 to-transparent text-black text-center py-1 z-30 backdrop-blur-sm pointer-events-none">
                     <span className="text-[9px] md:text-[10px] font-bold tracking-widest uppercase font-[family-name:var(--font-display)] drop-shadow-md">
                       {getPossessiveName(sellerName || 'Seller', isOwner)} Grail
                     </span>
@@ -138,6 +108,36 @@ export function BinderGrid({ isOwner, sellerName, collectionValueCents, grailCar
                   className="absolute inset-2 w-[calc(100%-16px)] h-[calc(100%-16px)] object-cover rounded-sm"
                   loading="lazy"
                 />
+              </div>
+
+              {/* MVP Grail Toggle for Owners */}
+              {isOwner && !isGrail && (
+                <button 
+                  onClick={(e) => handleSetGrail(e, card.id)}
+                  disabled={isPending}
+                  className={`absolute top-2 left-2 z-40 p-2 rounded-full backdrop-blur-sm transition-all hover:scale-105 shadow-md border ${
+                    grailCardId === card.id 
+                      ? 'bg-[#D4AF37]/20 text-[#D4AF37] border-[#D4AF37]/50' 
+                      : 'bg-black/60 text-[#7C3AED] hover:bg-[#7C3AED]/20 border-white/10 hover:border-[#7C3AED]/50'
+                  }`}
+                  title={grailCardId === card.id ? "Currently your Grail" : "Set as Grail"}
+                >
+                  <Star className="w-4 h-4" fill={grailCardId === card.id ? "currentColor" : "none"} />
+                </button>
+              )}
+
+              {/* Top-Right Badges & Actions */}
+              <div className="absolute top-2 right-2 z-40 flex flex-col items-end gap-1.5">
+                {/* Edit Affordance for Owners */}
+                {isOwner && (
+                  <Link
+                    href={`/binder/${card.id}/edit`}
+                    className="p-2 bg-black/60 text-zinc-300 hover:text-white rounded-full hover:bg-black/80 transition-all backdrop-blur-sm shadow-md border border-white/10"
+                    title="Edit Card"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </Link>
+                )}
               </div>
 
               {/* Card Metadata */}
