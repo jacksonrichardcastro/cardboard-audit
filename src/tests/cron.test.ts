@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, vi } from "vitest";
 import { db, withUserContext } from "@/lib/db";
-import { orders, users, listings, profiles } from "@/lib/db/schema";
+import { orders, users, listings, profiles, cards } from "@/lib/db/schema";
 import { POST } from "@/app/api/cron/payout-sweeper/route";
 import { eq } from "drizzle-orm";
 
@@ -32,10 +32,21 @@ describe("P0-7: Cron Payout Sweeper Integration", () => {
         },
       ]).onConflictDoNothing();
 
+      await tx.insert(cards).values([
+        {
+          id: 1,
+          ownerId: "user_seller",
+          title: "Test Card",
+          category: "TCG",
+          condition: "Mint",
+        },
+      ]).onConflictDoNothing();
+
       await tx.insert(listings).values([
         {
           id: 1,
           sellerId: "user_seller",
+          cardId: 1,
           title: "Test Listing",
           category: "TCG",
           condition: "Mint",

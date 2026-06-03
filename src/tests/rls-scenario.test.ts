@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { db, withUserContext } from "@/lib/db";
-import { orders, users, listings, profiles } from "@/lib/db/schema";
+import { orders, users, listings, profiles, cards } from "@/lib/db/schema";
 
 describe("P0-5 Scenario 3: Cross-Tenant RLS Isolation", () => {
   beforeAll(async () => {
@@ -22,10 +22,21 @@ describe("P0-5 Scenario 3: Cross-Tenant RLS Isolation", () => {
         },
       ]).onConflictDoNothing();
 
+      await tx.insert(cards).values([
+        {
+          id: 1,
+          ownerId: "user_owner",
+          title: "Test Card",
+          category: "TCG",
+          condition: "Mint",
+        },
+      ]).onConflictDoNothing();
+
       await tx.insert(listings).values([
         {
           id: 500,
           sellerId: "user_owner",
+          cardId: 1,
           title: "Shared Listing",
           category: "TCG",
           condition: "Mint",
