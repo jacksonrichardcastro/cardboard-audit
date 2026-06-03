@@ -14,7 +14,6 @@ import { auth } from "@clerk/nextjs/server";
 import { getRecommendedListings } from "@/lib/recommendations/score";
 import { getUserPreferences } from "@/app/actions/preferences";
 import { ForYouClient } from "@/components/recommendations/ForYouClient";
-import { HotPill } from "@/components/shared/HotPill";
 interface Props {
   searchParams: Promise<Record<string, string | undefined>>;
 }
@@ -207,14 +206,14 @@ export default async function Home(props: Props) {
             <CardRail 
               title={
                 !hasSearchQuery 
-                  ? "Trending Now" 
+                  ? "Trending" 
                   : dbListings.length > 0 
                     ? "Search Results" 
                     : "No Results"
               } 
               icon={
                 !hasSearchQuery 
-                  ? <HotPill text="Hot" />
+                  ? <Flame className="w-6 h-6 text-violet-600 fill-violet-600" />
                   : undefined
               }
               listings={recentListings} 
