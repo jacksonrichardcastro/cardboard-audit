@@ -11,9 +11,10 @@ import { ActiveListingsGrid } from "@/components/storefront/ActiveListingsGrid";
 import { BinderGrid } from "@/components/shared/BinderGrid";
 import { auth } from "@clerk/nextjs/server";
 import { getPossessiveName } from "@/lib/utils/formatters";
-import { Lock, Plus, ListTree } from "lucide-react";
+import { Lock, Plus, ListTree, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HeaderCustomizer } from "@/components/shared/HeaderCustomizer";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { StorefrontControls } from "@/components/storefront/StorefrontControls";
 import { BinderValueToggle } from "@/components/shared/binder-value-toggle";
 import { FiltersDrawer } from "@/components/storefront/FiltersDrawer";
@@ -303,16 +304,35 @@ export default async function SellerStorePage(props: Props) {
           locationCity={seller.locationCity}
           locationState={seller.locationState}
           heroCards={formattedHeroCards}
-          customizerNode={isOwner ? (
-            <div className="absolute top-4 right-4 z-40 flex items-center gap-2">
-              <StorefrontControls layout={storefrontLayout as "grid" | "categories"} sellerId={seller.userId} />
-              <HeaderCustomizer cards={binderCards} selectedIds={headerIds as number[]} />
-            </div>
-          ) : undefined}
         />
 
       <main className="max-w-7xl mx-auto px-4 md:px-8 pb-12">
         
+        {isOwner && (
+          <div className="flex justify-end pt-4">
+            <Sheet>
+              <SheetTrigger className="flex items-center gap-2 px-4 py-2 border border-white/20 bg-zinc-900/80 backdrop-blur-sm text-white hover:bg-white/10 rounded-full text-sm font-medium transition-colors">
+                <Settings className="w-4 h-4" />
+                Manage Storefront
+              </SheetTrigger>
+              <SheetContent className="bg-zinc-950 border-zinc-800 text-white flex flex-col">
+                <SheetHeader>
+                  <SheetTitle className="text-white">Manage Storefront</SheetTitle>
+                </SheetHeader>
+                <div className="flex-1 py-6 flex flex-col gap-6">
+                  <div className="space-y-4">
+                    <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Appearance</h3>
+                    <div className="flex flex-col gap-3 items-start">
+                      <StorefrontControls layout={storefrontLayout as "grid" | "categories"} sellerId={seller.userId} />
+                      <HeaderCustomizer cards={binderCards} selectedIds={headerIds as number[]} />
+                    </div>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+        )}
+
         {/* Navigation Tabs Row */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-white/10 mb-6 mt-0 pt-6 md:pt-8 gap-4 relative">
           <nav className="flex items-center gap-6 overflow-x-auto pb-[-1px] scrollbar-hide relative z-10">
