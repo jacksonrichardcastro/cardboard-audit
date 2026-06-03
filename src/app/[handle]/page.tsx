@@ -188,7 +188,7 @@ export default async function SellerStorePage(props: Props) {
   });
 
   const isOwner = seller.userId === userId;
-  const sellerName = seller.displayName || seller.businessName;
+  const sellerName = seller.displayName || seller.businessName || "Seller";
   const possessiveName = getPossessiveName(sellerName, isOwner);
   const grailId = seller.grailCardId || (binderCards.length > 0 ? binderCards[0].id : null);
   
