@@ -202,11 +202,11 @@ export function CategoryRows({ categories, cards, isOwner, sellerName, tab, allB
           setActivePickerCategoryId(null);
           setSelectedCardIds([]);
         }
-      }}>
-        <DialogContent className="max-w-3xl bg-zinc-950 border-zinc-800 text-white z-[120]">
+      }} modal={false}>
+        <DialogContent hideOverlay={true} className="max-w-3xl bg-[#7C3AED]/10 backdrop-blur-md border-[#7C3AED]/30 text-white shadow-2xl z-[120]">
           <DialogHeader>
             <DialogTitle className="text-xl">Add Cards to {activeCategory?.name}</DialogTitle>
-            <p className="text-sm text-zinc-400">
+            <p className="text-sm text-zinc-300">
               Select cards from your binder to add to this category.
             </p>
           </DialogHeader>
@@ -220,12 +220,12 @@ export function CategoryRows({ categories, cards, isOwner, sellerName, tab, allB
                 <div 
                   key={card.id} 
                   onClick={() => toggleCardSelection(card.id)}
-                  className={`relative aspect-[5/7] rounded-lg cursor-pointer overflow-hidden border-2 transition-all ${isSelected ? 'border-[#7C3AED]' : 'border-transparent hover:border-zinc-700'}`}
+                  className={`relative aspect-[5/7] rounded-lg cursor-pointer overflow-hidden border-2 transition-all ${isSelected ? 'border-[#7C3AED] shadow-[0_0_15px_rgba(124,58,237,0.5)] scale-[0.98]' : 'border-transparent hover:border-[#7C3AED]/40 hover:scale-105'}`}
                 >
                   <img src={photoUrl} alt={card.title} className="w-full h-full object-cover" />
                   {isSelected && (
-                    <div className="absolute inset-0 bg-[#7C3AED]/20 flex items-center justify-center">
-                      <div className="bg-[#7C3AED] rounded-full p-1">
+                    <div className="absolute inset-0 bg-[#7C3AED]/20 flex items-center justify-center backdrop-blur-[2px]">
+                      <div className="bg-[#7C3AED] rounded-full p-1 shadow-lg">
                         <Check className="w-4 h-4 text-white" />
                       </div>
                     </div>
@@ -234,23 +234,23 @@ export function CategoryRows({ categories, cards, isOwner, sellerName, tab, allB
               );
             })}
             {pickerCards.length === 0 && (
-              <div className="col-span-full text-center py-12 text-zinc-500">
+              <div className="col-span-full text-center py-12 text-zinc-400">
                 <p>No eligible cards found in your binder.</p>
               </div>
             )}
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="mt-4">
             <Button variant="outline" onClick={() => {
               setActivePickerCategoryId(null);
               setSelectedCardIds([]);
-            }} className="border-zinc-800 bg-zinc-900 hover:bg-zinc-800">
+            }} className="border-[#7C3AED]/30 bg-black/40 hover:bg-black/60 text-white">
               Cancel
             </Button>
             <Button 
               onClick={handleAddSelected} 
               disabled={isPending || selectedCardIds.length === 0} 
-              className="bg-[#7C3AED] hover:bg-[#6D28D9] text-white"
+              className="bg-[#7C3AED] hover:bg-[#6D28D9] text-white shadow-[0_0_15px_rgba(124,58,237,0.4)]"
             >
               {isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Add selected to {activeCategory?.name}

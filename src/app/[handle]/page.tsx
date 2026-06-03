@@ -310,6 +310,8 @@ export default async function SellerStorePage(props: Props) {
               <HeaderCustomizer 
                 cards={binderCards} 
                 selectedIds={headerIds}
+                headerStyle={seller.headerStyle || 'cards'}
+                bannerImageUrl={seller.bannerImageUrl}
                 triggerNode={
                   <button className="absolute top-2 right-2 z-50 p-2 bg-black/60 text-zinc-300 hover:text-white rounded-full hover:bg-black/80 transition-all backdrop-blur-sm shadow-md border border-white/10" title="Customize Header">
                     <Edit3 className="w-4 h-4" /> 
@@ -323,7 +325,7 @@ export default async function SellerStorePage(props: Props) {
       <main className="max-w-7xl mx-auto px-4 md:px-8 pb-12">
         
         {isOwner && (
-          <div className="flex justify-end pt-4 relative">
+          <div id="storefront-controls-wrapper" className="flex justify-end pt-4 relative z-50">
             <StorefrontControls layout={storefrontLayout as "grid" | "categories"} sellerId={seller.userId} sellerHandle={seller.handle || ''} isPreview={isPreview} cards={binderCards} headerIds={headerIds as number[]} />
           </div>
         )}

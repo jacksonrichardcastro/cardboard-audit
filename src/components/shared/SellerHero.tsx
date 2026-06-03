@@ -10,9 +10,9 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { updatePresenceStatus, updateSellerProfile, removeProfilePhoto } from "@/app/actions/profile";
-import { useTransition, useRef } from "react";
+import { useTransition, useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, User, Trash, Image as ImageIcon } from "lucide-react";
+import { Loader2, User, Trash, Image as ImageIcon, X } from "lucide-react";
 
 interface BadgeConfig {
   id: string;
@@ -51,6 +51,17 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightboxOpen(false);
+    };
+    if (lightboxOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxOpen]);
 
   const handleStatusChange = (status: "online" | "away" | "offline") => {
     startTransition(async () => {
@@ -200,7 +211,7 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
             </DropdownMenuTrigger>
             <DropdownMenuContent align="center" className="bg-[#7C3AED]/10 backdrop-blur-md border border-[#7C3AED]/30 text-white min-w-[160px] z-[120]">
               {avatarUrl && (
-                <DropdownMenuItem className="cursor-pointer focus:bg-[#7C3AED]/15 focus:text-white" onClick={() => window.open(avatarUrl, "_blank")}>
+                <DropdownMenuItem className="cursor-pointer focus:bg-[#7C3AED]/15 focus:text-white" onClick={() => setLightboxOpen(true)}>
                   <User className="w-4 h-4 mr-2 text-zinc-400" />
                   View Photo
                 </DropdownMenuItem>
@@ -242,7 +253,7 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
           </div>
 
           {/* Flanking Status/Icon */}
-          <div className="flex justify-center items-center gap-2 shrink-0">
+          <div id="seller-status-row" className="flex justify-center items-center gap-2 shrink-0">
           {isOwner ? (
             <DropdownMenu>
               <DropdownMenuTrigger className="focus:outline-none" disabled={isPending}>
@@ -329,6 +340,27 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
           ))}
         </div>
       </div>
+
+      {/* Lightbox for Profile Photo */}
+      {lightboxOpen && avatarUrl && (
+        <div 
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={() => setLightboxOpen(false)}
+        >
+          <button 
+            className="absolute top-4 right-4 p-2 text-white/70 hover:text-white transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              setLightboxOpen(false);
+            }}
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <div className="relative w-[90vw] max-w-2xl aspect-square md:aspect-auto md:h-[80vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            <img src={avatarUrl} alt={name} className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

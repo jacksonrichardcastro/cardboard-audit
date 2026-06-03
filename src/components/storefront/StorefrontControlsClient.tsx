@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { LayoutGrid, ListTree, Settings2, Loader2, Settings, Eye, Image as ImageIcon } from "lucide-react";
 import { updateStorefrontLayout } from "@/app/actions/categories";
@@ -37,6 +37,34 @@ export function StorefrontControlsClient({ layout, categories, sports, years, br
   const [showChrome, setShowChrome] = useState(true);
   const router = useRouter();
 
+  const [arrowTop, setArrowTop] = useState<number>(400); // sensible default
+
+  useEffect(() => {
+    if (!isPreview) return;
+
+    const updatePosition = () => {
+      const el = document.getElementById("seller-status-row");
+      const wrapper = document.getElementById("storefront-controls-wrapper");
+      if (el && wrapper) {
+        const elRect = el.getBoundingClientRect();
+        const wrapperRect = wrapper.getBoundingClientRect();
+        // position slightly below the status row, relative to the wrapper
+        setArrowTop((elRect.bottom - wrapperRect.top) + 8);
+      }
+    };
+
+    updatePosition();
+    // Use ResizeObserver for more robust layout updates if images load
+    const observer = new ResizeObserver(updatePosition);
+    if (document.body) observer.observe(document.body);
+    window.addEventListener("resize", updatePosition);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updatePosition);
+    };
+  }, [isPreview]);
+
   const handleLayoutChange = (value: string) => {
     if (value === layout) return;
     startTransition(() => {
@@ -49,19 +77,12 @@ export function StorefrontControlsClient({ layout, categories, sports, years, br
       {isPreview && (
         <button 
           onClick={() => setShowChrome(!showChrome)}
-          className="fixed top-1/2 right-0 -translate-y-1/2 z-[100] p-2 bg-[#7C3AED]/20 text-[#7C3AED] hover:bg-[#7C3AED]/30 hover:text-white backdrop-blur-md rounded-l-lg border-y border-l border-[#7C3AED]/30 transition-all shadow-lg flex items-center justify-center"
+          className="absolute right-0 z-[100] p-2 bg-[#7C3AED]/20 text-[#7C3AED] hover:bg-[#7C3AED]/30 hover:text-white backdrop-blur-md rounded-l-lg border-y border-l border-[#7C3AED]/30 transition-all shadow-lg flex items-center justify-center"
           title="Toggle Screenshot Mode"
+          style={{ top: `${arrowTop}px` }}
         >
           {showChrome ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
-      )}
-
-      {isPreview && showChrome && (
-        <div className="fixed top-[max(env(safe-area-inset-top),20px)] left-1/2 -translate-x-1/2 z-[100]">
-          <Link href={`/${sellerHandle}`} className="flex items-center gap-2 px-4 py-2 bg-[#7C3AED] text-white font-semibold rounded-full shadow-[0_0_15px_rgba(124,58,237,0.5)] hover:bg-[#6D28D9] transition-all text-sm border border-white/20">
-            Exit Preview
-          </Link>
-        </div>
       )}
 
       {(showChrome || !isPreview) && (
@@ -78,7 +99,7 @@ export function StorefrontControlsClient({ layout, categories, sports, years, br
             </Button>
           )
         } />
-        <DropdownMenuContent align="end" className="w-56 bg-[#7C3AED]/10 backdrop-blur-md border border-[#7C3AED]/30 text-white z-[110]">
+        <DropdownMenuContent align="end" className="w-56 bg-[#7C3AED]/5 backdrop-blur-md border border-[#7C3AED]/30 text-white z-[110]">
           <div className="px-2 py-1.5 text-xs font-semibold text-zinc-500 uppercase tracking-wider">
             Layout
           </div>
@@ -100,6 +121,15 @@ export function StorefrontControlsClient({ layout, categories, sports, years, br
               <Settings2 className="w-4 h-4 mr-2" />
               Manage Categories
             </DropdownMenuItem>
+          )}
+
+          {isPreview && (
+            <>
+              <DropdownMenuSeparator className="bg-white/10" />
+              <DropdownMenuItem className="cursor-pointer focus:bg-[#7C3AED]/15 focus:text-[#7C3AED] text-red-400 transition-colors" onClick={() => router.push(`/${sellerHandle}`)}>
+                Exit Preview
+              </DropdownMenuItem>
+            </>
           )}
         </DropdownMenuContent>
       </DropdownMenu>

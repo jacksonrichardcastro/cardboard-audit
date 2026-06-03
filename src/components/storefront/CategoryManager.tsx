@@ -85,26 +85,26 @@ export function CategoryManager({ open, onOpenChange, categories, sports, years,
   const hasAutoDataCategory = categories.some(c => !CURATED_CATEGORIES.some(curated => curated.name === c.name));
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md bg-zinc-950 border-zinc-800 text-white">
+    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
+      <DialogContent hideOverlay={true} className="max-w-md bg-[#7C3AED]/10 backdrop-blur-md border-[#7C3AED]/30 text-white shadow-2xl z-[120]">
         <DialogHeader>
           <DialogTitle className="text-xl">Manage Categories</DialogTitle>
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-zinc-300">
             Organize your storefront by adding category rows.
           </p>
         </DialogHeader>
 
         {showMyCollectionPrompt ? (
           <div className="py-6 flex flex-col items-center text-center gap-4">
-            <h3 className="text-lg font-medium">Auto-populate from binder?</h3>
-            <p className="text-sm text-zinc-400">
+            <h3 className="text-lg font-medium text-white">Auto-populate from binder?</h3>
+            <p className="text-sm text-zinc-300">
               Would you like to automatically fill "My Collection" with all cards currently in your binder?
             </p>
             <div className="flex gap-3 mt-4 w-full">
-              <Button variant="outline" className="flex-1 border-zinc-700 bg-zinc-800 text-white hover:bg-zinc-700" onClick={() => handleMyCollectionChoice(false)} disabled={isPending}>
+              <Button variant="outline" className="flex-1 border-[#7C3AED]/30 bg-black/40 text-white hover:bg-black/60" onClick={() => handleMyCollectionChoice(false)} disabled={isPending}>
                 Add my own
               </Button>
-              <Button className="flex-1 bg-[#7C3AED] hover:bg-[#6D28D9] text-white" onClick={() => handleMyCollectionChoice(true)} disabled={isPending}>
+              <Button className="flex-1 bg-[#7C3AED] hover:bg-[#6D28D9] text-white shadow-[0_0_15px_rgba(124,58,237,0.4)]" onClick={() => handleMyCollectionChoice(true)} disabled={isPending}>
                 {isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : "Auto Populate"}
               </Button>
             </div>
@@ -113,42 +113,42 @@ export function CategoryManager({ open, onOpenChange, categories, sports, years,
           <div className="flex flex-col gap-6 py-4">
             {/* Add Category */}
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-zinc-300">Add a Category Row</label>
+              <label className="text-sm font-medium text-zinc-200">Add a Category Row</label>
               <div className="flex gap-2">
                 <select 
-                  className="flex-1 bg-zinc-900 border border-zinc-800 rounded-md px-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-[#7C3AED]"
+                  className="flex-1 bg-black/40 border border-[#7C3AED]/30 rounded-md px-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-[#7C3AED]"
                   value={selectedCategory}
                   onChange={e => setSelectedCategory(e.target.value)}
                   disabled={isPending}
                 >
-                  <option value="" disabled>Select a category...</option>
+                  <option value="" disabled className="bg-zinc-900">Select a category...</option>
                   
-                  {availableCurated.length > 0 && <optgroup label="CURATED"></optgroup>}
+                  {availableCurated.length > 0 && <optgroup label="CURATED" className="bg-zinc-900"></optgroup>}
                   {availableCurated.map(c => (
-                    <option key={c.name} value={c.name}>{c.name}</option>
+                    <option key={c.name} value={c.name} className="bg-zinc-900">{c.name}</option>
                   ))}
                   
-                  {availableSports.length > 0 && <optgroup label="BY SPORT"></optgroup>}
+                  {availableSports.length > 0 && <optgroup label="BY SPORT" className="bg-zinc-900"></optgroup>}
                   {availableSports.map(s => (
-                    <option key={s} value={s}>{s}</option>
+                    <option key={s} value={s} className="bg-zinc-900">{s}</option>
                   ))}
                   
-                  {availableYears.length > 0 && <optgroup label="BY YEAR"></optgroup>}
+                  {availableYears.length > 0 && <optgroup label="BY YEAR" className="bg-zinc-900"></optgroup>}
                   {availableYears.map(y => (
-                    <option key={y} value={y}>{y}</option>
+                    <option key={y} value={y} className="bg-zinc-900">{y}</option>
                   ))}
                   
-                  {availableBrands.length > 0 && <optgroup label="BY BRAND"></optgroup>}
+                  {availableBrands.length > 0 && <optgroup label="BY BRAND" className="bg-zinc-900"></optgroup>}
                   {availableBrands.map(b => (
-                    <option key={b} value={b}>{b}</option>
+                    <option key={b} value={b} className="bg-zinc-900">{b}</option>
                   ))}
                   
-                  {availableGrades.length > 0 && <optgroup label="BY GRADE TIER"></optgroup>}
+                  {availableGrades.length > 0 && <optgroup label="BY GRADE TIER" className="bg-zinc-900"></optgroup>}
                   {availableGrades.map(g => (
-                    <option key={g} value={g}>{g}</option>
+                    <option key={g} value={g} className="bg-zinc-900">{g}</option>
                   ))}
                 </select>
-                <Button onClick={handleAddCategory} disabled={!selectedCategory || isPending} className="bg-zinc-800 text-white hover:bg-zinc-700">
+                <Button onClick={handleAddCategory} disabled={!selectedCategory || isPending} className="bg-black/40 border border-[#7C3AED]/30 text-white hover:bg-black/60">
                   <Plus className="w-4 h-4" />
                 </Button>
               </div>
@@ -168,19 +168,19 @@ export function CategoryManager({ open, onOpenChange, categories, sports, years,
 
             {/* Active Categories List */}
             <div className="flex flex-col gap-2 max-h-[40vh] overflow-y-auto pr-2">
-              <label className="text-sm font-medium text-zinc-300">Active Rows</label>
+              <label className="text-sm font-medium text-zinc-200">Active Rows</label>
               {categories.length === 0 ? (
-                <p className="text-sm text-zinc-500 italic">No categories added yet.</p>
+                <p className="text-sm text-[#7C3AED]/70 italic">No categories added yet.</p>
               ) : (
                 categories.map(c => (
-                  <div key={c.id} className="flex items-center justify-between p-3 rounded-md bg-zinc-900 border border-zinc-800">
-                    <span className="text-sm text-zinc-200 font-medium">{c.name}</span>
+                  <div key={c.id} className="flex items-center justify-between p-3 rounded-md bg-black/40 border border-[#7C3AED]/20 hover:border-[#7C3AED]/40 transition-colors">
+                    <span className="text-sm text-white font-medium">{c.name}</span>
                     <Button 
                       variant="ghost" 
                       size="sm" 
                       onClick={() => handleRemove(c.id)} 
                       disabled={isPending}
-                      className="h-8 w-8 p-0 text-zinc-500 hover:text-red-400 hover:bg-red-400/10"
+                      className="h-8 w-8 p-0 text-zinc-400 hover:text-red-400 hover:bg-red-400/10"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
