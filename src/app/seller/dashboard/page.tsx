@@ -9,7 +9,10 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { StorefrontUrlWidget } from "@/components/seller/StorefrontUrlWidget";
 
-export default async function SellerDashboardPage() {
+export default async function SellerDashboardPage(props: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const searchParams = await props.searchParams;
   const { userId } = await auth();
   if (!userId) return redirect("/sign-in?redirect_url=/seller/dashboard");
 
@@ -21,6 +24,7 @@ export default async function SellerDashboardPage() {
   }
 
   // Pre-KYC is allowed here now.
+  const tab = typeof searchParams.tab === "string" ? searchParams.tab : "settings";
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-5xl">
@@ -35,7 +39,7 @@ export default async function SellerDashboardPage() {
         )}
       </div>
 
-      <Tabs defaultValue="settings" className="w-full">
+      <Tabs defaultValue={tab} className="w-full">
         <TabsList className="mb-8 overflow-x-auto w-full justify-start bg-transparent border-b border-border rounded-none h-auto p-0">
           <TabsTrigger 
             value="settings" 

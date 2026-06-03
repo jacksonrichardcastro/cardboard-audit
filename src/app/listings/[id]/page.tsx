@@ -153,7 +153,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                     </Link>
                     <RemoveListingModal 
                       listingId={item.id}
-                      onSuccessRedirectUrl="/seller/dashboard?tab=active"
+                      onSuccessRedirectUrl="/seller/dashboard?tab=listings"
                       triggerNode={
                         <button className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-red-900/50 bg-red-950/20 hover:bg-red-900/40 text-red-500 hover:text-red-400 h-10 px-4 py-2">
                           <Trash2 className="w-4 h-4 mr-2" />

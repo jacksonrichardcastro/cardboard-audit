@@ -174,7 +174,7 @@ export default function EditListingClient({ listing, card }: { listing: any, car
       <div className="flex justify-center mt-12 mb-8">
         <RemoveListingModal 
           listingId={listing.id} 
-          onSuccessRedirectUrl="/seller/dashboard?tab=active"
+          onSuccessRedirectUrl="/seller/dashboard?tab=listings"
           triggerNode={
             <Button type="button" variant="destructive" className="w-full max-w-xs">
               Remove Listing

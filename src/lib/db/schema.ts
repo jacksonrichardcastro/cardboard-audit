@@ -355,7 +355,7 @@ export const userPreferences = pgTable("user_preferences", {
 export const viewHistory = pgTable("view_history", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id", { length: 255 }).references(() => users.id),
-  listingId: integer("listing_id").references(() => listings.id),
+  listingId: integer("listing_id").references(() => listings.id, { onDelete: 'cascade' }),
   viewedAt: timestamp("viewed_at").notNull().defaultNow(),
 }, (table) => ({
   userViewedAtIdx: index("view_history_user_viewed_at_idx").on(table.userId, sql`${table.viewedAt} DESC`),

@@ -11,7 +11,7 @@ import { useRouter } from "next/navigation";
 interface RemoveListingModalProps {
   listingId: number;
   triggerNode: React.ReactElement;
-  onSuccessRedirectUrl?: string; // e.g. /seller/dashboard?tab=active
+  onSuccessRedirectUrl?: string; // e.g. /seller/dashboard?tab=listings
 }
 
 export function RemoveListingModal({ listingId, triggerNode, onSuccessRedirectUrl }: RemoveListingModalProps) {
