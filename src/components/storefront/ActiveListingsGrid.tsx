@@ -73,23 +73,21 @@ export function ActiveListingsGrid({ isOwner, listings }: ActiveListingsGridProp
                 </h3>
                 <div className="flex flex-col gap-1 mb-2">
                   {listing.discountType && listing.discountAmount ? (
-                    <div className="flex flex-col">
-                      <span className="text-[10px] md:text-xs text-zinc-500 line-through">
-                        ${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <div className="flex items-center gap-1.5 w-full">
+                      <span className="text-[10px] md:text-[11px] text-zinc-500 line-through shrink-0">
+                        ${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                       </span>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <p className="text-sm md:text-[15px] font-bold text-[#7C3AED]">
-                          ${((listing.discountType === 'percent' 
-                            ? listing.priceCents * (1 - (listing.discountAmount || 0) / 10000)
-                            : listing.discountType === 'dollar'
-                            ? Math.max(0, listing.priceCents - (listing.discountAmount || 0))
-                            : listing.priceCents) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </p>
-                        <div className="bg-[#7C3AED]/20 border border-[#7C3AED]/50 text-[#7C3AED] text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider whitespace-nowrap">
-                          {listing.discountType === 'percent' 
-                            ? `${listing.discountAmount / 100}% OFF` 
-                            : `$${(listing.discountAmount / 100).toFixed(0)} OFF`}
-                        </div>
+                      <p className="text-sm md:text-[15px] font-bold text-[#7C3AED] shrink-0">
+                        ${((listing.discountType === 'percent' 
+                          ? listing.priceCents * (1 - (listing.discountAmount || 0) / 10000)
+                          : listing.discountType === 'dollar'
+                          ? Math.max(0, listing.priceCents - (listing.discountAmount || 0))
+                          : listing.priceCents) / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                      </p>
+                      <div className="bg-[#7C3AED]/20 border border-[#7C3AED]/50 text-[#7C3AED] text-[8px] md:text-[9px] font-bold px-1 py-0.5 rounded-sm uppercase tracking-wider whitespace-nowrap ml-auto">
+                        {listing.discountType === 'percent' 
+                          ? `${listing.discountAmount / 100}%` 
+                          : `$${(listing.discountAmount / 100).toFixed(0)}`} OFF
                       </div>
                     </div>
                   ) : (
