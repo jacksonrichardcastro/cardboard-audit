@@ -86,7 +86,7 @@ export function CategoryManager({ open, onOpenChange, categories, sports, years,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
-      <DialogContent hideOverlay={true} className="max-w-md bg-[#7C3AED]/10 backdrop-blur-md border-[#7C3AED]/30 text-white shadow-2xl z-[120]">
+      <DialogContent hideOverlay={true} className="max-w-md bg-[#7C3AED]/5 backdrop-blur-3xl border-[#7C3AED]/30 text-white shadow-2xl z-[120]">
         <DialogHeader>
           <DialogTitle className="text-xl">Manage Categories</DialogTitle>
           <p className="text-sm text-zinc-300">

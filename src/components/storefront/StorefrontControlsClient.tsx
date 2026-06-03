@@ -49,7 +49,7 @@ export function StorefrontControlsClient({ layout, categories, sports, years, br
         const elRect = el.getBoundingClientRect();
         const wrapperRect = wrapper.getBoundingClientRect();
         // position slightly below the status row, relative to the wrapper
-        setArrowTop((elRect.bottom - wrapperRect.top) + 8);
+        setArrowTop((elRect.bottom - wrapperRect.top) + 2);
       }
     };
 
@@ -99,7 +99,7 @@ export function StorefrontControlsClient({ layout, categories, sports, years, br
             </Button>
           )
         } />
-        <DropdownMenuContent align="end" className="w-56 bg-[#7C3AED]/5 backdrop-blur-md border border-[#7C3AED]/30 text-white z-[110]">
+        <DropdownMenuContent align="end" className="w-56 bg-[#7C3AED]/5 backdrop-blur-3xl border border-[#7C3AED]/30 text-white z-[110]">
           <div className="px-2 py-1.5 text-xs font-semibold text-zinc-500 uppercase tracking-wider">
             Layout
           </div>

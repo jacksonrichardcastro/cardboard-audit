@@ -10,9 +10,9 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { updatePresenceStatus, updateSellerProfile, removeProfilePhoto } from "@/app/actions/profile";
-import { useTransition, useRef, useState, useEffect } from "react";
+import { useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, User, Trash, Image as ImageIcon, X } from "lucide-react";
+import { Loader2, User, Trash, Image as ImageIcon } from "lucide-react";
 
 interface BadgeConfig {
   id: string;
@@ -51,17 +51,6 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setLightboxOpen(false);
-    };
-    if (lightboxOpen) {
-      document.addEventListener('keydown', handleKeyDown);
-    }
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [lightboxOpen]);
 
   const handleStatusChange = (status: "online" | "away" | "offline") => {
     startTransition(async () => {
@@ -188,67 +177,50 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
 
         {/* Profile Avatar (overlapping the shelf) */}
         <div className="absolute left-1/2 bottom-0 translate-y-1/2 -translate-x-1/2 z-20">
-          {isOwner ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger disabled={isPending} className="focus:outline-none transition-transform hover:scale-105">
-                <div className="relative group/avatar cursor-pointer">
-                  {avatarUrl ? (
-                    <img 
-                      src={avatarUrl} 
-                      alt={name} 
-                      className={`w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-4 border-black shadow-2xl bg-zinc-900 ${isPending ? 'opacity-50' : ''}`} 
-                    />
-                  ) : (
-                    <div className={`w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-black shadow-2xl bg-zinc-800 flex items-center justify-center text-2xl md:text-3xl font-bold text-white ${isPending ? 'opacity-50' : ''}`}>
-                      {name.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  {isPending && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Loader2 className="w-6 h-6 animate-spin text-white" />
-                    </div>
-                  )}
-                </div>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" className="bg-[#7C3AED]/10 backdrop-blur-md border border-[#7C3AED]/30 text-white min-w-[160px] z-[120]">
-                {avatarUrl && (
-                  <DropdownMenuItem className="cursor-pointer focus:bg-[#7C3AED]/15 focus:text-white" onClick={() => setLightboxOpen(true)}>
-                    <User className="w-4 h-4 mr-2 text-zinc-400" />
-                    View Photo
-                  </DropdownMenuItem>
+          <DropdownMenu>
+            <DropdownMenuTrigger disabled={isPending} className="focus:outline-none transition-transform hover:scale-105">
+              <div className="relative group/avatar">
+                {avatarUrl ? (
+                  <img 
+                    src={avatarUrl} 
+                    alt={name} 
+                    className={`w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-4 border-black shadow-2xl bg-zinc-900 ${isPending ? 'opacity-50' : ''}`} 
+                  />
+                ) : (
+                  <div className={`w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-black shadow-2xl bg-zinc-800 flex items-center justify-center text-2xl md:text-3xl font-bold text-white ${isPending ? 'opacity-50' : ''}`}>
+                    {name.charAt(0).toUpperCase()}
+                  </div>
                 )}
-                <DropdownMenuItem className="cursor-pointer focus:bg-[#7C3AED]/15 focus:text-[#7C3AED] text-[#7C3AED]" onClick={() => fileInputRef.current?.click()}>
-                  <ImageIcon className="w-4 h-4 mr-2" />
-                  Change Photo
+                {isPending && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Loader2 className="w-6 h-6 animate-spin text-white" />
+                  </div>
+                )}
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" className="bg-[#7C3AED]/10 backdrop-blur-md border border-[#7C3AED]/30 text-white min-w-[160px] z-[120]">
+              {avatarUrl && (
+                <DropdownMenuItem className="cursor-pointer focus:bg-[#7C3AED]/15 focus:text-white" onClick={() => window.open(avatarUrl, "_blank")}>
+                  <User className="w-4 h-4 mr-2 text-zinc-400" />
+                  View Photo
                 </DropdownMenuItem>
-                {avatarUrl && (
-                  <DropdownMenuItem className="cursor-pointer focus:bg-red-500/15 focus:text-red-400 text-red-400" onClick={handleAvatarRemove}>
-                    <Trash className="w-4 h-4 mr-2" />
-                    Remove
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <div 
-              className={`relative group/avatar ${avatarUrl ? 'cursor-pointer transition-transform hover:scale-105' : ''}`}
-              onClick={() => {
-                if (avatarUrl) setLightboxOpen(true);
-              }}
-            >
-              {avatarUrl ? (
-                <img 
-                  src={avatarUrl} 
-                  alt={name} 
-                  className={`w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-4 border-black shadow-2xl bg-zinc-900 ${isPending ? 'opacity-50' : ''}`} 
-                />
-              ) : (
-                <div className={`w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-black shadow-2xl bg-zinc-800 flex items-center justify-center text-2xl md:text-3xl font-bold text-white ${isPending ? 'opacity-50' : ''}`}>
-                  {name.charAt(0).toUpperCase()}
-                </div>
               )}
-            </div>
-          )}
+              {isOwner && (
+                <>
+                  <DropdownMenuItem className="cursor-pointer focus:bg-[#7C3AED]/15 focus:text-[#7C3AED] text-[#7C3AED]" onClick={() => fileInputRef.current?.click()}>
+                    <ImageIcon className="w-4 h-4 mr-2" />
+                    Change Photo
+                  </DropdownMenuItem>
+                  {avatarUrl && (
+                    <DropdownMenuItem className="cursor-pointer focus:bg-red-500/15 focus:text-red-400 text-red-400" onClick={handleAvatarRemove}>
+                      <Trash className="w-4 h-4 mr-2" />
+                      Remove
+                    </DropdownMenuItem>
+                  )}
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
           <input 
             type="file" 
             accept="image/*" 
@@ -270,7 +242,7 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
           </div>
 
           {/* Flanking Status/Icon */}
-          <div id="seller-status-row" className="flex justify-center items-center gap-2 shrink-0">
+          <div className="flex justify-center items-center gap-2 shrink-0">
           {isOwner ? (
             <DropdownMenu>
               <DropdownMenuTrigger className="focus:outline-none" disabled={isPending}>
@@ -357,27 +329,6 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
           ))}
         </div>
       </div>
-
-      {/* Lightbox for Profile Photo */}
-      {lightboxOpen && avatarUrl && (
-        <div 
-          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm"
-          onClick={() => setLightboxOpen(false)}
-        >
-          <button 
-            className="absolute top-4 right-4 p-2 text-white/70 hover:text-white transition-colors"
-            onClick={(e) => {
-              e.stopPropagation();
-              setLightboxOpen(false);
-            }}
-          >
-            <X className="w-6 h-6" />
-          </button>
-          <div className="relative w-[90vw] max-w-2xl aspect-square md:aspect-auto md:h-[80vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-            <img src={avatarUrl} alt={name} className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

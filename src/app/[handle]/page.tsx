@@ -11,7 +11,7 @@ import { ActiveListingsGrid } from "@/components/storefront/ActiveListingsGrid";
 import { BinderGrid } from "@/components/shared/BinderGrid";
 import { auth } from "@clerk/nextjs/server";
 import { getPossessiveName } from "@/lib/utils/formatters";
-import { Lock, Plus, ListTree, Settings, Edit3 } from "lucide-react";
+import { Lock, Plus, ListTree, Settings, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HeaderCustomizer } from "@/components/shared/HeaderCustomizer";
 import { StorefrontControls } from "@/components/storefront/StorefrontControls";
@@ -313,8 +313,8 @@ export default async function SellerStorePage(props: Props) {
                 headerStyle={seller.headerStyle || 'cards'}
                 bannerImageUrl={seller.bannerImageUrl}
                 triggerNode={
-                  <button className="absolute top-2 right-2 z-50 p-2 bg-black/60 text-zinc-300 hover:text-white rounded-full hover:bg-black/80 transition-all backdrop-blur-sm shadow-md border border-white/10" title="Customize Header">
-                    <Edit3 className="w-4 h-4" /> 
+                  <button className="absolute top-2 right-2 z-50 flex items-center justify-center w-11 h-11 bg-black/60 text-zinc-300 hover:text-white rounded-full hover:bg-black/80 transition-all backdrop-blur-sm shadow-md border border-white/10" title="Customize Header">
+                    <Pencil className="w-5 h-5" /> 
                   </button>
                 }
               />
