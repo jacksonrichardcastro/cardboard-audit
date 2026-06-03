@@ -64,6 +64,20 @@
       "when": 1780483442307,
       "tag": "0008_lumpy_leader",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1780490000000,
+      "tag": "0009_add_categories",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1780490000001,
+      "tag": "0010_missing_cols",
+      "breakpoints": true
     }
   ]
 }
