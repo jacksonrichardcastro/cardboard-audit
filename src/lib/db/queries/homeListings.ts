@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { listings, profiles } from "@/lib/db/schema";
-import { eq, desc, and, notInArray, sql } from "drizzle-orm";
+import { eq, desc, and, notInArray, inArray, sql } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 
 export const getHomeRows = unstable_cache(
@@ -31,7 +31,7 @@ export const getHomeRows = unstable_cache(
     .innerJoin(profiles, eq(listings.sellerId, profiles.userId))
     .where(
       and(
-        eq(listings.status, 'active'),
+        inArray(listings.status, ['active', 'pending_marketplace_activation']),
         sql`EXISTS (SELECT 1 FROM item_photos WHERE card_id = ${listings.cardId})`,
         sql`
           (${listings.title} ILIKE '%Shohei Ohtani%BST-6%') OR
@@ -96,6 +96,7 @@ export const getHomeRows = unstable_cache(
       and(
         eq(listings.status, 'active'),
         sql`EXISTS (SELECT 1 FROM item_photos WHERE card_id = ${listings.cardId})`,
+        sql`(${profiles.handle} IS NULL OR ${profiles.handle} NOT IN ('alexthegrader', '@alexthegrader'))`,
         specificListingIds.length > 0 ? notInArray(listings.id, specificListingIds) : undefined
       )
     )
@@ -194,6 +195,7 @@ export const getHomeRows = unstable_cache(
         and(
           eq(listings.status, 'active'),
           sql`EXISTS (SELECT 1 FROM item_photos WHERE card_id = ${listings.cardId})`,
+          sql`(${profiles.handle} IS NULL OR ${profiles.handle} NOT IN ('alexthegrader', '@alexthegrader'))`,
           excludeIds.length > 0 ? notInArray(listings.id, excludeIds) : undefined
         )
       )
