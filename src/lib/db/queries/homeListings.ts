@@ -96,7 +96,7 @@ export const getHomeRows = unstable_cache(
       and(
         inArray(listings.status, ['active', 'pending_marketplace_activation']),
         sql`EXISTS (SELECT 1 FROM item_photos WHERE card_id = ${listings.cardId})`,
-        sql`(${profiles.handle} IS NULL OR ${profiles.handle} NOT IN ('alexthegrader', '@alexthegrader'))`,
+        sql`(${profiles.handle} IS NULL OR ${profiles.handle} NOT IN ('alexthegrader', '@alexthegrader', 'storefront_test', '@storefront_test'))`,
         specificListingIds.length > 0 ? notInArray(listings.id, specificListingIds) : undefined
       )
     )
@@ -195,7 +195,7 @@ export const getHomeRows = unstable_cache(
         and(
           inArray(listings.status, ['active', 'pending_marketplace_activation']),
           sql`EXISTS (SELECT 1 FROM item_photos WHERE card_id = ${listings.cardId})`,
-          sql`(${profiles.handle} IS NULL OR ${profiles.handle} NOT IN ('alexthegrader', '@alexthegrader'))`,
+          sql`(${profiles.handle} IS NULL OR ${profiles.handle} NOT IN ('alexthegrader', '@alexthegrader', 'storefront_test', '@storefront_test'))`,
           excludeIds.length > 0 ? notInArray(listings.id, excludeIds) : undefined
         )
       )
