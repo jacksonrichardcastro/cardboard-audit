@@ -4,6 +4,7 @@ import { TickerPill } from "@/components/shared/TickerPill";
 import { SearchBar } from "@/components/storefront/search-bar";
 import { CardRail } from "@/components/storefront/card-rail";
 import { getTrendingListings } from "@/lib/db/queries/listings";
+import { getHomeRows } from "@/lib/db/queries/homeListings";
 import { FilterSidebar } from "@/components/storefront/filter-sidebar";
 import { db } from "@/lib/db";
 import { listings, profiles, itemPhotos } from "@/lib/db/schema";
@@ -29,86 +30,22 @@ export default async function Home(props: Props) {
     price: searchParams.price
   });
   
-  const hardcodedIds = [61, 62, 67, 64, 65, 66, 63, 68, 69];
-  
-  const rawTrendingListings = await db.select({
-    id: listings.id,
-    title: listings.title,
-    priceCents: listings.priceCents,
-    grade: listings.grade,
-    gradingCompany: listings.gradingCompany,
-    condition: listings.condition,
-    discountType: listings.discountType,
-    discountAmount: listings.discountAmount,
-    discountActiveUntil: listings.discountActiveUntil,
-    photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE card_id = ${listings.cardId}), '[]'::json)`,
-    sellerBusinessName: profiles.businessName,
-  })
-  .from(listings)
-  .innerJoin(profiles, eq(listings.sellerId, profiles.userId))
-  .where(inArray(listings.id, hardcodedIds));
+  const hasSearchQuery = !!(searchParams.sport || searchParams.listing_type || searchParams.grade || searchParams.era || searchParams.price || searchParams.q);
 
-  const recentListings = hardcodedIds.map(id => {
-    const d = rawTrendingListings.find(l => l.id === id);
-    if (!d) return null;
-    return {
-      id: d.id.toString(),
-      title: d.title,
-      category: "Sports" as any,
-      subcategory: "Other",
-      condition: d.condition,
-      grade: d.grade || undefined,
-      gradingCompany: d.gradingCompany || undefined,
-      priceCents: d.priceCents,
-      discountType: d.discountType || undefined,
-      discountAmount: d.discountAmount || undefined,
-      discountActiveUntil: d.discountActiveUntil || undefined,
-      photoUrl: (Array.isArray(d.photos) && d.photos.length > 0 && d.photos[0] !== null) ? d.photos[0] : 'https://placehold.co/400x550',
-      sellerBusinessName: d.sellerBusinessName,
-      createdAt: new Date().toISOString(),
-      sport: "",
-      listingType: "BUY_IT_NOW" as any,
-      gradeTier: "Raw / Ungraded",
-      era: "Modern (2010+)"
-    };
-  }).filter((item): item is NonNullable<typeof item> => item !== null);
+  let recentListings: any[] = [];
+  let recommendedMapped: any[] = [];
 
-  // Recommendations Engine integration (Hardcoded Featured Listings)
-  const { userId } = await auth();
-  const prefs = await getUserPreferences();
-  
-  const featuredIds = [75, 74, 77, 78, 79, 70, 71, 72, 76];
-  
-  const rawFeaturedListings = await db.select({
-    id: listings.id,
-    title: listings.title,
-    priceCents: listings.priceCents,
-    grade: listings.grade,
-    gradingCompany: listings.gradingCompany,
-    condition: listings.condition,
-    discountType: listings.discountType,
-    discountAmount: listings.discountAmount,
-    discountActiveUntil: listings.discountActiveUntil,
-    photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE card_id = ${listings.cardId}), '[]'::json)`,
-    sellerBusinessName: profiles.businessName,
-    sport: listings.sport,
-    listingType: listings.listingType,
-    gradeTier: listings.gradeTier,
-    era: listings.era,
-    category: listings.category
-  })
-  .from(listings)
-  .innerJoin(profiles, eq(listings.sellerId, profiles.userId))
-  .where(inArray(listings.id, featuredIds));
-
-  const recommendedMapped = featuredIds.map(id => {
-    const d = rawFeaturedListings.find(l => l.id === id);
-    if (!d) return null;
-    return {
+  if (!hasSearchQuery) {
+    const homeRows = await getHomeRows();
+    recentListings = homeRows.trending;
+    recommendedMapped = homeRows.featured;
+  } else {
+    // If there is a search query, dbListings is populated
+    recentListings = dbListings.map((d: any) => ({
       id: d.id.toString(),
       title: d.title,
       category: d.category as any,
-      subcategory: "Other",
+      subcategory: d.subcategory || "Other",
       condition: d.condition,
       grade: d.grade || undefined,
       gradingCompany: d.gradingCompany || undefined,
@@ -117,14 +54,16 @@ export default async function Home(props: Props) {
       discountAmount: d.discountAmount || undefined,
       discountActiveUntil: d.discountActiveUntil || undefined,
       photoUrl: (Array.isArray(d.photos) && d.photos.length > 0 && d.photos[0] !== null) ? d.photos[0] : 'https://placehold.co/400x550',
-      sellerBusinessName: d.sellerBusinessName,
-      createdAt: new Date().toISOString(),
+      sellerBusinessName: d.sellerBusinessName || "Seller",
+      createdAt: new Date(d.createdAt).toISOString(),
       sport: d.sport || "",
       listingType: d.listingType || "BUY_IT_NOW",
       gradeTier: d.gradeTier || "Raw / Ungraded",
       era: d.era || "Modern (2010+)"
-    };
-  }).filter((item): item is NonNullable<typeof item> => item !== null);
+    }));
+  }
+  const { userId } = await auth();
+  const prefs = await getUserPreferences();
 
   const hasPreferences = !!(prefs && prefs.sportCategories && prefs.sportCategories.length > 0);
   const isPersonalized = userId && hasPreferences;
@@ -144,8 +83,6 @@ export default async function Home(props: Props) {
     const total = activeListings[0]?.count ?? 0;
     displayText = `${total.toLocaleString()} cards available right now`;
   }
-
-  const hasSearchQuery = !!(searchParams.sport || searchParams.listing_type || searchParams.grade || searchParams.era || searchParams.price || searchParams.q);
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white relative">
