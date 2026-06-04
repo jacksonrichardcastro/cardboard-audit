@@ -94,7 +94,7 @@ export const getHomeRows = unstable_cache(
     .innerJoin(profiles, eq(listings.sellerId, profiles.userId))
     .where(
       and(
-        eq(listings.status, 'active'),
+        inArray(listings.status, ['active', 'pending_marketplace_activation']),
         sql`EXISTS (SELECT 1 FROM item_photos WHERE card_id = ${listings.cardId})`,
         sql`(${profiles.handle} IS NULL OR ${profiles.handle} NOT IN ('alexthegrader', '@alexthegrader'))`,
         specificListingIds.length > 0 ? notInArray(listings.id, specificListingIds) : undefined
@@ -139,7 +139,7 @@ export const getHomeRows = unstable_cache(
     .innerJoin(profiles, eq(listings.sellerId, profiles.userId))
     .where(
       and(
-        eq(listings.status, 'active'),
+        inArray(listings.status, ['active', 'pending_marketplace_activation']),
         sql`EXISTS (SELECT 1 FROM item_photos WHERE card_id = ${listings.cardId})`,
         excludedFromB.length > 0 ? notInArray(listings.id, excludedFromB) : undefined,
         sql`(${profiles.handle} IN ('beescardsemporium', '@beescardsemporium') OR ${listings.sellerId} = ${targetUserId})`
@@ -193,7 +193,7 @@ export const getHomeRows = unstable_cache(
       .innerJoin(profiles, eq(listings.sellerId, profiles.userId))
       .where(
         and(
-          eq(listings.status, 'active'),
+          inArray(listings.status, ['active', 'pending_marketplace_activation']),
           sql`EXISTS (SELECT 1 FROM item_photos WHERE card_id = ${listings.cardId})`,
           sql`(${profiles.handle} IS NULL OR ${profiles.handle} NOT IN ('alexthegrader', '@alexthegrader'))`,
           excludeIds.length > 0 ? notInArray(listings.id, excludeIds) : undefined
