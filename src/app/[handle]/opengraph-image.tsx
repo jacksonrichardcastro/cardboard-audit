@@ -27,9 +27,21 @@ export default async function Image(props: { params: Promise<{ handle: string }>
   }
 
   const seller = profileRecord.profile;
-  const displayName = seller.displayName || seller.businessName || seller.handle || "Seller";
-  const bio = seller.bio || `${displayName}'s storefront on Trax. By the hobby. For the hobby.`;
+  const displayName = (seller.displayName || seller.businessName || seller.handle || "Seller").trim();
+  const bio = seller.bio && seller.bio.trim().length > 0 ? seller.bio.trim() : `${displayName}'s storefront on Trax. By the hobby. For the hobby.`;
   const initial = displayName.charAt(0).toUpperCase();
+
+  let validAvatarUrl = null;
+  if (seller.profilePhotoUrl) {
+    try {
+      const res = await fetch(seller.profilePhotoUrl, { method: 'HEAD', signal: AbortSignal.timeout(3000) });
+      if (res.ok) {
+        validAvatarUrl = seller.profilePhotoUrl;
+      }
+    } catch (e) {
+      console.warn("OG Image avatar fetch failed for", seller.handle, e);
+    }
+  }
 
   return new ImageResponse(
     (
@@ -57,9 +69,9 @@ export default async function Image(props: { params: Promise<{ handle: string }>
         
         {/* Avatar Side */}
         <div style={{ display: 'flex', flex: '0 0 400px', justifyContent: 'center', alignItems: 'center' }}>
-          {seller.profilePhotoUrl ? (
+          {validAvatarUrl ? (
             <img
-              src={seller.profilePhotoUrl}
+              src={validAvatarUrl}
               style={{
                 width: '320px',
                 height: '320px',
