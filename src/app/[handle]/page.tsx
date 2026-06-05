@@ -304,7 +304,9 @@ export default async function SellerStorePage(props: Props) {
         />
       )}
       {theme === "trax-cosmos" && themeScope === "profile-wide" && (
-        <CosmosBackground />
+        <div className="fixed inset-0 z-0 pointer-events-none">
+          <CosmosBackground />
+        </div>
       )}
       <div className="relative z-10">
         <SellerHero 
