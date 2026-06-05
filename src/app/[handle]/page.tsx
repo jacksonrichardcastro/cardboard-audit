@@ -58,7 +58,14 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     openGraph: {
       title: `${displayName} on Trax`,
       description,
-      images: seller.profilePhotoUrl ? [seller.profilePhotoUrl] : [],
+      url: `https://trax.cards/${seller.handle}`,
+      siteName: 'Trax',
+      type: 'profile',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${displayName} on Trax`,
+      description,
     },
   };
 }
