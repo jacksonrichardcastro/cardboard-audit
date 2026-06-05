@@ -128,3 +128,25 @@ export async function removeProfilePhoto() {
 
   return { success: true };
 }
+
+export async function updateStorefrontTheme(theme: string, scope?: string | null) {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  await db
+    .update(profiles)
+    .set({ 
+      storefrontTheme: theme,
+      storefrontThemeScope: scope || undefined
+    })
+    .where(eq(profiles.userId, userId));
+
+  const [seller] = await db.select({ handle: profiles.handle }).from(profiles).where(eq(profiles.userId, userId)).limit(1);
+  if (seller?.handle) {
+    revalidatePath(`/${seller.handle}`);
+  }
+
+  return { success: true };
+}

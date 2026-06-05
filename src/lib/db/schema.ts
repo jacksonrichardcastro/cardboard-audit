@@ -41,6 +41,8 @@ export const profiles = pgTable("profiles", {
   headerCustomizationIds: json("header_customization_ids").default([]),
   badges: json("badges").$type<string[]>().default([]),
   presenceStatus: varchar("presence_status", { length: 20 }).notNull().default("online"), // online, away, offline
+  storefrontTheme: varchar("storefront_theme", { length: 50 }).notNull().default("trax-default"), // trax-default, trax-cosmos
+  storefrontThemeScope: varchar("storefront_theme_scope", { length: 50 }).default("storefront-only"), // storefront-only, profile-wide
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => ({
   handleIdx: unique("profiles_handle_idx").on(table.handle),

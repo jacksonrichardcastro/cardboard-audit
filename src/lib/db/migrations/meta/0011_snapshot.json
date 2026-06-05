@@ -1,6 +1,6 @@
 {
-  "id": "41fdb693-0f18-486e-b3dd-5fe0b4e6525e",
-  "prevId": "30a6f72f-8cb1-4efb-99f7-79af9374e11e",
+  "id": "ba46149d-998e-4c43-a616-0a6b4d3b2a50",
+  "prevId": "41fdb693-0f18-486e-b3dd-5fe0b4e6525e",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1863,6 +1863,20 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'online'"
+        },
+        "storefront_theme": {
+          "name": "storefront_theme",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'trax-default'"
+        },
+        "storefront_theme_scope": {
+          "name": "storefront_theme_scope",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'storefront-only'"
         },
         "created_at": {
           "name": "created_at",

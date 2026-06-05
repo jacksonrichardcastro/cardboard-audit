@@ -4,6 +4,7 @@ import { getUserPreferences } from "@/app/actions/preferences";
 import { Flame, ChevronRight } from "lucide-react";
 import { ForYouClient } from "@/components/recommendations/ForYouClient";
 import { ActiveListingsGrid } from "@/components/storefront/ActiveListingsGrid";
+import { CosmosBackground } from "@/components/marketplace/CosmosBackground";
 import Link from "next/link";
 import { Metadata } from "next";
 
@@ -27,7 +28,9 @@ export default async function ForYouPage() {
 
   return (
     <div className="min-h-screen bg-black text-white selection:bg-[#7C3AED]/30">
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-12">
+      <div className="relative overflow-hidden min-h-screen">
+        <CosmosBackground />
+        <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-12">
         
         {/* Header */}
         <div className="mb-8 space-y-2">
@@ -60,6 +63,7 @@ export default async function ForYouPage() {
             <p className="text-lg text-zinc-500">No listings found.</p>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

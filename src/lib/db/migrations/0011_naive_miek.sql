@@ -1,0 +1,2 @@
+ALTER TABLE "profiles" ADD COLUMN "storefront_theme" varchar(50) DEFAULT 'trax-default' NOT NULL;--> statement-breakpoint
+ALTER TABLE "profiles" ADD COLUMN "storefront_theme_scope" varchar(50) DEFAULT 'storefront-only';

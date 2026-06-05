@@ -2,8 +2,10 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { LayoutGrid, ListTree, Settings2, Loader2, Settings, Eye, Image as ImageIcon } from "lucide-react";
+import { LayoutGrid, ListTree, Settings2, Loader2, Settings, Eye, Image as ImageIcon, Sparkles, Palette } from "lucide-react";
 import { updateStorefrontLayout } from "@/app/actions/categories";
+import { updateStorefrontTheme } from "@/app/actions/profile";
+import { toast } from "sonner";
 import { CategoryManager } from "./CategoryManager";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -29,9 +31,11 @@ interface StorefrontControlsClientProps {
   binderCards: any[];
   headerIds: number[];
   sellerHandle: string;
+  theme: string;
+  themeScope: string;
 }
 
-export function StorefrontControlsClient({ layout, categories, sports, years, brands, grades, isPreview, binderCards, headerIds, sellerHandle }: StorefrontControlsClientProps) {
+export function StorefrontControlsClient({ layout, categories, sports, years, brands, grades, isPreview, binderCards, headerIds, sellerHandle, theme, themeScope }: StorefrontControlsClientProps) {
   const [isPending, startTransition] = useTransition();
   const [manageOpen, setManageOpen] = useState(false);
   const [showChrome, setShowChrome] = useState(true);
@@ -69,6 +73,22 @@ export function StorefrontControlsClient({ layout, categories, sports, years, br
     if (value === layout) return;
     startTransition(() => {
       updateStorefrontLayout(value as "grid" | "categories");
+    });
+  };
+
+  const handleThemeChange = (value: string) => {
+    if (value === theme) return;
+    startTransition(() => {
+      updateStorefrontTheme(value, value === "trax-cosmos" ? themeScope : null)
+        .then(() => toast.success("Theme updated"));
+    });
+  };
+
+  const handleScopeChange = (value: string) => {
+    if (value === themeScope) return;
+    startTransition(() => {
+      updateStorefrontTheme("trax-cosmos", value)
+        .then(() => toast.success("Theme scope updated"));
     });
   };
 
@@ -113,6 +133,38 @@ export function StorefrontControlsClient({ layout, categories, sports, years, br
               <span className="group-data-[state=checked]:text-[#7C3AED]">Categories</span>
             </DropdownMenuRadioItem>
           </DropdownMenuRadioGroup>
+          
+          <DropdownMenuSeparator className="bg-white/10" />
+          
+          <div className="px-2 py-1.5 text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+            Background Theme
+          </div>
+          <DropdownMenuRadioGroup value={theme} onValueChange={handleThemeChange}>
+            <DropdownMenuRadioItem value="trax-default" className="cursor-pointer focus:bg-[#7C3AED]/15 focus:text-white group" onSelect={(e) => e.preventDefault()}>
+              <Palette className="w-4 h-4 mr-2 group-data-[state=checked]:text-[#7C3AED]" />
+              <span className="group-data-[state=checked]:text-[#7C3AED]">Trax Theme</span>
+            </DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="trax-cosmos" className="cursor-pointer focus:bg-[#7C3AED]/15 focus:text-white group" onSelect={(e) => e.preventDefault()}>
+              <Sparkles className="w-4 h-4 mr-2 group-data-[state=checked]:text-[#7C3AED]" />
+              <span className="group-data-[state=checked]:text-[#7C3AED]">Trax Cosmos</span>
+            </DropdownMenuRadioItem>
+          </DropdownMenuRadioGroup>
+
+          {theme === "trax-cosmos" && (
+            <div className="px-2 py-1.5 mt-1 ml-4 border-l border-white/10">
+              <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1">
+                Apply to
+              </div>
+              <DropdownMenuRadioGroup value={themeScope} onValueChange={handleScopeChange}>
+                <DropdownMenuRadioItem value="storefront-only" className="cursor-pointer text-xs focus:bg-[#7C3AED]/15 focus:text-white group h-7" onSelect={(e) => e.preventDefault()}>
+                  <span className="group-data-[state=checked]:text-[#7C3AED]">Storefront only</span>
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="profile-wide" className="cursor-pointer text-xs focus:bg-[#7C3AED]/15 focus:text-white group h-7" onSelect={(e) => e.preventDefault()}>
+                  <span className="group-data-[state=checked]:text-[#7C3AED]">Profile-wide</span>
+                </DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </div>
+          )}
           
           <DropdownMenuSeparator className="bg-white/10" />
           

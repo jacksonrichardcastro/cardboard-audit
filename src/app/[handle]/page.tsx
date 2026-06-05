@@ -14,6 +14,7 @@ import { getPossessiveName } from "@/lib/utils/formatters";
 import { Lock, Plus, ListTree, Settings, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HeaderCustomizer } from "@/components/shared/HeaderCustomizer";
+import { CosmosBackground } from "@/components/marketplace/CosmosBackground";
 import { StorefrontControls } from "@/components/storefront/StorefrontControls";
 import { BinderValueToggle } from "@/components/shared/binder-value-toggle";
 import { FiltersDrawer } from "@/components/storefront/FiltersDrawer";
@@ -201,6 +202,9 @@ export default async function SellerStorePage(props: Props) {
   const possessiveName = getPossessiveName(sellerName, isOwner);
   const grailId = seller.grailCardId || (binderCards.length > 0 ? binderCards[0].id : null);
   
+  const theme = seller.storefrontTheme || 'trax-default';
+  const themeScope = seller.storefrontThemeScope || 'storefront-only';
+  
   let pendingCategoryCount = 0;
   if (displayAsOwner && storefrontLayout === "categories") {
     const categorizedCardIds = new Set();
@@ -289,14 +293,19 @@ export default async function SellerStorePage(props: Props) {
   }));
 
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-[#7C3AED]/30 relative">
+    <div className={`min-h-screen bg-black text-white selection:bg-[#7C3AED]/30 relative ${theme === 'trax-cosmos' && themeScope === 'profile-wide' ? 'overflow-hidden' : ''}`}>
       {/* Ambient background glow */}
-      <div 
-        className="absolute inset-0 pointer-events-none z-0"
-        style={{
-          backgroundImage: 'radial-gradient(80% 50% at 50% 0%, rgba(124, 58, 237, 0.45) 0%, rgba(124, 58, 237, 0.20) 30%, rgba(0, 0, 0, 0) 70%)'
-        }}
-      />
+      {theme === "trax-default" && (
+        <div 
+          className="absolute inset-0 pointer-events-none z-0"
+          style={{
+            backgroundImage: 'radial-gradient(80% 50% at 50% 0%, rgba(124, 58, 237, 0.45) 0%, rgba(124, 58, 237, 0.20) 30%, rgba(0, 0, 0, 0) 70%)'
+          }}
+        />
+      )}
+      {theme === "trax-cosmos" && themeScope === "profile-wide" && (
+        <CosmosBackground />
+      )}
       <div className="relative z-10">
         <SellerHero 
           name={sellerName}
@@ -333,7 +342,7 @@ export default async function SellerStorePage(props: Props) {
         
         {isOwner && (
           <div id="storefront-controls-wrapper" className="flex justify-end pt-4 relative z-50">
-            <StorefrontControls layout={storefrontLayout as "grid" | "categories"} sellerId={seller.userId} sellerHandle={seller.handle || ''} isPreview={isPreview} cards={binderCards} headerIds={headerIds as number[]} />
+            <StorefrontControls layout={storefrontLayout as "grid" | "categories"} sellerId={seller.userId} sellerHandle={seller.handle || ''} isPreview={isPreview} cards={binderCards} headerIds={headerIds as number[]} theme={theme} themeScope={themeScope} />
           </div>
         )}
 
@@ -370,7 +379,13 @@ export default async function SellerStorePage(props: Props) {
         </div>
 
         {/* Tab Content Areas */}
-        <div className="min-h-[400px]">
+        <div className={`relative min-h-[400px] ${theme === 'trax-cosmos' && themeScope === 'storefront-only' ? 'overflow-hidden' : ''}`}>
+          {theme === "trax-cosmos" && themeScope === "storefront-only" && (
+            <div className="absolute inset-0 z-0 -mx-4 md:-mx-8">
+              <CosmosBackground />
+            </div>
+          )}
+          <div className="relative z-10">
           {(currentTab === "storefront" || currentTab === "active-listings") && (
             <ActiveFilterChips />
           )}
@@ -467,6 +482,7 @@ export default async function SellerStorePage(props: Props) {
               <p className="text-lg text-zinc-500">Blog posts coming soon.</p>
             </div>
           )}
+          </div>
         </div>
       </main>
       </div>
