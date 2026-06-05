@@ -28,7 +28,7 @@ export default async function ForYouPage() {
 
   return (
     <div className="min-h-screen bg-black text-white selection:bg-[#7C3AED]/30">
-      <div className="relative overflow-hidden min-h-screen">
+      <div className="relative z-0 overflow-hidden min-h-screen">
         <CosmosBackground />
         <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-12">
         

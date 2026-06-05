@@ -321,6 +321,7 @@ export default async function SellerStorePage(props: Props) {
           locationCity={seller.locationCity}
           locationState={seller.locationState}
           heroCards={formattedHeroCards}
+          transparentBackground={theme === 'trax-cosmos' && themeScope === 'profile-wide'}
           customizerNode={
             displayAsOwner ? (
               <HeaderCustomizer 

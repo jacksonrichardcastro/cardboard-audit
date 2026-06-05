@@ -45,9 +45,10 @@ interface SellerHeroProps {
   presenceStatus?: string | null;
   locationCity?: string | null;
   locationState?: string | null;
+  transparentBackground?: boolean;
 }
 
-export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerImageUrl, isOwner, sellerId, heroCards = [], customizerNode, badges = [], presenceStatus = "online", locationCity, locationState }: SellerHeroProps) {
+export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerImageUrl, isOwner, sellerId, heroCards = [], customizerNode, badges = [], presenceStatus = "online", locationCity, locationState, transparentBackground = false }: SellerHeroProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -141,7 +142,7 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
   const displayCards = heroCards.length > 0 ? heroCards.slice(0, 19) : defaultHeroCards.slice(0, 19);
 
   return (
-    <div className="relative w-full bg-black pt-0 pb-6 md:pb-8 flex flex-col items-center">
+    <div className={`relative w-full ${transparentBackground ? 'bg-transparent' : 'bg-black'} pt-0 pb-6 md:pb-8 flex flex-col items-center`}>
       {/* Ambient Radial Glow Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-[600px] bg-[#7C3AED]/20 blur-[120px] rounded-full opacity-50" />
