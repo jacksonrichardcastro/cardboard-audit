@@ -30,6 +30,8 @@ export function CategoryManager({ open, onOpenChange, categories, sports, years,
   const [isPending, startTransition] = useTransition();
   const [selectedCategory, setSelectedCategory] = useState("");
   const [showMyCollectionPrompt, setShowMyCollectionPrompt] = useState(false);
+  const [customEmoji, setCustomEmoji] = useState("");
+  const [customName, setCustomName] = useState("");
 
   const activeNames = categories.map(c => c.name);
 
@@ -54,6 +56,18 @@ export function CategoryManager({ open, onOpenChange, categories, sports, years,
     startTransition(async () => {
       await addCategory(selectedCategory, isAuto);
       setSelectedCategory("");
+    });
+  };
+
+  const finalCustomName = customEmoji.trim() ? `${customEmoji.trim()} ${customName.trim()}` : customName.trim();
+  const isDuplicate = categories.some(c => c.name.toLowerCase() === finalCustomName.toLowerCase());
+
+  const handleCreateCustom = () => {
+    if (!customName.trim() || isDuplicate) return;
+    startTransition(async () => {
+      await addCategory(finalCustomName, false);
+      setCustomName("");
+      setCustomEmoji("");
     });
   };
 
@@ -111,9 +125,41 @@ export function CategoryManager({ open, onOpenChange, categories, sports, years,
           </div>
         ) : (
           <div className="flex flex-col gap-6 py-4">
+            {/* Create Custom Category */}
+            <div className="flex flex-col gap-2 pb-5 border-b border-white/10">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-zinc-200">Create Custom Category</label>
+                {isDuplicate && customName.trim() && (
+                  <span className="text-xs text-red-400">Category already exists</span>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <input 
+                  type="text"
+                  maxLength={2}
+                  placeholder="✨"
+                  className="w-12 bg-black/40 border border-[#7C3AED]/30 rounded-md px-0 text-center text-sm text-white focus:outline-none focus:ring-1 focus:ring-[#7C3AED]"
+                  value={customEmoji}
+                  onChange={e => setCustomEmoji(e.target.value)}
+                  disabled={isPending}
+                />
+                <input 
+                  type="text"
+                  placeholder="Category Name"
+                  className="flex-1 bg-black/40 border border-[#7C3AED]/30 rounded-md px-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-[#7C3AED]"
+                  value={customName}
+                  onChange={e => setCustomName(e.target.value)}
+                  disabled={isPending}
+                />
+                <Button onClick={handleCreateCustom} disabled={!customName.trim() || isDuplicate || isPending} className="bg-[#7C3AED] hover:bg-[#6D28D9] text-white shadow-[0_0_10px_rgba(124,58,237,0.3)]">
+                  Create
+                </Button>
+              </div>
+            </div>
+
             {/* Add Category */}
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-zinc-200">Add a Category Row</label>
+              <label className="text-sm font-medium text-zinc-200">Add an Auto-Populating Row</label>
               <div className="flex gap-2">
                 <select 
                   className="flex-1 bg-black/40 border border-[#7C3AED]/30 rounded-md px-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-[#7C3AED]"
