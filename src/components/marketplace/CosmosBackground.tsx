@@ -3,8 +3,8 @@
 import { useEffect, useRef } from "react";
 
 interface Star {
-  x: number;
-  y: number;
+  xRatio: number;
+  yRatio: number;
   size: number;
   baseOpacity: number;
   color: string;
@@ -13,7 +13,7 @@ interface Star {
 }
 
 interface Ray {
-  y: number;
+  yRatio: number;
   thickness: number;
   color: string;
   speed: number;
@@ -56,28 +56,30 @@ export function CosmosBackground() {
       canvas.height = height * window.devicePixelRatio;
       ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 
-      stars.length = 0;
-      for (let i = 0; i < MAX_STARS; i++) {
-        stars.push({
-          x: Math.random() * width,
-          y: Math.random() * height,
-          size: Math.random() * 1.5 + 0.5,
-          baseOpacity: Math.random() * 0.1 + 0.15, // 15% to 25% baseline
-          color: colors[Math.floor(Math.random() * colors.length)],
-          twinklePhase: Math.random() * Math.PI * 2,
-          twinkleSpeed: (Math.random() * 0.005) + 0.002, // Slow: 6-8s cycle
-        });
+      if (stars.length === 0) {
+        for (let i = 0; i < MAX_STARS; i++) {
+          stars.push({
+            xRatio: Math.random(),
+            yRatio: Math.random(),
+            size: Math.random() * 1.5 + 0.5,
+            baseOpacity: Math.random() * 0.1 + 0.15, // 15% to 25% baseline
+            color: colors[Math.floor(Math.random() * colors.length)],
+            twinklePhase: Math.random() * Math.PI * 2,
+            twinkleSpeed: (Math.random() * 0.005) + 0.002, // Slow: 6-8s cycle
+          });
+        }
       }
 
-      rays.length = 0;
-      for (let i = 0; i < 3; i++) {
-        rays.push({
-          y: Math.random() * height,
-          thickness: Math.random() * 150 + 50,
-          color: colors[Math.floor(Math.random() * colors.length)],
-          speed: (Math.random() * 0.2) + 0.1,
-          xOffset: Math.random() * width,
-        });
+      if (rays.length === 0) {
+        for (let i = 0; i < 3; i++) {
+          rays.push({
+            yRatio: Math.random(),
+            thickness: Math.random() * 150 + 50,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            speed: (Math.random() * 0.2) + 0.1,
+            xOffset: Math.random() * width,
+          });
+        }
       }
     };
 
@@ -123,11 +125,13 @@ export function CosmosBackground() {
           ray.xOffset += ray.speed;
           if (ray.xOffset > width * 2) {
             ray.xOffset = -width;
-            ray.y = Math.random() * height;
+            ray.yRatio = Math.random();
           }
 
+          const rayY = ray.yRatio * height;
+
           const gradient = ctx.createLinearGradient(
-            ray.xOffset, ray.y, ray.xOffset + width, ray.y
+            ray.xOffset, rayY, ray.xOffset + width, rayY
           );
           
           // Max ray opacity is 25% (or lower)
@@ -142,7 +146,7 @@ export function CosmosBackground() {
           gradient.addColorStop(1, clear);
 
           ctx.fillStyle = gradient;
-          ctx.fillRect(0, ray.y - ray.thickness / 2, width, ray.thickness);
+          ctx.fillRect(0, rayY - ray.thickness / 2, width, ray.thickness);
         });
       }
 
@@ -167,15 +171,18 @@ export function CosmosBackground() {
           currentOpacity = 0.40;
         }
 
+        const starX = star.xRatio * width;
+        const starY = star.yRatio * height;
+
         ctx.beginPath();
-        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.arc(starX, starY, star.size, 0, Math.PI * 2);
         ctx.fillStyle = star.color.replace('1)', `${currentOpacity})`);
         ctx.fill();
         
         // Add a subtle glow for larger stars if blooming
         if (!prefersReducedMotion && star.size > 1.2 && currentOpacity > 0.3) {
           ctx.beginPath();
-          ctx.arc(star.x, star.y, star.size * 2.5, 0, Math.PI * 2);
+          ctx.arc(starX, starY, star.size * 2.5, 0, Math.PI * 2);
           ctx.fillStyle = star.color.replace('1)', `${currentOpacity * 0.3})`);
           ctx.fill();
         }
