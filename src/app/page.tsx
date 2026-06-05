@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Award, Clock, ArrowRight, LayoutGrid, Tag, PackageSearch, Zap, Flame, Calendar, ChevronRight, ShieldCheck } from "lucide-react";
 import { TickerPill } from "@/components/shared/TickerPill";
 import { SearchBar } from "@/components/storefront/search-bar";
+import { CosmosBackground } from "@/components/marketplace/CosmosBackground";
 import { CardRail } from "@/components/storefront/card-rail";
 import { getTrendingListings } from "@/lib/db/queries/listings";
 import { getHomeRows } from "@/lib/db/queries/homeListings";
@@ -113,13 +114,17 @@ export default async function Home(props: Props) {
         </div>
       </div>
 
-      {/* Live Stat Element Buffer Zone */}
-      <div className="flex justify-center pt-6 pb-10">
-        <TickerPill />
-      </div>
+      {/* Cosmos Section Wrapper */}
+      <div className="relative">
+        <CosmosBackground />
 
-      <div className="max-w-[1600px] mx-auto px-4 md:px-8 py-4">
-        {/* Mobile Filters Drawer & Active Chips Row */}
+        {/* Live Stat Element Buffer Zone */}
+        <div className="relative z-10 flex justify-center pt-6 pb-10">
+          <TickerPill />
+        </div>
+
+        <div className="relative z-10 max-w-[1600px] mx-auto px-4 md:px-8 py-4">
+          {/* Mobile Filters Drawer & Active Chips Row */}
         <div className="md:hidden mb-4 space-y-3">
           <div className="flex items-center">
             <FiltersDrawer />
@@ -186,6 +191,8 @@ export default async function Home(props: Props) {
             </div>
           </div>
         </div>
+      </div>
+      
       </div>
     </div>
   </div>
