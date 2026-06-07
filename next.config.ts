@@ -3,6 +3,21 @@ import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   devIndicators: false,
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'card-bound.vercel.app',
+          },
+        ],
+        destination: 'https://trax.cards/:path*',
+        permanent: true,
+      },
+    ];
+  },
   // Sentry adds tunnelRoute + error boundary overlay; no other Next config
   // needed for Sentry wiring itself.
 };

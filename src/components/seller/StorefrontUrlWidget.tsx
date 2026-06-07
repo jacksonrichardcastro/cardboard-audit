@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 
 export function StorefrontUrlWidget({ handle }: { handle: string }) {
   const [copied, setCopied] = useState(false);
-  const url = `card-bound.vercel.app/${handle}`;
+  const url = `trax.cards/${handle}`;
 
   const copyToClipboard = async () => {
     try {
