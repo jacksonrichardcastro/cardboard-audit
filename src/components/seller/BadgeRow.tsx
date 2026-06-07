@@ -74,8 +74,8 @@ export function BadgeRow({ displayName, isFoundingSeller, identityVerified, badg
                   <X className="h-4 w-4 text-red-400" />
                 </button>
               )}
-              <div className="text-sm font-semibold mb-1 pr-6">{badge.label}</div>
-              <div className="text-xs text-zinc-300 leading-relaxed">
+              <div className="text-sm font-semibold mb-1 px-6 text-center">{badge.label}</div>
+              <div className="text-xs text-zinc-300 leading-relaxed text-center">
                 {badge.description(displayName)}
               </div>
             </PopoverContent>
