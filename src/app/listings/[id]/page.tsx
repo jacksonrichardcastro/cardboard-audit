@@ -14,6 +14,8 @@ import Link from "next/link";
 import Image from "next/image"; // Will use img securely with static Next boundaries as specified earlier to bypass proxy issues if any, but since they are in public/, we can use img
 import { ListingGallery } from "@/components/listings/listing-gallery";
 import { RemoveListingModal } from "@/components/listings/RemoveListingModal";
+import { PostCreationModal } from "@/components/listings/post-creation-modal";
+import { Suspense } from "react";
 
 export default async function ListingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -101,6 +103,9 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div className="w-full flex justify-center pb-24 md:pb-12 bg-background animate-in fade-in duration-700">
+      <Suspense fallback={null}>
+        <PostCreationModal sellerHandle={dbItem.sellerHandle} />
+      </Suspense>
       <div className="w-full max-w-7xl">
         {/* Breadcrumb - Align to left edges exactly like the rails (px-4 md:px-8) */}
         <div className="w-full px-4 md:px-8 py-6 flex items-center text-sm text-muted-foreground gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide">
