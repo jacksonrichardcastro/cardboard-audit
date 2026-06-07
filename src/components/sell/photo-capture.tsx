@@ -363,7 +363,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
         <IndicatorDot label="Bkgnd" check={background} />
       </div>
 
-      <div className="flex-1 min-h-0 relative w-full md:aspect-[3/4] bg-black rounded-xl overflow-hidden shadow-lg border border-border">
+      <div className="flex-1 min-h-[55vh] md:min-h-0 relative w-full md:aspect-[3/4] bg-black rounded-xl overflow-hidden shadow-lg border border-border flex items-center justify-center">
         {/* RAW METRICS OVERLAY (TEMPORARY FOR EMPIRICAL HARDWARE TUNING) */}
         {process.env.NODE_ENV === 'development' && (
         <div className="absolute top-2 left-2 bg-black/80 text-green-400 text-[10px] p-2 rounded z-30 pointer-events-none font-mono">
