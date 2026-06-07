@@ -10,6 +10,7 @@ import { useRef } from "react";
 import { PhotoCapture, type CapturedPhoto } from "@/components/sell/photo-capture";
 import { createDraft, updateDraft, loadDraft, publishDraft } from "../actions";
 import { Loader2, ImagePlus } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function NewListingPage({ categories = [], storefrontLayout = "grid" }: { categories?: any[], storefrontLayout?: string }) {
   const router = useRouter();
@@ -174,15 +175,26 @@ export default function NewListingPage({ categories = [], storefrontLayout = "gr
   if (isLoading) return <div className="p-12 text-center">Loading draft...</div>;
 
   return (
-    <div className="max-w-2xl mx-auto py-12 px-4">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Create Listing</h1>
+    <div className={cn(
+      "max-w-2xl mx-auto w-full",
+      step === 3 
+        ? "flex flex-col min-h-[100vh] min-h-[100dvh] md:min-h-0 md:py-12 md:px-4" 
+        : "py-12 px-4"
+    )}>
+      <div className={cn(
+        "flex justify-between items-center flex-shrink-0",
+        step === 3 ? "px-4 pt-4 pb-2 md:p-0 md:mb-8" : "mb-8"
+      )}>
+        <h1 className={cn("font-bold", step === 3 ? "text-xl md:text-3xl" : "text-3xl")}>Create Listing</h1>
         <div className="text-sm text-muted-foreground">
           {isSaving ? "Saving..." : "Saved as draft"}
         </div>
       </div>
 
-      <div className="bg-card border border-border/50 rounded-xl p-6">
+      <div className={cn(
+        "bg-card border border-border/50 rounded-xl",
+        step === 3 ? "flex-1 flex flex-col min-h-0 border-0 rounded-none bg-transparent md:border md:rounded-xl md:p-6 md:bg-card" : "p-6"
+      )}>
         {step === 1 && (
           <div className="space-y-6">
             <h2 className="text-xl font-semibold border-b pb-2">Step 1: Identify the Card</h2>
@@ -282,8 +294,8 @@ export default function NewListingPage({ categories = [], storefrontLayout = "gr
         )}
 
         {step === 3 && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold border-b pb-2 flex justify-between items-center">
+          <div className="flex flex-col h-full md:block space-y-6 md:space-y-6">
+            <h2 className="flex-shrink-0 text-xl font-semibold border-b pb-2 flex justify-between items-center px-4 md:px-0">
               Step 3: Photos
               <div className="flex gap-2">
                 <label 
@@ -305,8 +317,8 @@ export default function NewListingPage({ categories = [], storefrontLayout = "gr
             </h2>
             
             {formData.photos.length === 0 ? (
-              <div className="py-4">
-                <h3 className="text-center font-medium mb-4 text-muted-foreground">Capture Front of Card</h3>
+              <div className="flex-1 flex flex-col min-h-0 md:py-4 w-full">
+                <h3 className="flex-shrink-0 text-center font-medium mb-4 text-muted-foreground">Capture Front of Card</h3>
                 <PhotoCapture 
                   key="front"
                   draftId={draftId}
@@ -318,8 +330,8 @@ export default function NewListingPage({ categories = [], storefrontLayout = "gr
                 />
               </div>
             ) : formData.photos.length === 1 ? (
-              <div className="py-4">
-                <h3 className="text-center font-medium mb-4 text-muted-foreground">Capture Back of Card</h3>
+              <div className="flex-1 flex flex-col min-h-0 md:py-4 w-full">
+                <h3 className="flex-shrink-0 text-center font-medium mb-4 text-muted-foreground">Capture Back of Card</h3>
                 <PhotoCapture 
                   key="back"
                   draftId={draftId}

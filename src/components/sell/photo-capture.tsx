@@ -353,9 +353,9 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
   }
 
   return (
-    <div className="relative w-full max-w-sm mx-auto flex flex-col items-center">
+    <div className="relative w-full max-w-sm mx-auto flex flex-col flex-1 min-h-0 items-center">
       {/* Real-time Indicator Dots */}
-      <div className="flex justify-center gap-1 mb-3 bg-black/80 rounded-full px-2 py-2 text-white shadow-lg w-full z-10 overflow-x-auto">
+      <div className="flex-shrink-0 flex justify-center gap-1 mb-3 bg-black/80 rounded-full px-2 py-2 text-white shadow-lg w-full z-10 overflow-x-auto">
         <IndicatorDot label="Level" check={tilt} />
         <IndicatorDot label="Framing" check={framing} />
         <IndicatorDot label="Lighting" check={lighting} />
@@ -363,7 +363,7 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
         <IndicatorDot label="Bkgnd" check={background} />
       </div>
 
-      <div className="relative w-full aspect-[3/4] bg-black rounded-xl overflow-hidden shadow-lg border border-border">
+      <div className="flex-1 min-h-0 relative w-full md:aspect-[3/4] bg-black rounded-xl overflow-hidden shadow-lg border border-border">
         {/* RAW METRICS OVERLAY (TEMPORARY FOR EMPIRICAL HARDWARE TUNING) */}
         {process.env.NODE_ENV === 'development' && (
         <div className="absolute top-2 left-2 bg-black/80 text-green-400 text-[10px] p-2 rounded z-30 pointer-events-none font-mono">
@@ -436,8 +436,8 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
         />
         
         {/* 3:4 Overlay Guide */}
-        <div className="absolute inset-0 pointer-events-none p-4 flex items-center justify-center">
-          <div className="w-full h-full border-4 border-white/50 rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] transition-colors duration-300"></div>
+        <div className="absolute inset-0 pointer-events-none p-4 flex items-center justify-center overflow-hidden">
+          <div className="relative aspect-[3/4] w-full max-h-full border-4 border-white/50 rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] transition-colors duration-300"></div>
           {/* Center crosshairs */}
           <div className="absolute w-8 h-px bg-white/50"></div>
           <div className="absolute h-8 w-px bg-white/50"></div>
@@ -481,10 +481,10 @@ export function PhotoCapture({ onCapture, kind, sortOrder, draftId }: Props) {
       </div>
 
       {validationError && (
-        <p className="text-sm text-destructive font-medium mt-4 text-center">{validationError}</p>
+        <p className="flex-shrink-0 text-sm text-destructive font-medium mt-4 text-center">{validationError}</p>
       )}
 
-      <div className="mt-6 flex flex-col items-center gap-2">
+      <div className="flex-shrink-0 mt-4 md:mt-6 flex flex-col items-center gap-2 pb-[env(safe-area-inset-bottom)]">
         <Button 
           size="lg" 
           className={cn("rounded-full w-16 h-16 p-0 border-4 border-background shadow-xl hover:scale-105 transition-all relative", captureButtonClass)} 
