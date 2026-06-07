@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Copy, Check, Pencil, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { changeHandleAction } from "@/app/actions/handle";
 
 const RESERVED_HANDLES = new Set([
   'admin', 'administrator', 'support', 'help', 'login', 'logout',
@@ -34,7 +35,7 @@ export function StorefrontUrlWidget({ handle: initialHandle }: { handle: string 
   const [editValue, setEditValue] = useState(handle);
   const [error, setError] = useState<string | null>(null);
   const [confirmingHandle, setConfirmingHandle] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   const url = `trax.cards/${handle}`;
 
@@ -91,21 +92,25 @@ export function StorefrontUrlWidget({ handle: initialHandle }: { handle: string 
     setConfirmingHandle(editValue.toLowerCase());
   };
 
-  const confirmSave = async () => {
+  const confirmSave = () => {
     if (!confirmingHandle) return;
-    setIsSaving(true);
     
-    // Phase A stub
-    console.log('Phase A: handle change stubbed, new:', confirmingHandle);
-    
-    setTimeout(() => {
-      // Simulate success
-      setHandle(confirmingHandle);
-      setIsEditing(false);
-      setConfirmingHandle(null);
-      setIsSaving(false);
-      toast.success("Storefront URL updated successfully.");
-    }, 500);
+    startTransition(async () => {
+      try {
+        const result = await changeHandleAction(confirmingHandle);
+        if (result.error) {
+          toast.error(result.error);
+          return;
+        }
+        
+        setHandle(confirmingHandle);
+        setIsEditing(false);
+        setConfirmingHandle(null);
+        toast.success("Storefront URL updated successfully.");
+      } catch (err) {
+        toast.error("An unexpected error occurred.");
+      }
+    });
   };
 
   return (
@@ -179,16 +184,16 @@ export function StorefrontUrlWidget({ handle: initialHandle }: { handle: string 
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isSaving} className="bg-transparent border-zinc-700 text-white hover:bg-zinc-800">Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isPending} className="bg-transparent border-zinc-700 text-white hover:bg-zinc-800">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
                 confirmSave();
               }}
-              disabled={isSaving}
+              disabled={isPending}
               className="bg-violet-600 hover:bg-violet-700 text-white"
             >
-              {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               Confirm
             </AlertDialogAction>
           </AlertDialogFooter>

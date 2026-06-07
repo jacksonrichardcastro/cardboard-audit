@@ -1,8 +1,8 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { RESERVED_HANDLES } from "@/lib/reserved-handles";
 import { db } from "@/lib/db";
 import { QuickUploadModal } from "@/components/sell/QuickUploadModal";
-import { profiles, listings, users, cards, itemPhotos, categories } from "@/lib/db/schema";
+import { profiles, listings, users, cards, itemPhotos, categories, handleHistory } from "@/lib/db/schema";
 import { eq, desc, and, inArray, sql } from "drizzle-orm";
 import { Metadata } from "next";
 import Link from "next/link";
@@ -90,6 +90,21 @@ export default async function SellerStorePage(props: Props) {
   .limit(1);
 
   if (!profileRecord || profileRecord.profile.approvalStatus === "rejected") {
+    // Check handle history for old handles
+    const historyEntry = await db.query.handleHistory.findFirst({
+      where: sql`LOWER(${handleHistory.oldHandle}) = ${handleLower}`,
+      orderBy: desc(handleHistory.changedAt),
+    });
+    
+    if (historyEntry) {
+      const currentProfile = await db.query.profiles.findFirst({
+        where: eq(profiles.userId, historyEntry.userId)
+      });
+      if (currentProfile?.handle) {
+        redirect(`/${currentProfile.handle}`);
+      }
+    }
+    
     notFound();
   }
   const seller = profileRecord.profile;

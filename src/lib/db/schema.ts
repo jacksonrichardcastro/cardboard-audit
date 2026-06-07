@@ -445,3 +445,16 @@ export const offersRelations = relations(offers, ({ one }) => ({
   })
 }));
 
+export const handleHistory = pgTable('handle_history', {
+
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: varchar('user_id', { length: 255 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
+  oldHandle: varchar('old_handle', { length: 50 }).notNull(),
+  newHandle: varchar('new_handle', { length: 50 }).notNull(),
+  changedAt: timestamp('changed_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => {
+  return {
+    oldHandleIdx: index('idx_handle_history_old_handle').on(sql`LOWER(${table.oldHandle})`),
+    userIdIdx: index('idx_handle_history_user_id').on(table.userId),
+  };
+});
