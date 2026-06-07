@@ -101,7 +101,7 @@ export const getHomeRows = unstable_cache(
       )
     )
     .orderBy(desc(listings.priceCents))
-    .limit(20);
+    .limit(40);
 
     const poolA = poolAQuery.map(d => ({
       ...d,
@@ -110,7 +110,7 @@ export const getHomeRows = unstable_cache(
 
     const poolAIds = poolA.map(l => l.id);
 
-    // 2. Fetch Pool B randoms: user_3 and beescardsemporium
+    // 2. Fetch Pool B randoms: founding sellers
     const targetUserId = 'user_3eykjbzyrhydtz2vnirnhqqtlyr';
     const excludedFromB = [...poolAIds, ...specificListingIds];
 
@@ -142,7 +142,7 @@ export const getHomeRows = unstable_cache(
         inArray(listings.status, ['active', 'pending_marketplace_activation']),
         sql`EXISTS (SELECT 1 FROM item_photos WHERE card_id = ${listings.cardId})`,
         excludedFromB.length > 0 ? notInArray(listings.id, excludedFromB) : undefined,
-        sql`(${profiles.handle} IN ('beescardsemporium', '@beescardsemporium') OR ${listings.sellerId} = ${targetUserId})`
+        sql`(${profiles.handle} IN ('beescardsemporium', '@beescardsemporium', 'christian6610', '@christian6610', 'bofascards', '@bofascards', 'dbergzsportzcardz', '@dbergzsportzcardz') OR ${listings.sellerId} = ${targetUserId})`
       )
     );
 
@@ -159,14 +159,14 @@ export const getHomeRows = unstable_cache(
 
     const poolBSelected: typeof poolBRandom = [...pickedSpecificListings];
     
-    // Pick 2 random for each of the 2 random sellers
+    // Pick 4 random for each of the 5 founding sellers
     for (const [sellerId, listingsArray] of sellerMap.entries()) {
       const shuffled = [...listingsArray].sort(() => Math.random() - 0.5);
-      poolBSelected.push(...shuffled.slice(0, 2));
+      poolBSelected.push(...shuffled.slice(0, 4));
     }
 
-    // Need 10 cards total in Pool B. If < 10, backfill.
-    if (poolBSelected.length < 10) {
+    // Need 20 cards total in Pool B. If < 20, backfill.
+    if (poolBSelected.length < 20) {
       const excludeIds = [...poolAIds, ...poolBSelected.map(l => l.id)];
       const backfillQuery = await db.select({
         id: listings.id,
@@ -200,7 +200,7 @@ export const getHomeRows = unstable_cache(
         )
       )
       .orderBy(desc(listings.priceCents))
-      .limit(10 - poolBSelected.length);
+      .limit(20 - poolBSelected.length);
 
       const backfill = backfillQuery.map(d => ({
         ...d,
@@ -211,8 +211,8 @@ export const getHomeRows = unstable_cache(
 
     // 3. Split and Distribute
     const poolAShuffled = [...poolA].sort(() => Math.random() - 0.5);
-    const poolA_Trending = poolAShuffled.slice(0, 10);
-    const poolA_Featured = poolAShuffled.slice(10, 20);
+    const poolA_Trending = poolAShuffled.slice(0, 20);
+    const poolA_Featured = poolAShuffled.slice(20, 40);
 
     const poolB_Trending: typeof poolBSelected = [];
     const poolB_Featured: typeof poolBSelected = [];
