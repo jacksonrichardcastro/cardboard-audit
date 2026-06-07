@@ -10,24 +10,10 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { updatePresenceStatus, updateSellerProfile, removeProfilePhoto } from "@/app/actions/profile";
+import { BadgeRow } from "@/components/seller/BadgeRow";
 import { useTransition, useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, User, Trash, Image as ImageIcon, X } from "lucide-react";
-
-interface BadgeConfig {
-  id: string;
-  label: string;
-  imgSrc?: string; // For future asset injection
-  fallbackColor: string;
-}
-
-const PRESTIGE_BADGES: BadgeConfig[] = [
-  { id: "founding", label: "Founding Seller", imgSrc: "/badges/badge-founding-seller.png", fallbackColor: "bg-slate-800 border-slate-600 text-slate-300" },
-  { id: "gold", label: "Gold Medal", imgSrc: "/badges/badge-gold-medal.png", fallbackColor: "bg-amber-900/40 border-amber-500/50 text-amber-500" },
-  { id: "certified", label: "Certified Badge", imgSrc: "/badges/badge-certified-badge.png", fallbackColor: "bg-purple-900/40 border-purple-500/50 text-purple-400" },
-  { id: "verified", label: "Verified Pin", imgSrc: "/badges/badge-verified-pin.png", fallbackColor: "bg-blue-900/40 border-blue-500/50 text-blue-400" },
-  { id: "ambassador", label: "Trax Ambassador", imgSrc: "/badges/badge-trax-ambassador.png", fallbackColor: "bg-zinc-800 border-[#7C3AED] text-[#7C3AED]" },
-];
 
 interface SellerHeroProps {
   name: string;
@@ -39,6 +25,9 @@ interface SellerHeroProps {
   isOwner?: boolean;
   sellerId?: string;
   badges?: string[];
+  isFoundingSeller?: boolean;
+  identityVerified?: boolean;
+  hiddenBadges?: string[];
   // Passing these so we can render mock cards in the background shelf
   heroCards?: { id: string; url: string }[];
   customizerNode?: React.ReactNode;
@@ -48,7 +37,7 @@ interface SellerHeroProps {
   transparentBackground?: boolean;
 }
 
-export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerImageUrl, isOwner, sellerId, heroCards = [], customizerNode, badges = [], presenceStatus = "online", locationCity, locationState, transparentBackground = false }: SellerHeroProps) {
+export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerImageUrl, isOwner, sellerId, heroCards = [], customizerNode, badges = [], isFoundingSeller = false, identityVerified = false, hiddenBadges = [], presenceStatus = "online", locationCity, locationState, transparentBackground = false }: SellerHeroProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -336,27 +325,17 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
           </p>
         )}
 
-        {/* Prestige Emblems Row (Exactly 5, single row) */}
-        <div className="flex flex-wrap items-center justify-center gap-3 md:gap-6 max-w-4xl mx-auto">
-          {PRESTIGE_BADGES.filter(b => badges.includes(b.id)).map((badge) => (
-            <div key={badge.id} className="flex flex-col items-center gap-3">
-              {badge.imgSrc ? (
-                // Future Asset Injection Point
-                <div className="w-14 h-14 md:w-16 md:h-16 relative hover:scale-110 transition-transform duration-300 drop-shadow-2xl">
-                  <img src={badge.imgSrc} alt={badge.label} className="w-full h-full object-contain" />
-                </div>
-              ) : (
-                // V16 Placeholder Styling (3D tactile feel mockup)
-                <div className={`w-14 h-14 md:w-16 md:h-16 rounded-lg flex items-center justify-center border-2 shadow-[0_10px_20px_rgba(0,0,0,0.5),inset_0_2px_4px_rgba(255,255,255,0.2)] hover:scale-110 transition-transform duration-300 ${badge.fallbackColor} transform rotate-3`}>
-                   <CheckCircle2 className="w-6 h-6 md:w-8 md:h-8 opacity-80" />
-                </div>
-              )}
-              <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-zinc-500">
-                {badge.label}
-              </span>
-            </div>
-          ))}
-        </div>
+        <BadgeRow
+          displayName={name}
+          isFoundingSeller={isFoundingSeller}
+          identityVerified={identityVerified}
+          badges={badges}
+          hiddenBadges={hiddenBadges}
+          isOwner={isOwner ?? false}
+          onHideBadge={async (slug: string) => {
+            console.log("onHideBadge stub:", slug);
+          }}
+        />
       </div>
 
       {/* Lightbox for Profile Photo */}

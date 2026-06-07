@@ -38,7 +38,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const [profileRecord] = await db.select({
     profile: profiles,
     accountType: users.accountType,
-    storefrontLayout: users.storefrontLayout
+    storefrontLayout: users.storefrontLayout,
+    isFoundingSeller: users.isFoundingSeller
   })
   .from(profiles)
   .innerJoin(users, eq(profiles.userId, users.id))
@@ -80,7 +81,8 @@ export default async function SellerStorePage(props: Props) {
   const [profileRecord] = await db.select({
     profile: profiles,
     accountType: users.accountType,
-    storefrontLayout: users.storefrontLayout
+    storefrontLayout: users.storefrontLayout,
+    isFoundingSeller: users.isFoundingSeller
   })
   .from(profiles)
   .innerJoin(users, eq(profiles.userId, users.id))
@@ -319,6 +321,9 @@ export default async function SellerStorePage(props: Props) {
           isOwner={displayAsOwner}
           sellerId={seller.userId}
           badges={(seller.badges as string[]) || []}
+          isFoundingSeller={profileRecord.isFoundingSeller}
+          identityVerified={seller.identityVerified}
+          hiddenBadges={[]}
           presenceStatus={seller.presenceStatus}
           locationCity={seller.locationCity}
           locationState={seller.locationState}
