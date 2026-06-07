@@ -5,7 +5,7 @@ import { SearchBar } from "@/components/storefront/search-bar";
 import { CosmosBackground } from "@/components/marketplace/CosmosBackground";
 import { CardRail } from "@/components/storefront/card-rail";
 import { getTrendingListings } from "@/lib/db/queries/listings";
-import { getHomeRows } from "@/lib/db/queries/homeListings";
+import { getHomeRows, getMarketplaceTrendingListings } from "@/lib/db/queries/homeListings";
 import { FilterSidebar } from "@/components/storefront/filter-sidebar";
 import { db } from "@/lib/db";
 import { listings, profiles, itemPhotos } from "@/lib/db/schema";
@@ -16,6 +16,16 @@ import { auth } from "@clerk/nextjs/server";
 import { getRecommendedListings } from "@/lib/recommendations/score";
 import { getUserPreferences } from "@/app/actions/preferences";
 import { ForYouClient } from "@/components/recommendations/ForYouClient";
+
+function shuffleArray<T>(arr: T[]): T[] {
+  const copy = [...arr]
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[copy[i], copy[j]] = [copy[j], copy[i]]
+  }
+  return copy
+}
+
 interface Props {
   searchParams: Promise<Record<string, string | undefined>>;
 }
@@ -36,9 +46,31 @@ export default async function Home(props: Props) {
   let recentListings: any[] = [];
   let recommendedMapped: any[] = [];
 
+  const mapListingToUIFormat = (d: any) => ({
+    id: d.id.toString(),
+    title: d.title,
+    category: d.category as any,
+    subcategory: d.subcategory || "Other",
+    condition: d.condition,
+    grade: d.grade || undefined,
+    gradingCompany: d.gradingCompany || undefined,
+    priceCents: d.priceCents,
+    discountType: d.discountType || undefined,
+    discountAmount: d.discountAmount || undefined,
+    discountActiveUntil: d.discountActiveUntil || undefined,
+    photoUrl: (Array.isArray(d.photos) && d.photos.length > 0 && d.photos[0] !== null) ? d.photos[0] : 'https://placehold.co/400x550',
+    sellerBusinessName: d.sellerBusinessName || "Seller",
+    createdAt: new Date(d.createdAt).toISOString(),
+    sport: d.sport || "",
+    listingType: d.listingType || "BUY_IT_NOW",
+    gradeTier: d.gradeTier || "Raw / Ungraded",
+    era: d.era || "Modern (2010+)"
+  });
+
   if (!hasSearchQuery) {
     const homeRows = await getHomeRows();
-    recentListings = homeRows.trending;
+    const trendingPool = await getMarketplaceTrendingListings();
+    recentListings = shuffleArray(trendingPool).map(mapListingToUIFormat);
     recommendedMapped = homeRows.featured;
   } else {
     // If there is a search query, dbListings is populated

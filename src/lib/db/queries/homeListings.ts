@@ -3,6 +3,50 @@ import { listings, profiles } from "@/lib/db/schema";
 import { eq, desc, and, notInArray, inArray, sql } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 
+import { TEST_USER_IDS } from '@/lib/db/test-accounts'
+
+const TRENDING_POOL_SIZE = 100
+
+export async function getMarketplaceTrendingListings() {
+  return unstable_cache(
+    async () => {
+      return await db
+        .select({
+          id: listings.id,
+          title: listings.title,
+          priceCents: listings.priceCents,
+          grade: listings.grade,
+          gradingCompany: listings.gradingCompany,
+          condition: listings.condition,
+          discountType: listings.discountType,
+          discountAmount: listings.discountAmount,
+          discountActiveUntil: listings.discountActiveUntil,
+          photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE card_id = ${listings.cardId}), '[]'::json)`,
+          sellerBusinessName: profiles.businessName,
+          sellerHandle: profiles.handle,
+          sellerId: listings.sellerId,
+          sport: listings.sport,
+          listingType: listings.listingType,
+          gradeTier: listings.gradeTier,
+          era: listings.era,
+          category: listings.category,
+          createdAt: listings.createdAt,
+        })
+        .from(listings)
+        .innerJoin(profiles, eq(listings.sellerId, profiles.userId))
+        .where(and(
+          inArray(listings.status, ['active', 'pending_marketplace_activation']),
+          sql`${listings.priceCents} IS NOT NULL`,
+          notInArray(listings.sellerId, [...TEST_USER_IDS])
+        ))
+        .orderBy(desc(listings.priceCents))
+        .limit(TRENDING_POOL_SIZE)
+    },
+    ['trending-listings-pool'],
+    { revalidate: 300, tags: ['trending-pool'] }
+  )()
+}
+
 export const getHomeRows = unstable_cache(
   async () => {
     // We need to fetch specific listings for bofascards, christian6610, dbergzsportzcardz
