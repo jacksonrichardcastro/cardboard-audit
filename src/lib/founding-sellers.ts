@@ -9,5 +9,5 @@ export const FOUNDING_SELLER_EMAILS = [
   'joeblemaire@gmail.com', 'sneakordz@gmail.com', 'junkforcozy@gmail.com',
   'cris.a.1996@hotmail.com', 'nadroj117@gmail.com', 'hitmachinesports@gmail.com',
   'rkgreen19@gmail.com', 'raptordelivery1@gmail.com', 'greenescardco@hotmail.com',
-  'itsgreeny17@gmail.com', 'shophpm@gmail.com',
+  'itsgreeny17@gmail.com', 'shophpm@gmail.com', 'jacksonrichardcastro@gmail.com',
 ] as const;
