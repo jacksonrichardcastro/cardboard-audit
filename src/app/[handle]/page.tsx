@@ -325,7 +325,7 @@ export default async function SellerStorePage(props: Props) {
           badges={(seller.badges as string[]) || []}
           isFoundingSeller={profileRecord.isFoundingSeller}
           identityVerified={seller.identityVerified}
-          hiddenBadges={[]}
+          hiddenBadges={(seller.hiddenBadges as string[]) || []}
           presenceStatus={seller.presenceStatus}
           locationCity={seller.locationCity}
           locationState={seller.locationState}

@@ -1,13 +1,14 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { profiles } from "@/lib/db/schema";
+import { profiles, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EditProfileForm } from "@/app/edit-profile/EditProfileForm";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { StorefrontUrlWidget } from "@/components/seller/StorefrontUrlWidget";
+import { ProfileBadgesManager } from "@/components/seller/ProfileBadgesManager";
 
 export default async function SellerDashboardPage(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -88,6 +89,18 @@ export default async function SellerDashboardPage(props: {
                 presenceStatus: seller.presenceStatus || "online",
               }} 
             />
+            
+            <div className="mt-12">
+              <ProfileBadgesManager 
+                isFoundingSeller={seller.userId ? await (async () => {
+                  const [u] = await db.select({ isFoundingSeller: users.isFoundingSeller }).from(users).where(eq(users.id, seller.userId));
+                  return u?.isFoundingSeller ?? false;
+                })() : false}
+                identityVerified={seller.identityVerified}
+                badges={(seller.badges as string[]) || []}
+                hiddenBadges={(seller.hiddenBadges as string[]) || []}
+              />
+            </div>
           </div>
         </TabsContent>
 

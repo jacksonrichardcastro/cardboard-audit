@@ -6,14 +6,14 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { X } from 'lucide-react'
 
-type Badge = {
+export type Badge = {
   slug: string
   imageSrc: string
   label: string
   description: (displayName: string) => string
 }
 
-const ALL_BADGES: Badge[] = [
+export const ALL_BADGES: Badge[] = [
   {
     slug: 'founding-seller',
     imageSrc: '/badges/badge-founding-seller.png',
@@ -95,7 +95,6 @@ export function BadgeRow({ displayName, isFoundingSeller, identityVerified, badg
             <AlertDialogAction
               onClick={async () => {
                 if (confirmingHide) {
-                  console.log('Phase A: hide action stubbed, slug:', confirmingHide)
                   if (onHideBadge) {
                     await onHideBadge(confirmingHide)
                   }

@@ -40,6 +40,7 @@ export const profiles = pgTable("profiles", {
   binderPrivate: boolean("binder_private").notNull().default(false),
   headerCustomizationIds: json("header_customization_ids").default([]),
   badges: json("badges").$type<string[]>().default([]),
+  hiddenBadges: json("hidden_badges").$type<string[]>().default([]),
   presenceStatus: varchar("presence_status", { length: 20 }).notNull().default("online"), // online, away, offline
   storefrontTheme: varchar("storefront_theme", { length: 50 }).notNull().default("trax-cosmos"), // trax-default, trax-cosmos
   storefrontThemeScope: varchar("storefront_theme_scope", { length: 50 }).default("profile-wide"), // storefront-only, profile-wide

@@ -92,6 +92,13 @@
       "when": 1780647955089,
       "tag": "0012_chief_sebastian_shaw",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1780867490059,
+      "tag": "0013_complete_red_ghost",
+      "breakpoints": true
     }
   ]
 }

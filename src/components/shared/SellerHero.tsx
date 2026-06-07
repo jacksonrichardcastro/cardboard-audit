@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { updatePresenceStatus, updateSellerProfile, removeProfilePhoto } from "@/app/actions/profile";
+import { hideBadgeAction } from "@/app/actions/badges";
 import { BadgeRow } from "@/components/seller/BadgeRow";
 import { useTransition, useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -333,7 +334,7 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
           hiddenBadges={hiddenBadges}
           isOwner={isOwner ?? false}
           onHideBadge={async (slug: string) => {
-            console.log("onHideBadge stub:", slug);
+            await hideBadgeAction(slug);
           }}
         />
       </div>
