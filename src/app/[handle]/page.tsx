@@ -96,6 +96,8 @@ export default async function SellerStorePage(props: Props) {
   const isSellerLayout = profileRecord.accountType === "seller" && seller.kycStatus === "verified";
   const storefrontLayout = profileRecord.storefrontLayout;
   
+  console.log(`[Cache Bust] seller.isFoundingSeller for ${handleLower} =`, profileRecord.isFoundingSeller);
+  
   const currentTab = searchParams.tab || (isSellerLayout ? "active-listings" : "collection");
 
   const activeConditions = [
