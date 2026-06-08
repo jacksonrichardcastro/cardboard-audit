@@ -59,7 +59,7 @@ export async function updateHeaderCustomization(cardIds: number[]) {
   return { success: true };
 }
 
-export async function updateSellerProfile(data: { bio?: string; locationCity?: string; locationState?: string; profilePhotoUrl?: string; headerStyle?: string; bannerImageUrl?: string; presenceStatus?: string | null }) {
+export async function updateSellerProfile(data: { bio?: string | null; locationCity?: string | null; locationState?: string | null; profilePhotoUrl?: string | null; headerStyle?: string | null; bannerImageUrl?: string | null; presenceStatus?: string | null; displayName?: string | null; storefrontId?: string }) {
   const { userId } = await auth();
   if (!userId) {
     throw new Error("Unauthorized");
@@ -68,15 +68,24 @@ export async function updateSellerProfile(data: { bio?: string; locationCity?: s
   await db
     .update(profiles)
     .set({
-      bio: data.bio,
-      locationCity: data.locationCity,
-      locationState: data.locationState,
-      profilePhotoUrl: data.profilePhotoUrl,
-      headerStyle: data.headerStyle,
-      bannerImageUrl: data.bannerImageUrl,
+      locationCity: data.locationCity || undefined,
+      locationState: data.locationState || undefined,
+      headerStyle: data.headerStyle || undefined,
+      bannerImageUrl: data.bannerImageUrl || undefined,
       presenceStatus: data.presenceStatus || undefined,
     })
     .where(eq(profiles.userId, userId));
+
+  if (data.storefrontId) {
+    const { storefronts } = await import("@/lib/db/schema");
+    await db.update(storefronts)
+      .set({
+        displayName: data.displayName || null,
+        bio: data.bio || null,
+        avatarUrl: data.profilePhotoUrl || null,
+      })
+      .where(and(eq(storefronts.id, data.storefrontId), eq(storefronts.userId, userId)));
+  }
 
   const [seller] = await db.select({ handle: profiles.handle }).from(profiles).where(eq(profiles.userId, userId)).limit(1);
   if (seller?.handle) {

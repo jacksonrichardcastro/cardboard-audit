@@ -1,9 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { profiles, users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { profiles, users, storefronts } from "@/lib/db/schema";
+import { eq, and } from "drizzle-orm";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cookies } from "next/headers";
 import { StorefrontsList } from "@/components/storefront/StorefrontsList";
 import { EditProfileForm } from "@/app/edit-profile/EditProfileForm";
 import Link from "next/link";
@@ -23,6 +24,21 @@ export default async function SellerDashboardPage(props: {
   if (!seller) {
     // If no profile exists at all, force them to onboarding
     return redirect("/seller/onboarding/profile");
+  }
+
+  const cookieStore = await cookies();
+  const activeStorefrontId = cookieStore.get("active_storefront_id")?.value;
+  
+  let activeStorefront = null;
+  if (activeStorefrontId) {
+    activeStorefront = await db.query.storefronts.findFirst({
+      where: eq(storefronts.id, activeStorefrontId)
+    });
+  }
+  if (!activeStorefront) {
+    activeStorefront = await db.query.storefronts.findFirst({
+      where: and(eq(storefronts.userId, userId), eq(storefronts.isDefaultForUser, true))
+    });
   }
 
   // Pre-KYC is allowed here now.
@@ -84,14 +100,28 @@ export default async function SellerDashboardPage(props: {
 
         <TabsContent value="settings" className="space-y-6">
           <div className="max-w-2xl">
-            {seller.handle && <StorefrontUrlWidget handle={seller.handle} />}
+            {activeStorefront && (
+              <div className="mb-6 p-4 bg-zinc-900 border border-white/10 rounded-xl flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-1">Currently Editing</p>
+                  <p className="text-white font-medium">{activeStorefront.displayName || activeStorefront.handle}</p>
+                </div>
+                <Button variant="outline" size="sm" asChild>
+                  <Link href="/seller/dashboard?tab=storefronts">Switch Storefront</Link>
+                </Button>
+              </div>
+            )}
+            {activeStorefront?.handle && <StorefrontUrlWidget handle={activeStorefront.handle} />}
             <h2 className="text-xl font-semibold mb-6">Storefront Profile</h2>
             <EditProfileForm 
               initialData={{
-                bio: seller.bio,
+                storefrontId: activeStorefront?.id,
+                handle: activeStorefront?.handle,
+                displayName: activeStorefront?.displayName || null,
+                bio: activeStorefront?.bio || null,
                 locationCity: seller.locationCity,
                 locationState: seller.locationState,
-                profilePhotoUrl: seller.profilePhotoUrl,
+                profilePhotoUrl: activeStorefront?.avatarUrl || null,
                 headerStyle: seller.headerStyle,
                 bannerImageUrl: seller.bannerImageUrl,
                 presenceStatus: seller.presenceStatus || "online",
@@ -106,7 +136,7 @@ export default async function SellerDashboardPage(props: {
                 })() : false}
                 identityVerified={seller.identityVerified}
                 badges={(seller.badges as string[]) || []}
-                hiddenBadges={(seller.hiddenBadges as string[]) || []}
+                hiddenBadges={((activeStorefront?.hiddenBadges || []) as string[])}
               />
             </div>
           </div>

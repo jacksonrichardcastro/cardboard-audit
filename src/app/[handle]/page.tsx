@@ -160,7 +160,6 @@ export default async function SellerStorePage(props: Props) {
     else if (searchParams.price === '5000-plus') activeConditions.push(gte(listings.priceCents, 500000));
   }
 
-  // Fetch active listings for Storefront / Active Listings tab
   const activeListings = await db.select({
       id: listings.id,
       cardId: listings.cardId,
@@ -175,7 +174,7 @@ export default async function SellerStorePage(props: Props) {
       photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE item_photos.card_id = listings.card_id), '[]'::json)`,
     })
     .from(listings)
-    .where(and(...activeConditions))
+    .where(and(eq(listings.storefrontId, storefront.id), eq(listings.status, "active"), sql`${listings.deletedAt} IS NULL`, ...activeConditions))
     .orderBy(desc(listings.createdAt));
 
   // Fetch unfiltered active listings for the header strip fallback
@@ -217,7 +216,6 @@ export default async function SellerStorePage(props: Props) {
 
   // Deduplicate in case a card has multiple listings
   const binderCards = Array.from(new Map(rawBinderCards.map(c => [c.id, c])).values());
-
   const userCategories = await db.query.categories.findMany({
     where: eq(categories.storefrontId, storefront.id),
     orderBy: (c) => [c.displayOrder],
@@ -225,7 +223,6 @@ export default async function SellerStorePage(props: Props) {
       memberships: true
     }
   });
-
   const isOwner = seller.userId === userId;
   const isPreview = searchParams.preview === "true";
   const displayAsOwner = isOwner && !isPreview;
@@ -233,8 +230,8 @@ export default async function SellerStorePage(props: Props) {
   const possessiveName = getPossessiveName(sellerName, isOwner);
   const grailId = seller.grailCardId || (binderCards.length > 0 ? binderCards[0].id : null);
   
-  const theme = seller.storefrontTheme || 'trax-default';
-  const themeScope = seller.storefrontThemeScope || 'storefront-only';
+  const theme = storefront.theme || 'trax-default';
+  const themeScope = storefront.themeScope || 'storefront-only';
   
   let pendingCategoryCount = 0;
   if (displayAsOwner && storefrontLayout === "categories") {
@@ -355,7 +352,7 @@ export default async function SellerStorePage(props: Props) {
           badges={(seller.badges as string[]) || []}
           isFoundingSeller={profileRecord.isFoundingSeller}
           identityVerified={seller.identityVerified}
-          hiddenBadges={(seller.hiddenBadges as string[]) || []}
+          hiddenBadges={(storefront.hiddenBadges as string[]) || []}
           presenceStatus={seller.presenceStatus}
           locationCity={seller.locationCity}
           locationState={seller.locationState}

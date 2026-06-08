@@ -11,6 +11,9 @@ import { Loader2 } from "lucide-react";
 
 interface EditProfileFormProps {
   initialData: {
+    storefrontId?: string;
+    handle?: string;
+    displayName?: string | null;
     bio: string | null;
     locationCity: string | null;
     locationState: string | null;
@@ -33,6 +36,8 @@ export function EditProfileForm({ initialData }: EditProfileFormProps) {
   const [cropTarget, setCropTarget] = useState<"avatar" | "banner">("avatar");
 
   const [formData, setFormData] = useState({
+    storefrontId: initialData.storefrontId || undefined,
+    displayName: initialData.displayName || "",
     bio: initialData.bio || "",
     locationCity: initialData.locationCity || "",
     locationState: initialData.locationState || "",
@@ -68,6 +73,8 @@ export function EditProfileForm({ initialData }: EditProfileFormProps) {
     
     try {
       await updateSellerProfile({
+        storefrontId: formData.storefrontId,
+        displayName: formData.displayName,
         bio: formData.bio,
         locationCity: formData.locationCity,
         profilePhotoUrl: formData.profilePhotoUrl,
@@ -91,11 +98,13 @@ export function EditProfileForm({ initialData }: EditProfileFormProps) {
       <div className="space-y-2">
         <Label>Profile Photo</Label>
         <div className="flex items-center gap-6">
-          <div className="w-24 h-24 rounded-full bg-zinc-900 border border-white/10 overflow-hidden flex-shrink-0">
+          <div className="w-24 h-24 rounded-full bg-zinc-900 border border-white/10 overflow-hidden flex-shrink-0 flex items-center justify-center">
             {formData.profilePhotoUrl ? (
               <img src={formData.profilePhotoUrl} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-zinc-600 text-xs">No Image</div>
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-violet-600 to-[#7C3AED] text-white text-3xl font-bold uppercase">
+                {(formData.displayName || initialData.handle || "S").charAt(0)}
+              </div>
             )}
           </div>
           <div className="flex-1 space-y-2">
@@ -127,6 +136,18 @@ export function EditProfileForm({ initialData }: EditProfileFormProps) {
             />
           </div>
         </div>
+      </div>
+
+      <div className="space-y-2 pt-4 border-t border-white/10">
+        <Label htmlFor="displayName">Display Name</Label>
+        <Input 
+          id="displayName"
+          value={formData.displayName}
+          onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
+          placeholder="Enter Storefront Name"
+          className="bg-zinc-900 border-white/10"
+          disabled={isLoading}
+        />
       </div>
 
       <div className="space-y-4 pt-4 border-t border-white/10">
@@ -225,7 +246,7 @@ export function EditProfileForm({ initialData }: EditProfileFormProps) {
           id="bio"
           value={formData.bio}
           onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-          placeholder="Expert Collector | PSA 10 Specialist | Curating Rarity"
+          placeholder="Add a bio so visitors know what this storefront is about"
           maxLength={160}
           className="bg-zinc-900 border-white/10 min-h-[100px]"
           disabled={isLoading}

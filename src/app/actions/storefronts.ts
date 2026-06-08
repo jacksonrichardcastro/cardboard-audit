@@ -53,9 +53,12 @@ export async function createStorefrontAction(handle: string, displayName?: strin
       userId,
       handle: handle.toLowerCase(),
       displayName: displayName || null,
-      bio: bio || null,
-      avatarUrl: avatarUrl || null,
-      theme,
+      bio: null,
+      avatarUrl: null,
+      theme: "trax-cosmos",
+      themeScope: "profile-wide",
+      headerCustomizationIds: [],
+      hiddenBadges: [],
       isDefaultForUser: false,
     }).returning({ id: storefronts.id });
 
