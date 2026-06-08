@@ -318,7 +318,8 @@ export default async function SellerStorePage(props: Props) {
     id: item.id.toString(),
     url: (item.photos && item.photos[0]) ? item.photos[0] : 'https://placehold.co/300x400/1a1a1a/333333?text=PSA+10',
     title: item.title || "Unknown Card",
-    activeListingId: item.cardId ? item.id : item.listingId
+    activeListingId: item.cardId ? item.id : item.listingId,
+    draftListingId: item.listingId
   }));
 
   return (

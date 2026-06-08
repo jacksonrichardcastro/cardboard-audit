@@ -29,7 +29,7 @@ interface SellerHeroProps {
   isFoundingSeller?: boolean;
   identityVerified?: boolean;
   hiddenBadges?: string[];
-  heroCards?: { id: string; url: string; title?: string; activeListingId?: number }[];
+  heroCards?: { id: string; url: string; title?: string; activeListingId?: number; draftListingId?: number }[];
   customizerNode?: React.ReactNode;
   presenceStatus?: string | null;
   locationCity?: string | null;
@@ -116,7 +116,8 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
     id: `hero-card-${i}`,
     url: 'https://placehold.co/300x400/1a1a1a/333333?text=PSA+10',
     title: undefined as string | undefined,
-    activeListingId: undefined as number | undefined
+    activeListingId: undefined as number | undefined,
+    draftListingId: undefined as number | undefined
   }));
   
   const displayCards = heroCards.length > 0 ? heroCards.slice(0, 19) : defaultHeroCards.slice(0, 19);
@@ -156,6 +157,8 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
               }}
             >
               {displayCards.map((card, i) => {
+                const listingId = card.activeListingId ?? card.draftListingId;
+                
                 const cardContent = (
                   <div 
                     key={customizerNode ? `${card.id}-${i}` : undefined} 
@@ -165,12 +168,16 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
                   </div>
                 );
 
-                if (customizerNode || !card.activeListingId) {
+                if (customizerNode) {
                   return cardContent;
+                }
+                
+                if (!listingId) {
+                  return cardContent; // Default placeholders have no listingId
                 }
 
                 return (
-                  <Link key={`${card.id}-${i}`} href={`/listings/${card.activeListingId}`}>
+                  <Link key={`${card.id}-${i}`} href={`/listings/${listingId}`}>
                     {cardContent}
                   </Link>
                 );
