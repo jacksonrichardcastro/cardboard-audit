@@ -40,6 +40,12 @@ export function HeaderCustomizer({ cards, selectedIds, headerStyle = 'cards', ba
     }
   }, [isOpen, selectedIds, headerStyle]);
 
+  useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener('open-header-customizer', handler);
+    return () => window.removeEventListener('open-header-customizer', handler);
+  }, [setOpen]);
+
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;

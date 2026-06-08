@@ -14,7 +14,7 @@ import { hideBadgeAction } from "@/app/actions/badges";
 import { BadgeRow } from "@/components/seller/BadgeRow";
 import { useTransition, useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, User, Trash, Image as ImageIcon, X } from "lucide-react";
+import { Loader2, User, Trash, Image as ImageIcon, X, Eye, Edit3, Store, LayoutTemplate } from "lucide-react";
 
 interface SellerHeroProps {
   name: string;
@@ -43,6 +43,7 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [heroLightboxUrl, setHeroLightboxUrl] = useState<string | null>(null);
+  const [ownerActionMenuCard, setOwnerActionMenuCard] = useState<{ id: string; url: string; title?: string; activeListingId?: number } | null>(null);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -183,6 +184,18 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
 
                 if (customizerNode) {
                   return cardContent;
+                }
+
+                if (isOwner) {
+                  return (
+                    <button 
+                      key={`${card.id}-${i}`} 
+                      onClick={() => setOwnerActionMenuCard(card)}
+                      className="text-left focus:outline-none"
+                    >
+                      {cardContent}
+                    </button>
+                  );
                 }
 
                 if (isListed) {
@@ -407,6 +420,90 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
           </button>
           <div className="relative w-[90vw] max-w-2xl aspect-auto md:h-[85vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
             <img src={heroLightboxUrl} alt="Card Preview" className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
+          </div>
+        </div>
+      )}
+
+      {/* Owner Action Menu */}
+      {ownerActionMenuCard && (
+        <div 
+          className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4 sm:p-0"
+          onClick={() => setOwnerActionMenuCard(null)}
+        >
+          <div 
+            className="w-full max-w-sm bg-zinc-950 border border-[#7C3AED]/30 rounded-t-xl sm:rounded-xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 sm:fade-in-90"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4 border-b border-white/10">
+              <h3 className="font-semibold text-white">Card Actions</h3>
+              <button 
+                onClick={() => setOwnerActionMenuCard(null)}
+                className="p-1 text-zinc-400 hover:text-white transition-colors rounded-full hover:bg-white/10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-2 flex flex-col">
+              <button 
+                onClick={() => {
+                  setHeroLightboxUrl(ownerActionMenuCard.url);
+                  setOwnerActionMenuCard(null);
+                }}
+                className="flex items-center w-full p-3 text-left hover:bg-white/5 rounded-lg transition-colors group"
+              >
+                <Eye className="w-5 h-5 mr-3 text-zinc-400 group-hover:text-white" />
+                <span className="font-medium text-zinc-200 group-hover:text-white">View card</span>
+              </button>
+
+              <Link 
+                href={`/binder/${ownerActionMenuCard.id}/edit`}
+                className="flex items-center w-full p-3 text-left hover:bg-white/5 rounded-lg transition-colors group"
+              >
+                <Edit3 className="w-5 h-5 mr-3 text-zinc-400 group-hover:text-white" />
+                <span className="font-medium text-zinc-200 group-hover:text-white">Edit card</span>
+              </Link>
+
+              <button 
+                onClick={() => {
+                  window.dispatchEvent(new Event('open-header-customizer'));
+                  setOwnerActionMenuCard(null);
+                }}
+                className="flex items-center w-full p-3 text-left hover:bg-white/5 rounded-lg transition-colors group"
+              >
+                <LayoutTemplate className="w-5 h-5 mr-3 text-zinc-400 group-hover:text-white" />
+                <span className="font-medium text-zinc-200 group-hover:text-white">Customize header</span>
+              </button>
+
+              <div className="h-px bg-white/10 my-1 mx-2" />
+
+              {!ownerActionMenuCard.activeListingId ? (
+                <Link 
+                  href={`/sell/new?cardId=${ownerActionMenuCard.id}`}
+                  className="flex items-center w-full p-3 text-left hover:bg-white/5 rounded-lg transition-colors group"
+                >
+                  <Store className="w-5 h-5 mr-3 text-[#7C3AED] group-hover:text-[#9D5CFF]" />
+                  <span className="font-medium text-[#7C3AED] group-hover:text-[#9D5CFF]">List on Marketplace</span>
+                </Link>
+              ) : (
+                <>
+                  <Link 
+                    href={`/listings/${ownerActionMenuCard.activeListingId}`}
+                    className="flex items-center w-full p-3 text-left hover:bg-white/5 rounded-lg transition-colors group"
+                  >
+                    <Store className="w-5 h-5 mr-3 text-zinc-400 group-hover:text-white" />
+                    <span className="font-medium text-zinc-200 group-hover:text-white">View listing</span>
+                  </Link>
+                  <Link 
+                    href={`/listings/${ownerActionMenuCard.activeListingId}/edit`}
+                    className="flex items-center w-full p-3 text-left hover:bg-white/5 rounded-lg transition-colors group"
+                  >
+                    <Edit3 className="w-5 h-5 mr-3 text-zinc-400 group-hover:text-white" />
+                    <span className="font-medium text-zinc-200 group-hover:text-white">Edit listing</span>
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
