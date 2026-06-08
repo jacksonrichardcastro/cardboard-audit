@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { listings, profiles } from "@/lib/db/schema";
-import { eq, desc, and, notInArray, inArray, sql } from "drizzle-orm";
+import { eq, desc, and, notInArray, inArray, sql, or } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 
 import { TEST_USER_IDS } from '@/lib/db/test-accounts'
@@ -34,15 +34,21 @@ export async function getMarketplaceTrendingListings() {
         })
         .from(listings)
         .innerJoin(profiles, eq(listings.sellerId, profiles.userId))
-        .where(and(
-          inArray(listings.status, ['active', 'pending_marketplace_activation']),
-          sql`${listings.priceCents} IS NOT NULL`,
-          notInArray(listings.sellerId, [...TEST_USER_IDS])
+        .where(or(
+          inArray(listings.id, [271, 546]),
+          and(
+            inArray(listings.status, ['active', 'pending_marketplace_activation']),
+            sql`${listings.priceCents} IS NOT NULL`,
+            notInArray(listings.sellerId, [...TEST_USER_IDS])
+          )
         ))
-        .orderBy(desc(listings.priceCents))
-        .limit(TRENDING_POOL_SIZE)
+        .orderBy(
+          sql`CASE WHEN ${listings.id} IN (271, 546) THEN 0 ELSE 1 END`,
+          desc(listings.priceCents)
+        )
+        .limit(TRENDING_POOL_SIZE + 2)
     },
-    ['trending-listings-pool'],
+    ['trending-listings-pool-v3'],
     { revalidate: 300, tags: ['trending-pool'] }
   )()
 }
