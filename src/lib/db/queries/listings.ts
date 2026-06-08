@@ -111,6 +111,7 @@ export async function getListingById(id: number) {
     const data = await withUserContext(null, async (tx) => {
       const [record] = await tx.select({
         id: listings.id,
+        cardId: listings.cardId,
         title: listings.title,
         set: listings.set,
         year: listings.year,

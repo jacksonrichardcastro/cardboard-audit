@@ -150,3 +150,29 @@ export async function updateStorefrontTheme(theme: string, scope?: string | null
 
   return { success: true };
 }
+
+export async function removeCardFromHeaderAction(cardId: number) {
+  const { userId } = await auth();
+  if (!userId) return { error: "Unauthorized" };
+
+  const [profile] = await db.select({ headerCustomizationIds: profiles.headerCustomizationIds, handle: profiles.handle })
+    .from(profiles)
+    .where(eq(profiles.userId, userId))
+    .limit(1);
+
+  if (!profile) return { error: "Profile not found" };
+
+  const currentIds = (profile.headerCustomizationIds as number[]) || [];
+  const newIds = currentIds.filter(id => id !== cardId);
+
+  await db
+    .update(profiles)
+    .set({ headerCustomizationIds: newIds })
+    .where(eq(profiles.userId, userId));
+
+  if (profile.handle) {
+    revalidatePath(`/${profile.handle}`);
+  }
+  revalidatePath(`/listings/`);
+  return { success: true };
+}

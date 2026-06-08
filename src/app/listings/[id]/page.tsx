@@ -8,12 +8,14 @@ import { MakeOfferButton } from "@/components/storefront/make-offer-button";
 import { CardRail } from "@/components/storefront/card-rail";
 import { getListingById, getTrendingListings } from "@/lib/db/queries/listings";
 import { db } from "@/lib/db";
-import { viewHistory } from "@/lib/db/schema";
+import { viewHistory, profiles } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import Image from "next/image"; // Will use img securely with static Next boundaries as specified earlier to bypass proxy issues if any, but since they are in public/, we can use img
 import { ListingGallery } from "@/components/listings/listing-gallery";
 import { RemoveListingModal } from "@/components/listings/RemoveListingModal";
+import { RemoveFromHeaderButton } from "@/components/listings/RemoveFromHeaderButton";
 import { PostCreationModal } from "@/components/listings/post-creation-modal";
 import { Suspense } from "react";
 
@@ -66,6 +68,17 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   };
 
   const isOwner = userId === dbItem.sellerId;
+
+  let isInHeader = false;
+  if (isOwner && dbItem.cardId && userId) {
+    const profile = await db.query.profiles.findFirst({
+      where: eq(profiles.userId, userId),
+      columns: { headerCustomizationIds: true }
+    });
+    if (profile && Array.isArray(profile.headerCustomizationIds)) {
+      isInHeader = profile.headerCustomizationIds.includes(dbItem.cardId);
+    }
+  }
   const isDraft = item.priceCents === null;
 
   const dbRelated = await getTrendingListings({ 
@@ -157,6 +170,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                     >
                       Edit Listing
                     </Link>
+                    ${isInHeader && dbItem.cardId ? <RemoveFromHeaderButton cardId={dbItem.cardId} /> : null}
                     <RemoveListingModal 
                       listingId={item.id}
                       onSuccessRedirectUrl={dbItem.sellerHandle ? `/${dbItem.sellerHandle}` : "/seller/dashboard?tab=listings"}
