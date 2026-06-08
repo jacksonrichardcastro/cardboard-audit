@@ -10,6 +10,7 @@ interface Card {
   id: number;
   title: string;
   photos: string[];
+  listingId?: number | null;
 }
 
 interface HeaderCustomizerProps {
@@ -156,18 +157,38 @@ export function HeaderCustomizer({ cards, selectedIds, headerStyle = 'cards', ba
                     ? card.photos[0] 
                     : 'https://placehold.co/400x550';
 
+                  const hasListing = card.listingId != null;
+
                   return (
                     <div 
                       key={card.id} 
-                      onClick={() => toggleCard(card.id)}
-                      className={`relative aspect-[5/7] rounded-lg cursor-pointer overflow-hidden border-2 transition-all ${isSelected ? 'border-[#7C3AED] shadow-[0_0_15px_rgba(124,58,237,0.5)] scale-[0.98]' : 'border-transparent hover:border-[#7C3AED]/40 hover:scale-105'}`}
+                      onClick={() => hasListing && toggleCard(card.id)}
+                      className={`relative aspect-[5/7] rounded-lg overflow-hidden border-2 transition-all ${
+                        hasListing 
+                          ? isSelected 
+                            ? 'border-[#7C3AED] shadow-[0_0_15px_rgba(124,58,237,0.5)] scale-[0.98] cursor-pointer' 
+                            : 'border-transparent hover:border-[#7C3AED]/40 hover:scale-105 cursor-pointer'
+                          : 'border-transparent opacity-50 grayscale-[50%] cursor-not-allowed'
+                      }`}
                     >
                       <img src={photoUrl} alt={card.title} className="w-full h-full object-cover" />
-                      {isSelected && (
+                      {isSelected && hasListing && (
                         <div className="absolute inset-0 bg-[#7C3AED]/20 flex items-center justify-center backdrop-blur-[2px]">
                           <div className="bg-[#7C3AED] rounded-full p-1 shadow-lg">
                             <Check className="w-4 h-4 text-white" />
                           </div>
+                        </div>
+                      )}
+                      {!hasListing && (
+                        <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center p-2 text-center backdrop-blur-[1px]">
+                          <p className="text-[10px] font-medium text-zinc-300 leading-tight mb-2">List this card first to feature it in your header</p>
+                          <a 
+                            href={`/sell/new?cardId=${card.id}`}
+                            className="bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-[10px] px-2 py-1 rounded-md transition-colors pointer-events-auto"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            List on Marketplace
+                          </a>
                         </div>
                       )}
                     </div>

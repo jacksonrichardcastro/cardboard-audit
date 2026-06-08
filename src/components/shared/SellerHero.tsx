@@ -14,7 +14,7 @@ import { hideBadgeAction } from "@/app/actions/badges";
 import { BadgeRow } from "@/components/seller/BadgeRow";
 import { useTransition, useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, User, Trash, Image as ImageIcon, X, Eye, Edit3, Store, LayoutTemplate } from "lucide-react";
+import { Loader2, User, Trash, Image as ImageIcon } from "lucide-react";
 
 interface SellerHeroProps {
   name: string;
@@ -41,22 +41,6 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [heroLightboxUrl, setHeroLightboxUrl] = useState<string | null>(null);
-  const [ownerActionMenuCard, setOwnerActionMenuCard] = useState<{ id: string; url: string; title?: string; activeListingId?: number } | null>(null);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setLightboxOpen(false);
-        setHeroLightboxUrl(null);
-      }
-    };
-    if (lightboxOpen || heroLightboxUrl) {
-      document.addEventListener('keydown', handleKeyDown);
-    }
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [lightboxOpen, heroLightboxUrl]);
 
   const handleStatusChange = (status: "online" | "away" | "offline") => {
     startTransition(async () => {
@@ -172,7 +156,6 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
               }}
             >
               {displayCards.map((card, i) => {
-                const isListed = card.activeListingId != null;
                 const cardContent = (
                   <div 
                     key={customizerNode ? `${card.id}-${i}` : undefined} 
@@ -182,39 +165,15 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
                   </div>
                 );
 
-                if (customizerNode) {
+                if (customizerNode || !card.activeListingId) {
                   return cardContent;
                 }
 
-                if (isOwner) {
-                  return (
-                    <button 
-                      key={`${card.id}-${i}`} 
-                      onClick={() => setOwnerActionMenuCard(card)}
-                      className="text-left focus:outline-none"
-                    >
-                      {cardContent}
-                    </button>
-                  );
-                }
-
-                if (isListed) {
-                  return (
-                    <Link key={`${card.id}-${i}`} href={`/listings/${card.activeListingId}`}>
-                      {cardContent}
-                    </Link>
-                  );
-                } else {
-                  return (
-                    <button 
-                      key={`${card.id}-${i}`} 
-                      onClick={() => setHeroLightboxUrl(card.url)}
-                      className="text-left focus:outline-none"
-                    >
-                      {cardContent}
-                    </button>
-                  );
-                }
+                return (
+                  <Link key={`${card.id}-${i}`} href={`/listings/${card.activeListingId}`}>
+                    {cardContent}
+                  </Link>
+                );
               })}
             </div>
           </div>
@@ -222,67 +181,24 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
 
         {/* Profile Avatar (overlapping the shelf) */}
         <div className="absolute left-1/2 bottom-0 translate-y-1/2 -translate-x-1/2 z-20">
-          {isOwner ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger disabled={isPending} className="focus:outline-none transition-transform hover:scale-105">
-                <div className="relative group/avatar cursor-pointer">
-                  {avatarUrl ? (
-                    <img 
-                      src={avatarUrl} 
-                      alt={name} 
-                      className={`w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-4 border-black shadow-2xl bg-zinc-900 ${isPending ? 'opacity-50' : ''}`} 
-                    />
-                  ) : (
-                    <div className={`w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-black shadow-2xl bg-zinc-800 flex items-center justify-center text-2xl md:text-3xl font-bold text-white ${isPending ? 'opacity-50' : ''}`}>
-                      {name.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  {isPending && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Loader2 className="w-6 h-6 animate-spin text-white" />
-                    </div>
-                  )}
-                </div>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" className="bg-[#7C3AED]/10 backdrop-blur-md border border-[#7C3AED]/30 text-white min-w-[160px] z-[120]">
-                {avatarUrl && (
-                  <DropdownMenuItem className="cursor-pointer focus:bg-[#7C3AED]/15 focus:text-white" onClick={() => setLightboxOpen(true)}>
-                    <User className="w-4 h-4 mr-2 text-zinc-400" />
-                    View Photo
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuItem className="cursor-pointer focus:bg-[#7C3AED]/15 focus:text-[#7C3AED] text-[#7C3AED]" onClick={() => fileInputRef.current?.click()}>
-                  <ImageIcon className="w-4 h-4 mr-2" />
-                  Change Photo
-                </DropdownMenuItem>
-                {avatarUrl && (
-                  <DropdownMenuItem className="cursor-pointer focus:bg-red-500/15 focus:text-red-400 text-red-400" onClick={handleAvatarRemove}>
-                    <Trash className="w-4 h-4 mr-2" />
-                    Remove
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <div 
-              className={`relative group/avatar ${avatarUrl ? 'cursor-pointer transition-transform hover:scale-105' : ''}`}
-              onClick={() => {
-                if (avatarUrl) setLightboxOpen(true);
-              }}
-            >
-              {avatarUrl ? (
-                <img 
-                  src={avatarUrl} 
-                  alt={name} 
-                  className={`w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-4 border-black shadow-2xl bg-zinc-900 ${isPending ? 'opacity-50' : ''}`} 
-                />
-              ) : (
-                <div className={`w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-black shadow-2xl bg-zinc-800 flex items-center justify-center text-2xl md:text-3xl font-bold text-white ${isPending ? 'opacity-50' : ''}`}>
-                  {name.charAt(0).toUpperCase()}
-                </div>
-              )}
-            </div>
-          )}
+          <div className="relative group/avatar">
+            {avatarUrl ? (
+              <img 
+                src={avatarUrl} 
+                alt={name} 
+                className={`w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-4 border-black shadow-2xl bg-zinc-900 ${isPending ? 'opacity-50' : ''}`} 
+              />
+            ) : (
+              <div className={`w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-black shadow-2xl bg-zinc-800 flex items-center justify-center text-2xl md:text-3xl font-bold text-white ${isPending ? 'opacity-50' : ''}`}>
+                {name.charAt(0).toUpperCase()}
+              </div>
+            )}
+            {isPending && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Loader2 className="w-6 h-6 animate-spin text-white" />
+              </div>
+            )}
+          </div>
           <input 
             type="file" 
             accept="image/*" 
@@ -381,132 +297,6 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
           }}
         />
       </div>
-
-      {/* Lightbox for Profile Photo */}
-      {lightboxOpen && avatarUrl && (
-        <div 
-          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm"
-          onClick={() => setLightboxOpen(false)}
-        >
-          <button 
-            className="absolute top-4 right-4 p-2 text-white/70 hover:text-white transition-colors"
-            onClick={(e) => {
-              e.stopPropagation();
-              setLightboxOpen(false);
-            }}
-          >
-            <X className="w-6 h-6" />
-          </button>
-          <div className="relative w-[90vw] max-w-2xl aspect-square md:aspect-auto md:h-[80vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-            <img src={avatarUrl} alt={name} className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
-          </div>
-        </div>
-      )}
-
-      {/* Lightbox for Hero Cards */}
-      {heroLightboxUrl && (
-        <div 
-          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-sm"
-          onClick={() => setHeroLightboxUrl(null)}
-        >
-          <button 
-            className="absolute top-4 right-4 p-2 text-white/70 hover:text-white transition-colors"
-            onClick={(e) => {
-              e.stopPropagation();
-              setHeroLightboxUrl(null);
-            }}
-          >
-            <X className="w-6 h-6" />
-          </button>
-          <div className="relative w-[90vw] max-w-2xl aspect-auto md:h-[85vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-            <img src={heroLightboxUrl} alt="Card Preview" className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
-          </div>
-        </div>
-      )}
-
-      {/* Owner Action Menu */}
-      {ownerActionMenuCard && (
-        <div 
-          className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4 sm:p-0"
-          onClick={() => setOwnerActionMenuCard(null)}
-        >
-          <div 
-            className="w-full max-w-sm bg-zinc-950 border border-[#7C3AED]/30 rounded-t-xl sm:rounded-xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 sm:fade-in-90"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between p-4 border-b border-white/10">
-              <h3 className="font-semibold text-white">Card Actions</h3>
-              <button 
-                onClick={() => setOwnerActionMenuCard(null)}
-                className="p-1 text-zinc-400 hover:text-white transition-colors rounded-full hover:bg-white/10"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            
-            <div className="p-2 flex flex-col">
-              <button 
-                onClick={() => {
-                  setHeroLightboxUrl(ownerActionMenuCard.url);
-                  setOwnerActionMenuCard(null);
-                }}
-                className="flex items-center w-full p-3 text-left hover:bg-white/5 rounded-lg transition-colors group"
-              >
-                <Eye className="w-5 h-5 mr-3 text-zinc-400 group-hover:text-white" />
-                <span className="font-medium text-zinc-200 group-hover:text-white">View card</span>
-              </button>
-
-              <Link 
-                href={`/binder/${ownerActionMenuCard.id}/edit`}
-                className="flex items-center w-full p-3 text-left hover:bg-white/5 rounded-lg transition-colors group"
-              >
-                <Edit3 className="w-5 h-5 mr-3 text-zinc-400 group-hover:text-white" />
-                <span className="font-medium text-zinc-200 group-hover:text-white">Edit card</span>
-              </Link>
-
-              <button 
-                onClick={() => {
-                  window.dispatchEvent(new Event('open-header-customizer'));
-                  setOwnerActionMenuCard(null);
-                }}
-                className="flex items-center w-full p-3 text-left hover:bg-white/5 rounded-lg transition-colors group"
-              >
-                <LayoutTemplate className="w-5 h-5 mr-3 text-zinc-400 group-hover:text-white" />
-                <span className="font-medium text-zinc-200 group-hover:text-white">Customize header</span>
-              </button>
-
-              <div className="h-px bg-white/10 my-1 mx-2" />
-
-              {!ownerActionMenuCard.activeListingId ? (
-                <Link 
-                  href={`/sell/new?cardId=${ownerActionMenuCard.id}`}
-                  className="flex items-center w-full p-3 text-left hover:bg-white/5 rounded-lg transition-colors group"
-                >
-                  <Store className="w-5 h-5 mr-3 text-[#7C3AED] group-hover:text-[#9D5CFF]" />
-                  <span className="font-medium text-[#7C3AED] group-hover:text-[#9D5CFF]">List on Marketplace</span>
-                </Link>
-              ) : (
-                <>
-                  <Link 
-                    href={`/listings/${ownerActionMenuCard.activeListingId}`}
-                    className="flex items-center w-full p-3 text-left hover:bg-white/5 rounded-lg transition-colors group"
-                  >
-                    <Store className="w-5 h-5 mr-3 text-zinc-400 group-hover:text-white" />
-                    <span className="font-medium text-zinc-200 group-hover:text-white">View listing</span>
-                  </Link>
-                  <Link 
-                    href={`/listings/${ownerActionMenuCard.activeListingId}/edit`}
-                    className="flex items-center w-full p-3 text-left hover:bg-white/5 rounded-lg transition-colors group"
-                  >
-                    <Edit3 className="w-5 h-5 mr-3 text-zinc-400 group-hover:text-white" />
-                    <span className="font-medium text-zinc-200 group-hover:text-white">Edit listing</span>
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

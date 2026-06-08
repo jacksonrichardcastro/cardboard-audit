@@ -66,6 +66,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   };
 
   const isOwner = userId === dbItem.sellerId;
+  const isDraft = item.priceCents === null;
 
   const dbRelated = await getTrendingListings({ 
     category: item.category,
@@ -172,61 +173,84 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
               <div className="flex items-end gap-3 pt-2">
                 <div className="flex flex-col">
-                  {item.discountType && item.discountAmount && (
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className="bg-primary/20 backdrop-blur-md px-2 py-0.5 rounded-sm border border-primary/30 flex items-center gap-1">
-                        <Flame className="w-4 h-4 text-orange-500" />
-                        <span className="text-xs font-bold text-primary">
-                          {item.discountType === 'percent' 
-                            ? `${item.discountAmount / 100}% OFF` 
-                            : `$${(item.discountAmount / 100).toFixed(0)} OFF`}
-                        </span>
-                      </div>
-                      <span className="text-xl text-muted-foreground line-through font-medium">
-                        ${(item.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </span>
-                    </div>
+                  {isDraft ? (
+                    <p className="text-3xl font-black tracking-tighter text-muted-foreground">
+                      Price coming soon
+                    </p>
+                  ) : (
+                    <>
+                      {item.discountType && item.discountAmount && (
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="bg-primary/20 backdrop-blur-md px-2 py-0.5 rounded-sm border border-primary/30 flex items-center gap-1">
+                            <Flame className="w-4 h-4 text-orange-500" />
+                            <span className="text-xs font-bold text-primary">
+                              {item.discountType === 'percent' 
+                                ? `${item.discountAmount / 100}% OFF` 
+                                : `$${(item.discountAmount / 100).toFixed(0)} OFF`}
+                            </span>
+                          </div>
+                          <span className="text-xl text-muted-foreground line-through font-medium">
+                            ${(item.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      )}
+                      <p className={`text-5xl font-black tracking-tighter ${item.discountType ? "text-primary" : "text-foreground"}`}>
+                        ${((item.discountType === 'percent' 
+                          ? item.priceCents * (1 - (item.discountAmount || 0) / 10000)
+                          : item.discountType === 'dollar'
+                          ? Math.max(0, item.priceCents - (item.discountAmount || 0))
+                          : item.priceCents) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                    </>
                   )}
-                  <p className={`text-5xl font-black tracking-tighter ${item.discountType ? "text-primary" : "text-foreground"}`}>
-                    ${((item.discountType === 'percent' 
-                      ? item.priceCents * (1 - (item.discountAmount || 0) / 10000)
-                      : item.discountType === 'dollar'
-                      ? Math.max(0, item.priceCents - (item.discountAmount || 0))
-                      : item.priceCents) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </p>
                 </div>
               </div>
             </div>
 
             {/* Purchase CTA */}
-            <div className="pt-2 flex flex-row gap-2 sm:gap-3">
-              <div className="flex-1">
-                <BuyNowButton 
-                  listingId={item.id} 
-                  price={item.discountType === 'percent' 
-                    ? item.priceCents * (1 - (item.discountAmount || 0) / 10000)
-                    : item.discountType === 'dollar'
-                    ? Math.max(0, item.priceCents - (item.discountAmount || 0))
-                    : item.priceCents} 
-                  title={item.title} 
-                  photoUrl={item.photos[0]} 
-                  shipsFrom={item.shipsFrom || "Los Angeles, CA"}
-                  shippingEstimate={item.shippingEstimate || "3-5 business days via USPS Priority"}
-                  quantity={1} // Phase A: hardcoded default
-                />
+            {!isDraft && (
+              <div className="pt-2 flex flex-row gap-2 sm:gap-3">
+                <div className="flex-1">
+                  <BuyNowButton 
+                    listingId={item.id} 
+                    price={item.discountType === 'percent' 
+                      ? item.priceCents * (1 - (item.discountAmount || 0) / 10000)
+                      : item.discountType === 'dollar'
+                      ? Math.max(0, item.priceCents - (item.discountAmount || 0))
+                      : item.priceCents} 
+                    title={item.title} 
+                    photoUrl={item.photos[0]} 
+                    shipsFrom={item.shipsFrom || "Los Angeles, CA"}
+                    shippingEstimate={item.shippingEstimate || "3-5 business days via USPS Priority"}
+                    quantity={1} // Phase A: hardcoded default
+                  />
+                </div>
+                <div className="flex-1">
+                  <MakeOfferButton
+                    listingId={item.id}
+                    priceCents={item.discountType === 'percent' 
+                      ? item.priceCents * (1 - (item.discountAmount || 0) / 10000)
+                      : item.discountType === 'dollar'
+                      ? Math.max(0, item.priceCents - (item.discountAmount || 0))
+                      : item.priceCents}
+                    title={item.title}
+                  />
+                </div>
               </div>
-              <div className="flex-1">
-                <MakeOfferButton
-                  listingId={item.id}
-                  priceCents={item.discountType === 'percent' 
-                    ? item.priceCents * (1 - (item.discountAmount || 0) / 10000)
-                    : item.discountType === 'dollar'
-                    ? Math.max(0, item.priceCents - (item.discountAmount || 0))
-                    : item.priceCents}
-                  title={item.title}
-                />
+            )}
+            {isDraft && isOwner && (
+              <div className="pt-2 flex flex-col gap-3">
+                <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 flex items-center justify-between">
+                  <p className="text-sm text-primary font-medium">Set a price to publish this listing.</p>
+                  <Link 
+                    href={`/listings/${item.id}/edit`}
+                    className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 shrink-0 ml-4"
+                  >
+                    Edit Listing
+                  </Link>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Logistics & Seller */}
             <div className="grid gap-4 pt-4">

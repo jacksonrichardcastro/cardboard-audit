@@ -101,7 +101,7 @@ export const listings = pgTable("listings", {
   gradingCompany: varchar("grading_company", { length: 100 }),
   grade: varchar("grade", { length: 50 }),
   description: text("description"),
-  priceCents: integer("price_cents").notNull(), // Stored in cents
+  priceCents: integer("price_cents"), // Stored in cents, nullable for drafts
   quantity: integer("quantity").notNull().default(1),
   status: varchar("status", { length: 50 }).notNull().default("pending_marketplace_activation"), // pending_marketplace_activation, active, sold, paused
   isDemo: boolean("is_demo").notNull().default(false),
