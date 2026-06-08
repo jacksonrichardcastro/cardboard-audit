@@ -168,17 +168,17 @@ async function run() {
   console.log("==========================================");
   console.log("=== HOME PAGE DATA FETCHED (TEST) ===");
   console.log("=== POOL A (Trending) ===");
-  poolA_Trending.forEach(c => console.log(`[${c.id}] $${(c.priceCents/100).toFixed(2)} - ${c.title} (@${c.sellerHandle || c.sellerId})`));
+  poolA_Trending.forEach(c => console.log(`[${c.id}] $${(((c.priceCents as number)||0)/100).toFixed(2)} - ${c.title} (@${c.sellerHandle || c.sellerId})`));
   console.log("=== POOL B (Trending) ===");
-  poolB_Trending.forEach(c => console.log(`[${c.id}] $${(c.priceCents/100).toFixed(2)} - ${c.title} (@${c.sellerHandle || c.sellerId})`));
+  poolB_Trending.forEach(c => console.log(`[${c.id}] $${(((c.priceCents as number)||0)/100).toFixed(2)} - ${c.title} (@${c.sellerHandle || c.sellerId})`));
   
   console.log("=== POOL A (Featured) ===");
-  poolA_Featured.forEach(c => console.log(`[${c.id}] $${(c.priceCents/100).toFixed(2)} - ${c.title} (@${c.sellerHandle || c.sellerId})`));
+  poolA_Featured.forEach(c => console.log(`[${c.id}] $${(((c.priceCents as number)||0)/100).toFixed(2)} - ${c.title} (@${c.sellerHandle || c.sellerId})`));
   console.log("=== POOL B (Featured) ===");
-  poolB_Featured.forEach(c => console.log(`[${c.id}] $${(c.priceCents/100).toFixed(2)} - ${c.title} (@${c.sellerHandle || c.sellerId})`));
+  poolB_Featured.forEach(c => console.log(`[${c.id}] $${(((c.priceCents as number)||0)/100).toFixed(2)} - ${c.title} (@${c.sellerHandle || c.sellerId})`));
 
   console.log("=== SPECIFIC LISTINGS PICKED ===");
-  pickedSpecificListings.forEach(c => console.log(`[${c.id}] $${(c.priceCents/100).toFixed(2)} - ${c.title} (@${c.sellerHandle || c.sellerId})`));
+  pickedSpecificListings.forEach(c => console.log(`[${c.id}] $${(((c.priceCents as number)||0)/100).toFixed(2)} - ${c.title} (@${c.sellerHandle || c.sellerId})`));
   console.log("==========================================");
 
 }

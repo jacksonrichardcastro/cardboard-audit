@@ -440,7 +440,7 @@ export default async function SellerStorePage(props: Props) {
                 isOwner={displayAsOwner}
                 sellerName={sellerName}
                 cards={binderCards} 
-                activeListings={activeListings}
+                activeListings={activeListings as any}
                 grailCardId={grailId}
               />
             )
@@ -483,7 +483,7 @@ export default async function SellerStorePage(props: Props) {
             ) : (
               <ActiveListingsGrid 
                 isOwner={displayAsOwner}
-                listings={activeListings} 
+                listings={activeListings as any} 
               />
             )
           )}

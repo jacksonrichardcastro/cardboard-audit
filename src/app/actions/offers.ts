@@ -55,6 +55,10 @@ export async function createOfferAction(listingId: number, amountCents: number, 
     return { error: "You cannot make an offer on your own listing." };
   }
 
+  if (listing.priceCents === null) {
+    return { error: "Cannot make an offer on a draft listing." };
+  }
+
   if (amountCents >= listing.priceCents) {
     return { error: "Offer amount must be less than the buy now price." };
   }

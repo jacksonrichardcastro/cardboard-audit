@@ -62,7 +62,7 @@ export default async function ForYouPage() {
         {/* Listings Grid */}
         {listings.length > 0 ? (
           <ActiveListingsGrid 
-            listings={listings} 
+            listings={listings as any} 
             isOwner={false} 
           />
         ) : (

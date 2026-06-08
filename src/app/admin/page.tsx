@@ -116,7 +116,7 @@ export default async function AdminDashboardPage(props: {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <ActivationQueue listings={pendingListings} />
+      <ActivationQueue listings={pendingListings as any} />
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
         <div>

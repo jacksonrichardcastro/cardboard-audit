@@ -212,7 +212,7 @@ export async function createCheckoutSessionAction(listingIds: number[]) {
         name: item.title, 
         metadata: { listingId: item.id.toString(), sellerId: item.sellerId } 
       },
-      unit_amount: item.priceCents,
+      unit_amount: item.priceCents as number,
     },
     quantity: 1,
   }));

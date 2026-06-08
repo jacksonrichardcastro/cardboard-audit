@@ -24,7 +24,7 @@ export interface BinderGridProps {
   activeListings?: {
     id: number;
     cardId: number;
-    priceCents: number;
+    priceCents: number | null;
   }[];
 }
 
@@ -178,7 +178,7 @@ export function BinderGrid({ isOwner, sellerName, collectionValueCents, grailCar
                         Listed
                       </div>
                       <p className="text-xs font-bold text-[#7C3AED]">
-                        ${(activeListing!.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 0 })}
+                        ${(activeListing!.priceCents != null ? activeListing!.priceCents / 100 : 0).toLocaleString(undefined, { minimumFractionDigits: 0 })}
                       </p>
                     </div>
                   )}

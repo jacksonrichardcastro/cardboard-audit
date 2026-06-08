@@ -187,7 +187,7 @@ async function handleCheckoutCompleted(event: Stripe.Event) {
       // Fee: founding tier 3%, standard tier 5%. Integer math only — cents in,
       // cents out. floor() avoids rounding up to the seller's detriment.
       const feeBps = item.feeTier === "founding" ? 300 : 500;
-      const feeCents = Math.floor((item.priceCents * feeBps) / 10_000);
+      const feeCents = Math.floor(((item.priceCents as number) * feeBps) / 10_000);
 
       const [newOrder] = await tx
         .insert(orders)
@@ -199,7 +199,7 @@ async function handleCheckoutCompleted(event: Stripe.Event) {
           priceCentsAtSale: item.priceCents,
           taxCents: 0,
           shippingCents: 500,
-          totalCents: item.priceCents + 500,
+          totalCents: (item.priceCents as number) + 500,
           feeCents,
           stripePaymentIntentId:
             typeof session.payment_intent === "string"
