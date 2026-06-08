@@ -100,7 +100,14 @@ export function CategoryRows({ categories, cards, isOwner, sellerName, tab, allB
 
           return (
             <div key={category.id} className="w-full space-y-4">
-              <h2 className="text-xl md:text-2xl font-bold tracking-tight text-white">{category.name}</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl md:text-2xl font-bold tracking-tight text-white">{category.name}</h2>
+                {isOwner && (
+                  <Button variant="outline" size="sm" onClick={() => openPicker(category.id)} className="text-[#7C3AED] border-[#7C3AED]/30 hover:bg-[#7C3AED]/10 bg-transparent">
+                    Add Cards
+                  </Button>
+                )}
+              </div>
               
               {categoryCards.length === 0 ? (
                 <div 
@@ -203,44 +210,54 @@ export function CategoryRows({ categories, cards, isOwner, sellerName, tab, allB
           setSelectedCardIds([]);
         }
       }} modal={false}>
-        <DialogContent hideOverlay={true} className="max-w-3xl bg-[#7C3AED]/10 backdrop-blur-md border-[#7C3AED]/30 text-white shadow-2xl z-[120]">
-          <DialogHeader>
+        <DialogContent hideOverlay={true} className="!max-w-[100vw] !w-[100vw] !h-[100dvh] !max-h-[100dvh] md:!max-w-[90vw] md:!w-[90vw] md:!max-h-[85vh] md:!h-[85vh] overflow-hidden flex flex-col bg-[#7C3AED]/10 backdrop-blur-md border-[#7C3AED]/30 text-white shadow-2xl z-[120] p-4 md:p-6">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle className="text-xl">Add Cards to {activeCategory?.name}</DialogTitle>
             <p className="text-sm text-zinc-300">
               Select cards from your binder to add to this category.
             </p>
           </DialogHeader>
 
-          <div className="grid grid-cols-3 md:grid-cols-4 gap-4 max-h-[60vh] overflow-y-auto py-4 pr-2">
-            {pickerCards.map(card => {
-              const isSelected = selectedCardIds.includes(card.id);
-              const photoUrl = getPhotoUrl(card.photos);
+          <div className="flex-1 overflow-y-auto mt-4 p-1">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+              {pickerCards.map(card => {
+                const isSelected = selectedCardIds.includes(card.id);
+                const photoUrl = getPhotoUrl(card.photos);
 
-              return (
-                <div 
-                  key={card.id} 
-                  onClick={() => toggleCardSelection(card.id)}
-                  className={`relative aspect-[5/7] rounded-lg cursor-pointer overflow-hidden border-2 transition-all ${isSelected ? 'border-[#7C3AED] shadow-[0_0_15px_rgba(124,58,237,0.5)] scale-[0.98]' : 'border-transparent hover:border-[#7C3AED]/40 hover:scale-105'}`}
-                >
-                  <img src={photoUrl} alt={card.title} className="w-full h-full object-cover" />
-                  {isSelected && (
-                    <div className="absolute inset-0 bg-[#7C3AED]/20 flex items-center justify-center backdrop-blur-[2px]">
-                      <div className="bg-[#7C3AED] rounded-full p-1 shadow-lg">
-                        <Check className="w-4 h-4 text-white" />
-                      </div>
+                return (
+                  <button 
+                    key={card.id} 
+                    onClick={() => toggleCardSelection(card.id)}
+                    className={`group relative rounded-lg border-2 transition-all overflow-hidden flex flex-col ${isSelected ? 'border-[#7C3AED] ring-2 ring-[#7C3AED]/50 scale-[0.98]' : 'border-zinc-800 hover:border-[#7C3AED]/40'}`}
+                  >
+                    <div className="aspect-[2.5/3.5] w-full bg-zinc-900 relative">
+                      <img src={photoUrl} alt={card.title} className="absolute inset-0 w-full h-full object-contain" />
                     </div>
-                  )}
+                    <div className="p-2 bg-black/80 w-full flex flex-col items-center justify-center">
+                      <div className="text-[10px] md:text-xs font-semibold text-white line-clamp-1 w-full text-center" title={card.title}>{card.title}</div>
+                      {(card as any).priceCents && (
+                        <div className="text-[9px] text-[#7C3AED] font-bold mt-0.5">
+                          ${((card as any).priceCents / 100).toFixed(2)}
+                        </div>
+                      )}
+                    </div>
+                    {isSelected && (
+                      <div className="absolute top-1 right-1 bg-[#7C3AED] rounded-full p-1 shadow-lg">
+                        <Check className="w-3 h-3 text-white" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+              {pickerCards.length === 0 && (
+                <div className="col-span-full text-center py-12 text-zinc-400">
+                  <p>No eligible cards found in your binder.</p>
                 </div>
-              );
-            })}
-            {pickerCards.length === 0 && (
-              <div className="col-span-full text-center py-12 text-zinc-400">
-                <p>No eligible cards found in your binder.</p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
-          <DialogFooter className="mt-4">
+          <DialogFooter className="mt-4 border-t border-[#7C3AED]/30 pt-4 flex-shrink-0">
             <Button variant="outline" onClick={() => {
               setActivePickerCategoryId(null);
               setSelectedCardIds([]);

@@ -24,6 +24,8 @@ export function ListingFormFields({
   isUploadingFiles: boolean;
   draftId: number;
   mode: "listing" | "binder";
+  categories?: any[];
+  storefrontLayout?: string;
 }) {
   return (
     <div className="space-y-12">
@@ -113,6 +115,51 @@ export function ListingFormFields({
           )}
         </div>
       </div>
+
+      {/* 2.5 Quantity */}
+      {mode !== 'binder' && (
+        <div className="space-y-6">
+          <h2 className="text-xl font-semibold border-b pb-2">Quantity & Storefront</h2>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Quantity Available *</Label>
+              <p className="text-sm text-muted-foreground">
+                Listing multiple copies of the same card in the same condition? Set quantity here instead of creating duplicate listings.
+              </p>
+              <Input 
+                type="number" 
+                min="1" 
+                max="99" 
+                value={formData.quantity || 1} 
+                onChange={e => handleChange("quantity", parseInt(e.target.value) || 1)} 
+                className="max-w-[150px]"
+              />
+            </div>
+
+            {storefrontLayout === "categories" && categories && categories.length > 0 && (
+              <div className="space-y-2 mt-6">
+                <Label>Storefront Category</Label>
+                <select 
+                  value={formData.categoryId || ''}
+                  onChange={e => handleChange("categoryId", e.target.value)}
+                  className="w-full h-10 px-3 mt-2 bg-background border rounded-md"
+                >
+                  <option value="">No Category</option>
+                  {categories.map(c => (
+                    <option key={c.id} value={c.id.toString()}>{c.name}</option>
+                  ))}
+                  <option value="not_exist">Category doesn't exist</option>
+                </select>
+                {formData.categoryId === "not_exist" && (
+                  <p className="text-sm text-yellow-500 mt-2">
+                    Card will be saved to your binder. You can create the category later and add it.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 3. Photos */}
       <div className="space-y-6">

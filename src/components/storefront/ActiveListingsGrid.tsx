@@ -21,6 +21,7 @@ export interface ActiveListingsGridProps {
     discountAmount?: number | null;
     discountActiveUntil?: Date | null;
     photos: string[];
+    quantity?: number;
   }[];
 }
 
@@ -94,6 +95,11 @@ export function ActiveListingsGrid({ isOwner, listings }: ActiveListingsGridProp
                     <p className="text-sm md:text-[15px] font-bold text-white text-center w-full">
                       ${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
+                  )}
+                  {((listing.quantity || 1) > 1) && (
+                    <span className="text-[9px] md:text-[10px] text-zinc-400 bg-zinc-800/50 px-1.5 py-0.5 rounded-full mt-0.5">
+                      {listing.quantity} available
+                    </span>
                   )}
                   <p className="text-[10px] md:text-[11px] text-zinc-500 truncate w-full text-center">
                     {listing.grade ? `${listing.gradingCompany} ${listing.grade}` : listing.condition}

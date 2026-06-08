@@ -1,9 +1,11 @@
-const { Pool } = require('pg');
-require('dotenv').config({ path: '.env.local' });
-async function run() {
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-  const res = await pool.query("SELECT * FROM profiles ORDER BY created_at DESC LIMIT 5");
-  console.log(res.rows);
-  pool.end();
+const { db } = require('./src/lib/db');
+const { listings } = require('./src/lib/db/schema');
+async function test() {
+  try {
+    const res = await db.select({ id: listings.id, quantity: listings.quantity }).from(listings).limit(1);
+    console.log("Success:", res);
+  } catch (e) {
+    console.error("Error:", e.message);
+  }
 }
-run();
+test();

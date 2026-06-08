@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { profiles, users, categories } from "@/lib/db/schema";
+import { profiles, users, categories, cards } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import ClientPage from "./client-page";
 
@@ -34,5 +34,20 @@ export default async function NewListingServerPage({ searchParams }: { searchPar
   const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
   const storefrontLayout = user?.storefrontLayout || "grid";
 
-  return <ClientPage categories={userCategories} storefrontLayout={storefrontLayout} />;
+  let initialCard = null;
+  const cardIdParam = (params as any).cardId as string | undefined;
+  if (cardIdParam) {
+    const cardId = parseInt(cardIdParam, 10);
+    const card = await db.query.cards.findFirst({
+      where: eq(cards.id, cardId),
+      with: {
+        photos: true
+      }
+    });
+    if (card && card.ownerId === userId) {
+      initialCard = card;
+    }
+  }
+
+  return <ClientPage categories={userCategories} storefrontLayout={storefrontLayout} initialCard={initialCard} />;
 }

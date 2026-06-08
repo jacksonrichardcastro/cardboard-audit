@@ -7,10 +7,13 @@ import { ListingFormFields } from "@/components/sell/ListingFormFields";
 import { Button } from "@/components/ui/button";
 import { RemoveListingModal } from "@/components/listings/RemoveListingModal";
 
-export default function EditListingClient({ listing, card, handle }: { 
+export default function EditListingClient({ listing, card, handle, categories = [], storefrontLayout = "grid", cardMemberships = [] }: { 
   listing: any, 
   card: any,
-  handle?: string
+  handle?: string,
+  categories?: any[],
+  storefrontLayout?: string,
+  cardMemberships?: any[]
 }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -49,6 +52,8 @@ export default function EditListingClient({ listing, card, handle }: {
     price: (listing.priceCents / 100).toFixed(2),
     shippingMethod: listing.shippingMethod || "Standard (USPS Ground Advantage)",
     description: listing.description || card.description || "",
+    quantity: (listing as any).quantity || 1,
+    categoryId: cardMemberships.length > 0 ? cardMemberships[0].categoryId.toString() : "",
     photos: (card.photos || []).sort((a: any, b: any) => a.sortOrder - b.sortOrder).map((p: any) => ({
       kind: p.kind,
       sortOrder: p.sortOrder,
@@ -172,6 +177,8 @@ export default function EditListingClient({ listing, card, handle }: {
           isUploadingFiles={isUploadingFiles}
           draftId={card.id} 
           mode="listing"
+          categories={categories}
+          storefrontLayout={storefrontLayout}
         />
       </div>
 

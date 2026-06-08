@@ -192,19 +192,26 @@ export default async function SellerStorePage(props: Props) {
     .where(and(eq(listings.sellerId, seller.userId), inArray(listings.status, ["active", "pending_marketplace_activation"])))
     .orderBy(desc(listings.createdAt));
 
-  // Fetch binder cards
-  const binderCards = await db.select({
+  // Fetch binder cards (all cards owned by the user, or linked to their listings)
+  const rawBinderCards = await db.select({
       id: cards.id,
       title: cards.title,
       category: cards.category,
       grade: cards.grade,
       gradingCompany: cards.gradingCompany,
       condition: cards.condition,
+      priceCents: listings.priceCents,
       photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE item_photos.card_id = cards.id), '[]'::json)`,
     })
     .from(cards)
-    .where(eq(cards.ownerId, seller.userId))
+    .leftJoin(listings, eq(cards.id, listings.cardId))
+    .where(
+      sql`${cards.ownerId} = ${seller.userId} OR (${listings.sellerId} = ${seller.userId} AND ${listings.deletedAt} IS NULL)`
+    )
     .orderBy(desc(cards.createdAt));
+
+  // Deduplicate in case a card has multiple listings
+  const binderCards = Array.from(new Map(rawBinderCards.map(c => [c.id, c])).values());
 
   const userCategories = await db.query.categories.findMany({
     where: eq(categories.userId, seller.userId),

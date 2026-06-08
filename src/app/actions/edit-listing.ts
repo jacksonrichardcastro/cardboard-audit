@@ -128,6 +128,25 @@ export async function updateListing(listingId: number, data: any) {
     }
   }
 
+  // Handle Category Assignment
+  const { categoryMemberships } = await import("@/lib/db/schema");
+  if (data.categoryId === "not_exist" || !data.categoryId) {
+    // If empty or doesn't exist, remove all category memberships for this card
+    await db.delete(categoryMemberships).where(eq(categoryMemberships.cardId, cardId));
+  } else {
+    // Replace existing memberships with the selected category
+    const catId = parseInt(data.categoryId, 10);
+    if (!isNaN(catId)) {
+      // Clear existing
+      await db.delete(categoryMemberships).where(eq(categoryMemberships.cardId, cardId));
+      // Insert new
+      await db.insert(categoryMemberships).values({
+        cardId,
+        categoryId: catId,
+      });
+    }
+  }
+
   revalidatePath(`/listings/${listingId}`);
   revalidatePath(`/listings/${listingId}/edit`);
   revalidatePath(`/`);

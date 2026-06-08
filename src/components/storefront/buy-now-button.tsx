@@ -21,9 +21,10 @@ interface BuyNowButtonProps {
   photoUrl: string;
   shipsFrom: string;
   shippingEstimate: string;
+  quantity?: number;
 }
 
-export function BuyNowButton({ listingId, price, title, photoUrl, shipsFrom, shippingEstimate }: BuyNowButtonProps) {
+export function BuyNowButton({ listingId, price, title, photoUrl, shipsFrom, shippingEstimate, quantity }: BuyNowButtonProps) {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -72,7 +73,9 @@ export function BuyNowButton({ listingId, price, title, photoUrl, shipsFrom, shi
       >
         <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 shrink-0" /> 
         <span className="sm:hidden">Buy</span>
-        <span className="hidden sm:inline">Buy Now</span>
+        <span className="hidden sm:inline">
+          {quantity && quantity > 1 ? `Buy 1 of ${quantity}` : "Buy Now"}
+        </span>
       </Button>
 
       {/* Mobile Sticky CTA */}
@@ -82,7 +85,7 @@ export function BuyNowButton({ listingId, price, title, photoUrl, shipsFrom, shi
           size="lg"
           className="w-full text-lg h-12 font-semibold shadow-lg shadow-primary/20"
         >
-          {`Buy • $${(price / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          {`${quantity && quantity > 1 ? `Buy 1 of ${quantity}` : "Buy"} • $${(price / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
         </Button>
       </div>
 

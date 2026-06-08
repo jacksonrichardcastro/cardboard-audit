@@ -212,6 +212,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                   photoUrl={item.photos[0]} 
                   shipsFrom={item.shipsFrom || "Los Angeles, CA"}
                   shippingEstimate={item.shippingEstimate || "3-5 business days via USPS Priority"}
+                  quantity={1} // Phase A: hardcoded default
                 />
               </div>
               <div className="flex-1">

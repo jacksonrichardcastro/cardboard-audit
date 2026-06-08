@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Lock, Star, Edit2 } from "lucide-react";
+import { Lock, Star, Edit2, Plus } from "lucide-react";
 import { setGrailCard } from "@/app/actions/profile";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -28,9 +28,15 @@ export interface BinderGridProps {
   }[];
 }
 
+import { useState } from "react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
+
 export function BinderGrid({ isOwner, sellerName, collectionValueCents, grailCardId, cards, activeListings = [] }: BinderGridProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [lightboxCard, setLightboxCard] = useState<any>(null);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   const handleSetGrail = (e: React.MouseEvent, cardId: number) => {
     e.preventDefault(); // prevent navigation
@@ -105,8 +111,13 @@ export function BinderGrid({ isOwner, sellerName, collectionValueCents, grailCar
                 <img
                   src={photoUrl}
                   alt={card.title}
-                  className="absolute inset-2 w-[calc(100%-16px)] h-[calc(100%-16px)] object-cover rounded-sm"
+                  className="absolute inset-2 w-[calc(100%-16px)] h-[calc(100%-16px)] object-cover rounded-sm cursor-pointer z-30"
                   loading="lazy"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setLightboxCard(card);
+                    setLightboxIndex(0);
+                  }}
                 />
               </div>
 
@@ -138,6 +149,17 @@ export function BinderGrid({ isOwner, sellerName, collectionValueCents, grailCar
                     <Edit2 className="w-4 h-4" />
                   </Link>
                 )}
+                {/* List Affordance for Owners */}
+                {isOwner && !isListed && (
+                  <Link
+                    href={`/sell/new?cardId=${card.id}`}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#7C3AED]/90 text-white rounded-full hover:bg-[#6D28D9] transition-all backdrop-blur-sm shadow-md border border-[#7C3AED]/30"
+                    title="List on Marketplace"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span className="text-[10px] font-bold tracking-wide uppercase">List</span>
+                  </Link>
+                )}
               </div>
 
               {/* Card Metadata */}
@@ -166,6 +188,57 @@ export function BinderGrid({ isOwner, sellerName, collectionValueCents, grailCar
           )
         })}
       </div>
+
+      <Dialog open={!!lightboxCard} onOpenChange={(open) => !open && setLightboxCard(null)}>
+        <DialogContent className="max-w-[100vw] h-[100vh] sm:max-w-4xl sm:h-[90vh] p-0 bg-black border-none flex flex-col justify-center items-center">
+          {lightboxCard && (
+            <div className="relative w-full h-full flex flex-col">
+              <div className="absolute top-4 right-4 z-50">
+                <button onClick={() => setLightboxCard(null)} className="p-2 bg-black/50 hover:bg-black/80 rounded-full text-white backdrop-blur-sm">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <div className="flex-1 w-full relative flex items-center justify-center p-4">
+                <img 
+                  src={(lightboxCard.photos && lightboxCard.photos.length > 0) ? lightboxCard.photos[lightboxIndex] : 'https://placehold.co/400x550'} 
+                  alt={lightboxCard.title} 
+                  className="max-h-[80vh] max-w-full object-contain"
+                />
+                
+                {lightboxCard.photos && lightboxCard.photos.length > 1 && (
+                  <>
+                    <button 
+                      className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/80 rounded-full text-white backdrop-blur-sm disabled:opacity-30"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setLightboxIndex(Math.max(0, lightboxIndex - 1));
+                      }}
+                      disabled={lightboxIndex === 0}
+                    >
+                      <ChevronLeft className="w-8 h-8" />
+                    </button>
+                    <button 
+                      className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/80 rounded-full text-white backdrop-blur-sm disabled:opacity-30"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setLightboxIndex(Math.min(lightboxCard.photos.length - 1, lightboxIndex + 1));
+                      }}
+                      disabled={lightboxIndex === lightboxCard.photos.length - 1}
+                    >
+                      <ChevronRight className="w-8 h-8" />
+                    </button>
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                      {lightboxCard.photos.map((_: any, i: number) => (
+                        <div key={i} className={`w-2 h-2 rounded-full ${i === lightboxIndex ? 'bg-white' : 'bg-white/30'}`} />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

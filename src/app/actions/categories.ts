@@ -73,8 +73,13 @@ export async function autoPopulateMyCollection() {
     }).returning();
   }
 
-  // Fetch all user cards
-  const userCards = await db.select({ id: cards.id }).from(cards).where(eq(cards.ownerId, userId));
+  // Fetch all user cards (either owned by user, or linked to an active/pending listing by the user)
+  const userCards = await db.select({ id: cards.id })
+    .from(cards)
+    .leftJoin(listings, eq(cards.id, listings.cardId))
+    .where(
+      sql`${cards.ownerId} = ${userId} OR (${listings.sellerId} = ${userId} AND ${listings.deletedAt} IS NULL)`
+    );
   
   // Insert memberships, ignoring conflicts
   if (userCards.length > 0) {
@@ -102,8 +107,20 @@ export async function autoPopulateCategories() {
   
   if (autoDataCategories.length === 0) return;
   
-  // Fetch all user cards
-  const userCards = await db.select().from(cards).where(eq(cards.ownerId, userId));
+  // Fetch all user cards (either owned by user, or linked to an active/pending listing by the user)
+  const userCards = await db.select({
+      id: cards.id,
+      sport: cards.sport,
+      year: cards.year,
+      set: cards.set,
+      gradeTier: cards.gradeTier,
+      category: cards.category
+    })
+    .from(cards)
+    .leftJoin(listings, eq(cards.id, listings.cardId))
+    .where(
+      sql`${cards.ownerId} = ${userId} OR (${listings.sellerId} = ${userId} AND ${listings.deletedAt} IS NULL)`
+    );
   
   const membershipsToInsert: {cardId: number, categoryId: number}[] = [];
   

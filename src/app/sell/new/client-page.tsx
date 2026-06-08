@@ -12,7 +12,7 @@ import { createDraft, updateDraft, loadDraft, publishDraft } from "../actions";
 import { Loader2, ImagePlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export default function NewListingPage({ categories = [], storefrontLayout = "grid" }: { categories?: any[], storefrontLayout?: string }) {
+export default function NewListingPage({ categories = [], storefrontLayout = "grid", initialCard = null }: { categories?: any[], storefrontLayout?: string, initialCard?: any }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const draftIdParam = searchParams.get("draftId");
@@ -27,21 +27,26 @@ export default function NewListingPage({ categories = [], storefrontLayout = "gr
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<any>({
-    subject: "",
-    set: "",
-    year: "",
-    cardNumber: "",
+    subject: initialCard?.title?.split('#')[0]?.trim() || "",
+    set: initialCard?.set || "",
+    year: initialCard?.year || "",
+    cardNumber: initialCard?.cardNumber || "",
     edition: "",
     
-    graded: false,
-    gradingCompany: "",
-    grade: "",
-    condition: "",
+    graded: initialCard?.grade ? true : false,
+    gradingCompany: initialCard?.gradingCompany || "",
+    grade: initialCard?.grade || "",
+    condition: initialCard?.condition || "",
 
     price: "",
     description: "",
+    quantity: 1,
 
-    photos: [] as { kind: string; url: string; sortOrder: number }[],
+    photos: (initialCard?.photos || []).sort((a: any, b: any) => a.sortOrder - b.sortOrder).map((p: any) => ({
+      kind: p.kind,
+      sortOrder: p.sortOrder,
+      url: p.storagePath
+    })),
 
     shippingMethod: "Standard (USPS Ground Advantage)",
     categoryId: "",
@@ -284,6 +289,24 @@ export default function NewListingPage({ categories = [], storefrontLayout = "gr
                 </div>
               )}
             </div>
+            
+            {/* ADD QUANTITY HERE */}
+            <div className="space-y-4 pt-4 border-t border-border/50">
+              <h2 className="text-xl font-semibold border-b pb-2">Quantity</h2>
+              <div className="space-y-2">
+                <Label>Quantity Available *</Label>
+                <p className="text-sm text-muted-foreground">Listing multiple copies of the same card in the same condition? Set quantity here instead of creating duplicate listings.</p>
+                <Input 
+                  type="number" 
+                  min="1" 
+                  max="99" 
+                  value={formData.quantity || 1} 
+                  onChange={e => handleChange("quantity", parseInt(e.target.value) || 1)} 
+                  className="max-w-[150px]"
+                />
+              </div>
+            </div>
+
             <div className="flex justify-between pt-4">
               <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
               <div className="text-right">
