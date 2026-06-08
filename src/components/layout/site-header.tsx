@@ -59,7 +59,7 @@ export async function SiteHeader() {
               href="/for-you"
               className="px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground flex items-center gap-1.5"
             >
-              <HotPill text={isSignedIn ? "For You" : "Hot"} />
+              <HotPill text={isSignedIn ? "Trending" : "Hot"} />
             </Link>
             <Link
               href="/tracker"

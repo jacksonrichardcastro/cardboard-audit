@@ -1,30 +1,45 @@
 import { auth } from "@clerk/nextjs/server";
-import { getRecommendedListings } from "@/lib/recommendations/score";
-import { getUserPreferences } from "@/app/actions/preferences";
-import { Flame, ChevronRight } from "lucide-react";
-import { ForYouClient } from "@/components/recommendations/ForYouClient";
+import { getMarketplaceTrendingListings } from "@/lib/db/queries/homeListings";
+import { Flame } from "lucide-react";
 import { ActiveListingsGrid } from "@/components/storefront/ActiveListingsGrid";
 import { CosmosBackground } from "@/components/marketplace/CosmosBackground";
-import Link from "next/link";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "For You — Trax",
-  description: "Personalized card recommendations on Trax.",
+  title: "Trending | Trax",
+  description: "Trending card recommendations on Trax.",
 };
+
+function shuffleArray<T>(arr: T[]): T[] {
+  const copy = [...arr]
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[copy[i], copy[j]] = [copy[j], copy[i]]
+  }
+  return copy
+}
 
 export default async function ForYouPage() {
   const { userId } = await auth();
-  const prefs = await getUserPreferences();
   
-  // We use the recommendation engine for both Hot and For You
-  const listings = await getRecommendedListings(userId, 30);
-  
-  const hasPreferences = !!(prefs && prefs.sportCategories && prefs.sportCategories.length > 0);
-  
-  const isLoggedOut = !userId;
-  const isSkipState = userId && !hasPreferences;
-  const isPersonalized = userId && hasPreferences;
+  // Reuse the premium trending pool from home
+  const pool = await getMarketplaceTrendingListings();
+  const shuffledPool = shuffleArray(pool);
+
+  // ActiveListingsGrid expects photos to be string[], which getMarketplaceTrendingListings provides
+  // But let's map it to ensure type safety matches ActiveListingsGrid interface
+  const listings = shuffledPool.map(l => ({
+    id: l.id,
+    title: l.title,
+    priceCents: l.priceCents,
+    grade: l.grade,
+    gradingCompany: l.gradingCompany,
+    condition: l.condition,
+    discountType: l.discountType,
+    discountAmount: l.discountAmount,
+    discountActiveUntil: l.discountActiveUntil,
+    photos: Array.isArray(l.photos) ? l.photos : []
+  }));
 
   return (
     <div className="min-h-screen bg-black text-white selection:bg-[#7C3AED]/30">
@@ -39,20 +54,10 @@ export default async function ForYouPage() {
           <div className="flex items-center gap-2">
             <Flame className="w-8 h-8 text-violet-600 fill-violet-600" />
             <h1 className="text-4xl font-bold tracking-tight">
-              {isPersonalized ? "For You" : isSkipState ? "For You" : "Hot"}
+              Trending
             </h1>
           </div>
-          <p className="text-zinc-400 text-lg">
-            {isPersonalized 
-              ? "Personalized for what you collect" 
-              : "What's moving on Trax right now"}
-          </p>
         </div>
-
-        {/* Client component for modal and soft prompt state */}
-        {!isPersonalized && userId && (
-          <ForYouClient />
-        )}
 
         {/* Listings Grid */}
         {listings.length > 0 ? (

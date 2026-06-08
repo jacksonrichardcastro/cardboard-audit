@@ -45,7 +45,7 @@ export function MobileMenu({
         <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
         <div className="flex flex-col gap-6 pt-[max(env(safe-area-inset-top),5rem)] pb-safe pl-4 pr-4">
           <Link href="/for-you" onClick={handleLinkClick} className="text-sm font-medium flex items-center gap-1.5 pl-4">
-            <HotPill text={isSignedIn ? "For You" : "Hot"} />
+            <HotPill text={isSignedIn ? "Trending" : "Hot"} />
           </Link>
           <Link href="/tracker" onClick={handleLinkClick} className="text-sm font-medium inline-flex items-center gap-2 pl-4">
             Tracker
