@@ -24,7 +24,7 @@ export default async function ForYouPage() {
   
   // Reuse the premium trending pool from home
   const pool = await getMarketplaceTrendingListings();
-  const shuffledPool = shuffleArray(pool).slice(0, 15);
+  const shuffledPool = shuffleArray(pool);
 
   // ActiveListingsGrid expects photos to be string[], which getMarketplaceTrendingListings provides
   // But let's map it to ensure type safety matches ActiveListingsGrid interface
