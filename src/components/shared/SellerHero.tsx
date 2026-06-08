@@ -192,7 +192,7 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
                 className={`w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-4 border-black shadow-2xl bg-zinc-900 ${isPending ? 'opacity-50' : ''}`} 
               />
             ) : (
-              <div className={`w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-black shadow-2xl bg-zinc-800 flex items-center justify-center text-2xl md:text-3xl font-bold text-white ${isPending ? 'opacity-50' : ''}`}>
+              <div className={`w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-black shadow-2xl bg-gradient-to-br from-violet-600 to-[#7C3AED] flex items-center justify-center text-2xl md:text-3xl font-bold text-white uppercase ${isPending ? 'opacity-50' : ''}`}>
                 {name.charAt(0).toUpperCase()}
               </div>
             )}

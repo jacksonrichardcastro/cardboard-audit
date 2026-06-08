@@ -52,8 +52,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     return {};
   }
   const storefront = profileRecord.storefront;
-  const displayName = storefront.displayName;
-  const description = storefront.bio ? storefront.bio : `${displayName}'s card collection on Trax.`;
+  const displayName = (storefront.displayName ?? storefront.handle).trim();
+  const description = storefront.bio ?? `${storefront.handle}'s storefront on Trax. By the hobby. For the hobby.`;
 
   return {
     title: `${displayName} (@${storefront.handle}) — Trax`,
@@ -226,8 +226,11 @@ export default async function SellerStorePage(props: Props) {
   const isOwner = seller.userId === userId;
   const isPreview = searchParams.preview === "true";
   const displayAsOwner = isOwner && !isPreview;
-  const sellerName = storefront.displayName || "Seller";
-  const possessiveName = getPossessiveName(sellerName, isOwner);
+  const displayName = (storefront.displayName ?? storefront.handle).trim();
+  const bio = storefront.bio ?? `${storefront.handle}'s storefront on Trax. By the hobby. For the hobby.`;
+  const avatarUrl = storefront.avatarUrl;
+
+  const possessiveName = getPossessiveName(displayName, isOwner);
   const grailId = seller.grailCardId || (binderCards.length > 0 ? binderCards[0].id : null);
   
   const theme = storefront.theme || 'trax-default';
@@ -341,10 +344,10 @@ export default async function SellerStorePage(props: Props) {
       )}
       <div className="relative z-10">
         <SellerHero 
-          name={sellerName}
+          name={displayName}
           handle={storefront.handle || ''}
-          bio={storefront.bio}
-          avatarUrl={storefront.avatarUrl}
+          bio={bio}
+          avatarUrl={avatarUrl}
           headerStyle={seller.headerStyle}
           bannerImageUrl={seller.bannerImageUrl}
           isOwner={displayAsOwner}
@@ -433,14 +436,14 @@ export default async function SellerStorePage(props: Props) {
                 categories={userCategories} 
                 cards={binderCards} 
                 isOwner={displayAsOwner} 
-                sellerName={sellerName}
+                sellerName={displayName}
                 tab="binder"
                 allBinderCards={binderCards}
               />
             ) : (
               <BinderGrid 
                 isOwner={displayAsOwner}
-                sellerName={sellerName}
+                sellerName={displayName}
                 cards={binderCards} 
                 activeListings={activeListings as any}
                 grailCardId={grailId}
@@ -451,7 +454,7 @@ export default async function SellerStorePage(props: Props) {
           {currentTab === "binder" && seller.binderPrivate && !displayAsOwner && (
             <div className="text-center py-24 bg-zinc-950/50 rounded-xl border border-white/5">
               <Lock className="w-8 h-8 text-zinc-500 mx-auto mb-4" />
-              <p className="text-lg text-zinc-400">{sellerName}'s binder is private.</p>
+              <p className="text-lg text-zinc-400">{displayName}'s binder is private.</p>
             </div>
           )}
 
@@ -465,7 +468,7 @@ export default async function SellerStorePage(props: Props) {
           {currentTab === "binder" && seller.binderPrivate && displayAsOwner && (
             <BinderGrid 
               isOwner={displayAsOwner}
-              sellerName={sellerName}
+              sellerName={displayName}
               cards={binderCards} 
               activeListings={activeListings}
               grailCardId={grailId}
@@ -478,7 +481,7 @@ export default async function SellerStorePage(props: Props) {
                 categories={userCategories} 
                 cards={activeListings as any[]} 
                 isOwner={displayAsOwner}
-                sellerName={sellerName}
+                sellerName={displayName}
                 tab="storefront"
                 allBinderCards={binderCards}
               />
@@ -496,7 +499,7 @@ export default async function SellerStorePage(props: Props) {
                 categories={userCategories} 
                 cards={[]} 
                 isOwner={displayAsOwner}
-                sellerName={sellerName}
+                sellerName={displayName}
                 tab="storefront"
                 allBinderCards={binderCards}
               />
