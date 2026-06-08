@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { cards, itemPhotos, listings } from "@/lib/db/schema";
+import { cards, itemPhotos, listings, categoryMemberships } from "@/lib/db/schema";
 import { eq, and, notInArray } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
@@ -134,6 +134,21 @@ export async function updateBinderCard(cardId: number, data: any) {
         })
         .where(eq(listings.id, listing.id));
     }
+  }
+
+  // Handle Category Membership
+  if (data.categoryId && data.categoryId !== "not_exist") {
+    const catId = parseInt(data.categoryId);
+    if (!isNaN(catId)) {
+      await db.delete(categoryMemberships).where(eq(categoryMemberships.cardId, cardId));
+      await db.insert(categoryMemberships).values({
+        cardId,
+        categoryId: catId,
+        addedAt: new Date()
+      });
+    }
+  } else if (data.categoryId === "") {
+    await db.delete(categoryMemberships).where(eq(categoryMemberships.cardId, cardId));
   }
 
   revalidatePath(`/binder/${cardId}/edit`);

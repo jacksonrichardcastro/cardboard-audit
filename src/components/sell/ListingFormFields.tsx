@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { PhotoCapture, type CapturedPhoto } from "@/components/sell/photo-capture";
 import { Loader2, ImagePlus } from "lucide-react";
 import { useRef } from "react";
+import Link from "next/link";
 
 export function ListingFormFields({
   formData,
@@ -121,10 +122,10 @@ export function ListingFormFields({
       {/* 2.5 Quantity */}
       {mode !== 'binder' && (
         <div className="space-y-6">
-          <h2 className="text-xl font-semibold border-b pb-2">Quantity & Storefront</h2>
+          <h2 className="text-xl font-semibold border-b pb-2">Quantity Available</h2>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Quantity Available *</Label>
+              <Label>Quantity *</Label>
               <p className="text-sm text-muted-foreground">
                 Listing multiple copies of the same card in the same condition? Set quantity here instead of creating duplicate listings.
               </p>
@@ -137,10 +138,21 @@ export function ListingFormFields({
                 className="max-w-[150px]"
               />
             </div>
+          </div>
+        </div>
+      )}
 
-            {storefrontLayout === "categories" && categories && categories.length > 0 && (
-              <div className="space-y-2 mt-6">
-                <Label>Storefront Category</Label>
+      {/* 2.6 Category */}
+      <div className="space-y-6">
+        <h2 className="text-xl font-semibold border-b pb-2">Storefront Category</h2>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            {(!categories || categories.length === 0) ? (
+              <div className="text-sm text-muted-foreground p-3 border rounded-md bg-muted/10 mt-2">
+                No categories yet — <Link href="/seller/dashboard?tab=categories" className="text-[#7C3AED] hover:underline">create one from Manage Categories</Link>
+              </div>
+            ) : (
+              <>
                 <select 
                   value={formData.categoryId || ''}
                   onChange={e => handleChange("categoryId", e.target.value)}
@@ -157,11 +169,11 @@ export function ListingFormFields({
                     Card will be saved to your binder. You can create the category later and add it.
                   </p>
                 )}
-              </div>
+              </>
             )}
           </div>
         </div>
-      )}
+      </div>
 
       {/* 3. Photos */}
       <div className="space-y-6">

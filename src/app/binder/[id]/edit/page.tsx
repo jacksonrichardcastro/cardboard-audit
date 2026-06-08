@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { cards } from "@/lib/db/schema";
+import { cards, categories } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 import { notFound, redirect } from "next/navigation";
@@ -20,6 +20,7 @@ export default async function EditBinderPage({ params }: { params: Promise<{ id:
     with: {
       photos: true,
       listings: true, // Needed to check if tied to an active listing
+      categoryMemberships: true,
       owner: {
         with: {
           profile: true
@@ -35,5 +36,10 @@ export default async function EditBinderPage({ params }: { params: Promise<{ id:
     redirect(`/${card.owner?.profile?.handle || ''}?tab=binder`); 
   }
 
-  return <EditBinderClient card={card} />;
+  const userCategories = await db.query.categories.findMany({
+    where: eq(categories.userId, userId),
+    orderBy: (categories, { asc }) => [asc(categories.displayOrder)]
+  });
+
+  return <EditBinderClient card={card} categories={userCategories} />;
 }

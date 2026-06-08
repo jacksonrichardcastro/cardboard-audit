@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RemoveCardModal } from "@/components/listings/RemoveCardModal";
 
-export default function EditBinderClient({ card }: { card: any }) {
+export default function EditBinderClient({ card, categories }: { card: any, categories: any[] }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -51,7 +51,8 @@ export default function EditBinderClient({ card }: { card: any }) {
       kind: p.kind,
       sortOrder: p.sortOrder,
       url: p.storagePath
-    }))
+    })),
+    categoryId: (card.categoryMemberships && card.categoryMemberships.length > 0) ? card.categoryMemberships[0].categoryId.toString() : ""
   });
 
   // Warn on unsaved changes
@@ -170,6 +171,7 @@ export default function EditBinderClient({ card }: { card: any }) {
           isUploadingFiles={isUploadingFiles}
           draftId={card.id} 
           mode="binder"
+          categories={categories}
         />
 
         {/* Binder Specific Fields */}

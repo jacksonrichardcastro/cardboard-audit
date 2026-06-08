@@ -201,6 +201,7 @@ export default async function SellerStorePage(props: Props) {
       gradingCompany: cards.gradingCompany,
       condition: cards.condition,
       priceCents: listings.priceCents,
+      listingId: listings.id,
       photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE item_photos.card_id = cards.id), '[]'::json)`,
     })
     .from(cards)
@@ -315,7 +316,9 @@ export default async function SellerStorePage(props: Props) {
 
   const formattedHeroCards = alternatingCards.slice(0, 19).map(item => ({
     id: item.id.toString(),
-    url: (item.photos && item.photos[0]) ? item.photos[0] : 'https://placehold.co/300x400/1a1a1a/333333?text=PSA+10'
+    url: (item.photos && item.photos[0]) ? item.photos[0] : 'https://placehold.co/300x400/1a1a1a/333333?text=PSA+10',
+    title: item.title || "Unknown Card",
+    activeListingId: item.cardId ? item.id : item.listingId
   }));
 
   return (

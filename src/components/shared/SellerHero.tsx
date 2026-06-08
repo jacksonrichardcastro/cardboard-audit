@@ -29,8 +29,7 @@ interface SellerHeroProps {
   isFoundingSeller?: boolean;
   identityVerified?: boolean;
   hiddenBadges?: string[];
-  // Passing these so we can render mock cards in the background shelf
-  heroCards?: { id: string; url: string }[];
+  heroCards?: { id: string; url: string; title?: string; activeListingId?: number }[];
   customizerNode?: React.ReactNode;
   presenceStatus?: string | null;
   locationCity?: string | null;
@@ -43,16 +42,20 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [heroLightboxUrl, setHeroLightboxUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setLightboxOpen(false);
+      if (e.key === 'Escape') {
+        setLightboxOpen(false);
+        setHeroLightboxUrl(null);
+      }
     };
-    if (lightboxOpen) {
+    if (lightboxOpen || heroLightboxUrl) {
       document.addEventListener('keydown', handleKeyDown);
     }
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [lightboxOpen]);
+  }, [lightboxOpen, heroLightboxUrl]);
 
   const handleStatusChange = (status: "online" | "away" | "offline") => {
     startTransition(async () => {
@@ -126,7 +129,9 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
   // Placeholder images for the hero shelf background
   const defaultHeroCards = Array.from({ length: 12 }).map((_, i) => ({
     id: `hero-card-${i}`,
-    url: 'https://placehold.co/300x400/1a1a1a/333333?text=PSA+10'
+    url: 'https://placehold.co/300x400/1a1a1a/333333?text=PSA+10',
+    title: undefined as string | undefined,
+    activeListingId: undefined as number | undefined
   }));
   
   const displayCards = heroCards.length > 0 ? heroCards.slice(0, 19) : defaultHeroCards.slice(0, 19);
@@ -165,14 +170,39 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
                 WebkitOverflowScrolling: 'touch'
               }}
             >
-              {displayCards.map((card, i) => (
-                <div 
-                  key={`${card.id}-${i}`} 
-                  className="relative flex-shrink-0 w-20 md:w-28 aspect-[5/7] rounded-lg border border-white/10 overflow-hidden shadow-xl transform transition-transform duration-500 hover:-translate-y-4 hover:z-10"
-                >
-                  <img src={card.url} alt="Hero Card" className="absolute inset-0 w-full h-full object-cover" />
-                </div>
-              ))}
+              {displayCards.map((card, i) => {
+                const isListed = card.activeListingId != null;
+                const cardContent = (
+                  <div 
+                    key={customizerNode ? `${card.id}-${i}` : undefined} 
+                    className="relative flex-shrink-0 w-20 md:w-28 aspect-[5/7] rounded-lg border border-white/10 overflow-hidden shadow-xl transform transition-transform duration-500 hover:-translate-y-4 hover:scale-105 hover:z-10 cursor-pointer"
+                  >
+                    <img src={card.url} alt={card.title || "Hero Card"} className="absolute inset-0 w-full h-full object-cover" />
+                  </div>
+                );
+
+                if (customizerNode) {
+                  return cardContent;
+                }
+
+                if (isListed) {
+                  return (
+                    <Link key={`${card.id}-${i}`} href={`/listings/${card.activeListingId}`}>
+                      {cardContent}
+                    </Link>
+                  );
+                } else {
+                  return (
+                    <button 
+                      key={`${card.id}-${i}`} 
+                      onClick={() => setHeroLightboxUrl(card.url)}
+                      className="text-left focus:outline-none"
+                    >
+                      {cardContent}
+                    </button>
+                  );
+                }
+              })}
             </div>
           </div>
         )}
@@ -356,6 +386,27 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
           </button>
           <div className="relative w-[90vw] max-w-2xl aspect-square md:aspect-auto md:h-[80vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
             <img src={avatarUrl} alt={name} className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox for Hero Cards */}
+      {heroLightboxUrl && (
+        <div 
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-sm"
+          onClick={() => setHeroLightboxUrl(null)}
+        >
+          <button 
+            className="absolute top-4 right-4 p-2 text-white/70 hover:text-white transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              setHeroLightboxUrl(null);
+            }}
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <div className="relative w-[90vw] max-w-2xl aspect-auto md:h-[85vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            <img src={heroLightboxUrl} alt="Card Preview" className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
           </div>
         </div>
       )}
