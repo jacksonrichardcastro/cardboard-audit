@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { storefronts, listings } from "@/lib/db/schema";
+import { storefronts, listings, categories } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 import { StorefrontsManager } from "./StorefrontsManager";
@@ -18,6 +18,7 @@ export async function StorefrontsList() {
   const storefrontIds = userStorefronts.map(s => s.id);
   
   let listingsCounts: Record<string, number> = {};
+  let categoriesCounts: Record<string, number> = {};
   
   if (storefrontIds.length > 0) {
     const counts = await db.select({
@@ -32,6 +33,19 @@ export async function StorefrontsList() {
         listingsCounts[row.storefrontId] = Number(row.count);
       }
     });
+
+    const catCounts = await db.select({
+      storefrontId: categories.storefrontId,
+      count: sql<number>`count(*)`
+    })
+    .from(categories)
+    .groupBy(categories.storefrontId);
+
+    catCounts.forEach(row => {
+      if (row.storefrontId) {
+        categoriesCounts[row.storefrontId] = Number(row.count);
+      }
+    });
   }
 
   const storefrontsData = userStorefronts.map(s => ({
@@ -41,6 +55,7 @@ export async function StorefrontsList() {
     avatarUrl: s.avatarUrl,
     isDefault: s.isDefaultForUser,
     listingsCount: listingsCounts[s.id] || 0,
+    categoriesCount: categoriesCounts[s.id] || 0,
   }));
 
   const cookieStore = await cookies();

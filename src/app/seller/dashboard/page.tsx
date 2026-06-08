@@ -50,6 +50,12 @@ export default async function SellerDashboardPage(props: {
             Settings
           </TabsTrigger>
           <TabsTrigger 
+            value="storefronts" 
+            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet-500 rounded-none px-4 py-2"
+          >
+            Storefronts
+          </TabsTrigger>
+          <TabsTrigger 
             value="listings" 
             className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet-500 rounded-none px-4 py-2"
           >
@@ -73,12 +79,7 @@ export default async function SellerDashboardPage(props: {
           >
             Payouts
           </TabsTrigger>
-          <TabsTrigger 
-            value="storefronts" 
-            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet-500 rounded-none px-4 py-2"
-          >
-            Storefronts
-          </TabsTrigger>
+
         </TabsList>
 
         <TabsContent value="settings" className="space-y-6">
@@ -111,6 +112,10 @@ export default async function SellerDashboardPage(props: {
           </div>
         </TabsContent>
 
+        <TabsContent value="storefronts">
+          <StorefrontsList />
+        </TabsContent>
+
         <TabsContent value="listings">
           <div className="text-center py-24 bg-card/50 border border-white/10 rounded-xl">
             <p className="text-zinc-500">Listings management coming soon.</p>
@@ -141,9 +146,7 @@ export default async function SellerDashboardPage(props: {
           </div>
         </TabsContent>
 
-        <TabsContent value="storefronts">
-          <StorefrontsList />
-        </TabsContent>
+
       </Tabs>
     </div>
   );

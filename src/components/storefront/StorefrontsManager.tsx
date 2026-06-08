@@ -30,6 +30,7 @@ type StorefrontData = {
   avatarUrl: string | null;
   isDefault: boolean;
   listingsCount: number;
+  categoriesCount: number;
 };
 
 export function StorefrontsManager({ 
@@ -92,7 +93,7 @@ export function StorefrontsManager({
           <p className="text-sm text-muted-foreground mt-1">Manage your storefronts and switch between them.</p>
         </div>
         <Button onClick={() => setIsCreateModalOpen(true)} className="bg-violet-600 hover:bg-violet-700">
-          <Plus className="mr-2 h-4 w-4" /> Add Storefront
+          <Plus className="mr-2 h-4 w-4" /> Add New Storefront
         </Button>
       </div>
 
@@ -135,8 +136,8 @@ export function StorefrontsManager({
                         <SwitchCamera className="mr-2 h-4 w-4" /> Switch to Storefront
                       </DropdownMenuItem>
                     )}
-                    <DropdownMenuItem render={<Link href={`/${storefront.handle}`} />} className="cursor-pointer">
-                      <LinkIcon className="mr-2 h-4 w-4" /> View Public Page
+                    <DropdownMenuItem render={<Link href={`/seller/dashboard?tab=settings`} onClick={() => { if (!isActive) handleSwitch(storefront.id); }} />} className="cursor-pointer">
+                      <Edit className="mr-2 h-4 w-4" /> Edit
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     {!storefront.isDefault && (
@@ -160,6 +161,10 @@ export function StorefrontsManager({
                   <div className="flex flex-col">
                     <span className="text-muted-foreground text-xs">Listings</span>
                     <span className="font-semibold">{storefront.listingsCount}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-muted-foreground text-xs">Categories</span>
+                    <span className="font-semibold">{storefront.categoriesCount}</span>
                   </div>
                 </div>
                 
