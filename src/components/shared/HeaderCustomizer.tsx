@@ -4,7 +4,7 @@ import { useState, useTransition, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Check, Edit3, Loader2 } from "lucide-react";
-import { updateHeaderCustomization, updateSellerProfile } from "@/app/actions/profile";
+import { updateStorefrontAction } from "@/app/actions/storefronts";
 
 interface Card {
   id: number;
@@ -21,9 +21,10 @@ interface HeaderCustomizerProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   triggerNode?: React.ReactElement;
+  storefrontId: string;
 }
 
-export function HeaderCustomizer({ cards, selectedIds, headerStyle = 'cards', bannerImageUrl, open = false, onOpenChange, triggerNode }: HeaderCustomizerProps) {
+export function HeaderCustomizer({ cards, selectedIds, headerStyle = 'cards', bannerImageUrl, open = false, onOpenChange, triggerNode, storefrontId }: HeaderCustomizerProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = onOpenChange ? open : internalOpen;
   const setOpen = onOpenChange ? onOpenChange : setInternalOpen;
@@ -71,7 +72,7 @@ export function HeaderCustomizer({ cards, selectedIds, headerStyle = 'cards', ba
 
       if (!uploadRes.ok) throw new Error("Failed to upload image to bucket");
 
-      await updateSellerProfile({
+      await updateStorefrontAction(storefrontId, {
         headerStyle: 'banner',
         bannerImageUrl: publicUrl,
       });
@@ -99,10 +100,10 @@ export function HeaderCustomizer({ cards, selectedIds, headerStyle = 'cards', ba
   const handleSave = () => {
     startTransition(async () => {
       try {
-        await Promise.all([
-          updateHeaderCustomization(localSelection),
-          updateSellerProfile({ headerStyle: localMode })
-        ]);
+        await updateStorefrontAction(storefrontId, {
+          headerCustomizationIds: localSelection,
+          headerStyle: localMode
+        });
         setOpen(false);
         if (localMode !== headerStyle) {
           window.location.reload();

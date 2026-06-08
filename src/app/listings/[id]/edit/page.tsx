@@ -32,7 +32,7 @@ export default async function EditListingPage({ params }: { params: Promise<{ id
     redirect(`/listings/${id}`); // redirect non-owners back to public view
   }
 
-  const { profiles, users, categories, categoryMemberships } = await import("@/lib/db/schema");
+  const { profiles, users, categories, categoryMemberships, storefronts } = await import("@/lib/db/schema");
   const sellerProfile = await db.query.profiles.findFirst({
     where: eq(profiles.userId, userId),
   });
@@ -50,6 +50,11 @@ export default async function EditListingPage({ params }: { params: Promise<{ id
     where: eq(categoryMemberships.cardId, listing.cardId),
   });
 
+  const userStorefronts = await db.query.storefronts.findMany({
+    where: eq(storefronts.userId, userId),
+    orderBy: (storefronts, { asc }) => [asc(storefronts.createdAt)]
+  });
+
   return <EditListingClient 
     listing={listing} 
     card={listing.card} 
@@ -57,5 +62,6 @@ export default async function EditListingPage({ params }: { params: Promise<{ id
     categories={userCategories}
     storefrontLayout={user?.storefrontLayout || "grid"}
     cardMemberships={cardMemberships}
+    storefronts={userStorefronts}
   />;
 }

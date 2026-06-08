@@ -31,6 +31,11 @@ export default async function NewListingServerPage({ searchParams }: { searchPar
     orderBy: (c) => [c.displayOrder],
   });
 
+  const userStorefronts = await db.query.storefronts.findMany({
+    where: eq(storefronts.userId, userId),
+    orderBy: (storefronts, { asc }) => [asc(storefronts.createdAt)]
+  });
+
   const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
   const storefrontLayout = user?.storefrontLayout || "grid";
 
@@ -49,5 +54,5 @@ export default async function NewListingServerPage({ searchParams }: { searchPar
     }
   }
 
-  return <ClientPage categories={userCategories} storefrontLayout={storefrontLayout} initialCard={initialCard} />;
+  return <ClientPage categories={userCategories} storefrontLayout={storefrontLayout} initialCard={initialCard} storefronts={userStorefronts} />;
 }

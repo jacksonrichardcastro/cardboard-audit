@@ -21,7 +21,7 @@ async function run() {
   for (const q of queries) {
     const matches = data.filter(d => 
       d.title.toLowerCase().includes(q.title.toLowerCase()) &&
-      Math.abs(d.price - q.priceApprox) < 1000 // allow a few cents variation
+      d.price != null && Math.abs(d.price - q.priceApprox) < 1000 // allow a few cents variation
     );
     console.log(`\nQuery: ${q.title} | ${q.priceApprox}`);
     if (matches.length > 0) {

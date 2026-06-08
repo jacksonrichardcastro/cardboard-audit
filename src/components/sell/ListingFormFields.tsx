@@ -29,6 +29,7 @@ export function ListingFormFields({
   mode: "listing" | "binder";
   categories?: any[];
   storefrontLayout?: string;
+  storefronts?: any[];
 }) {
   return (
     <div className="space-y-12">
@@ -40,6 +41,20 @@ export function ListingFormFields({
             <Label>Player / Character / Subject *</Label>
             <Input value={formData.subject || ''} onChange={e => handleChange("subject", e.target.value)} placeholder="e.g. Michael Jordan, Charizard" />
           </div>
+          {storefronts && storefronts.length > 1 && (
+            <div className="space-y-2">
+              <Label>Storefront *</Label>
+              <select 
+                value={formData.storefrontId || ''}
+                onChange={e => handleChange("storefrontId", e.target.value)}
+                className="w-full h-10 px-3 bg-background border rounded-md"
+              >
+                {storefronts.map((s: any) => (
+                  <option key={s.id} value={s.id}>{s.displayName || `@${s.handle}`}</option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Set *</Label>

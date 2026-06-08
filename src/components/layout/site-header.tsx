@@ -2,8 +2,17 @@ import Link from "next/link";
 import { Menu, Flame } from "lucide-react";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
-import { profiles, users } from "@/lib/db/schema";
+import { profiles, users, storefronts } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { cookies } from "next/headers";
+
+export type StorefrontProfile = {
+  id: string;
+  handle: string;
+  avatarUrl: string | null;
+  displayName: string | null;
+  isDefault: boolean;
+};
 import { NavAuthControls } from "./nav-auth-controls";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -19,7 +28,8 @@ export async function SiteHeader() {
 
   const isAdmin = isSignedIn && userId === process.env.ADMIN_USER_ID;
 
-  let userProfile: { handle: string | null; displayName: string | null; avatarUrl: string | null } | null = null;
+  let userStorefronts: StorefrontProfile[] = [];
+  let activeStorefrontId: string | null = null;
   let showWelcomeModal = false;
   let isFoundingSeller = false;
 
@@ -35,16 +45,20 @@ export async function SiteHeader() {
       isFoundingSeller = userRow.isFoundingSeller;
     }
     
-    const profileRow = await db.query.profiles.findFirst({
-      where: eq(profiles.userId, userId),
+    const dbStorefronts = await db.query.storefronts.findMany({
+      where: eq(storefronts.userId, userId),
     });
-    if (profileRow) {
-      userProfile = {
-        handle: profileRow.handle,
-        avatarUrl: profileRow.profilePhotoUrl,
-        displayName: profileRow.displayName || profileRow.businessName,
-      };
-    }
+    
+    userStorefronts = dbStorefronts.map(s => ({
+      id: s.id,
+      handle: s.handle,
+      avatarUrl: s.avatarUrl,
+      displayName: s.displayName,
+      isDefault: s.isDefaultForUser,
+    }));
+    
+    const cookieStore = await cookies();
+    activeStorefrontId = cookieStore.get("active_storefront_id")?.value || null;
   }
 
   return (
@@ -86,10 +100,10 @@ export async function SiteHeader() {
             <Button asChild>
               <Link href="/seller/onboarding/stripe" className="hidden md:inline-flex">Sell</Link>
             </Button>
-            <NavAuthControls isSignedIn={isSignedIn} userProfile={userProfile} isAdmin={isAdmin} />
+            <NavAuthControls isSignedIn={isSignedIn} storefronts={userStorefronts} activeStorefrontId={activeStorefrontId} isAdmin={isAdmin} />
           </div>
           <div className="md:hidden">
-            <MobileMenu isSignedIn={isSignedIn} userProfile={userProfile} isAdmin={isAdmin} />
+            <MobileMenu isSignedIn={isSignedIn} userProfile={null} isAdmin={isAdmin} />
           </div>
         </div>
         </div>

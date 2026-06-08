@@ -31,11 +31,11 @@ interface StorefrontControlsClientProps {
   binderCards: any[];
   headerIds: number[];
   sellerHandle: string;
-  theme: string;
   themeScope: string;
+  storefrontId: string;
 }
 
-export function StorefrontControlsClient({ layout, categories, sports, years, brands, grades, isPreview, binderCards, headerIds, sellerHandle, theme, themeScope }: StorefrontControlsClientProps) {
+export function StorefrontControlsClient({ layout, categories, sports, years, brands, grades, isPreview, binderCards, headerIds, sellerHandle, theme, themeScope, storefrontId }: StorefrontControlsClientProps) {
   const [isPending, startTransition] = useTransition();
   const [manageOpen, setManageOpen] = useState(false);
   const [showChrome, setShowChrome] = useState(true);
@@ -203,6 +203,7 @@ export function StorefrontControlsClient({ layout, categories, sports, years, br
         years={years}
         brands={brands}
         grades={grades}
+        storefrontId={storefrontId}
       />
     </div>
   );

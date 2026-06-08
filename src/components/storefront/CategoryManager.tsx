@@ -12,8 +12,8 @@ interface CategoryManagerProps {
   categories: any[];
   sports: string[];
   years: string[];
-  brands: string[];
   grades: string[];
+  storefrontId: string;
 }
 
 const CURATED_CATEGORIES = [
@@ -26,7 +26,7 @@ const CURATED_CATEGORIES = [
   { name: "My Collection", autoManaged: false },
 ];
 
-export function CategoryManager({ open, onOpenChange, categories, sports, years, brands, grades }: CategoryManagerProps) {
+export function CategoryManager({ open, onOpenChange, categories, sports, years, brands, grades, storefrontId }: CategoryManagerProps) {
   const [isPending, startTransition] = useTransition();
   const [selectedCategory, setSelectedCategory] = useState("");
   const [showMyCollectionPrompt, setShowMyCollectionPrompt] = useState(false);
@@ -54,7 +54,7 @@ export function CategoryManager({ open, onOpenChange, categories, sports, years,
     const isAuto = selectedCategory === "🔥 Weekly Discounts";
     
     startTransition(async () => {
-      await addCategory(selectedCategory, isAuto);
+      await addCategory(selectedCategory, isAuto, storefrontId);
       setSelectedCategory("");
     });
   };
@@ -65,7 +65,7 @@ export function CategoryManager({ open, onOpenChange, categories, sports, years,
   const handleCreateCustom = () => {
     if (!customName.trim() || isDuplicate) return;
     startTransition(async () => {
-      await addCategory(finalCustomName, false);
+      await addCategory(finalCustomName, false, storefrontId);
       setCustomName("");
       setCustomEmoji("");
     });
@@ -74,9 +74,9 @@ export function CategoryManager({ open, onOpenChange, categories, sports, years,
   const handleMyCollectionChoice = (autoPopulate: boolean) => {
     startTransition(async () => {
       if (autoPopulate) {
-        await autoPopulateMyCollection();
+        await autoPopulateMyCollection(storefrontId);
       } else {
-        await addCategory("My Collection", false);
+        await addCategory("My Collection", false, storefrontId);
       }
       setShowMyCollectionPrompt(false);
       setSelectedCategory("");
@@ -85,13 +85,13 @@ export function CategoryManager({ open, onOpenChange, categories, sports, years,
 
   const handleRemove = (id: number) => {
     startTransition(async () => {
-      await removeCategory(id);
+      await removeCategory(id, storefrontId);
     });
   };
 
   const handleAutoPopulate = () => {
     startTransition(async () => {
-      await autoPopulateCategories();
+      await autoPopulateCategories(storefrontId);
     });
   };
 

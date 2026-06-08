@@ -16,7 +16,7 @@ export async function updateStorefrontLayout(layout: "grid" | "categories") {
   }
 }
 
-export async function addCategory(name: string, isAutoManaged = false) {
+export async function addCategory(name: string, isAutoManaged = false, storefrontId?: string) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
   
@@ -32,6 +32,7 @@ export async function addCategory(name: string, isAutoManaged = false) {
     name,
     isAutoManaged,
     displayOrder: maxOrder + 1,
+    storefrontId: storefrontId || null,
   });
   
   const [profile] = await db.select({ handle: profiles.handle }).from(profiles).where(eq(profiles.userId, userId)).limit(1);
@@ -40,7 +41,7 @@ export async function addCategory(name: string, isAutoManaged = false) {
   }
 }
 
-export async function removeCategory(categoryId: number) {
+export async function removeCategory(categoryId: number, storefrontId?: string) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
   
@@ -52,7 +53,7 @@ export async function removeCategory(categoryId: number) {
   }
 }
 
-export async function autoPopulateMyCollection() {
+export async function autoPopulateMyCollection(storefrontId?: string) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
   
@@ -69,7 +70,8 @@ export async function autoPopulateMyCollection() {
       userId,
       name: "My Collection",
       isAutoManaged: false,
-      displayOrder: maxOrder + 1
+      displayOrder: maxOrder + 1,
+      storefrontId: storefrontId || null,
     }).returning();
   }
 
@@ -94,7 +96,7 @@ export async function autoPopulateMyCollection() {
   }
 }
 
-export async function autoPopulateCategories() {
+export async function autoPopulateCategories(storefrontId?: string) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
   

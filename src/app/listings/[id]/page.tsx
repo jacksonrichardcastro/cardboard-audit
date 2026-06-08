@@ -8,7 +8,7 @@ import { MakeOfferButton } from "@/components/storefront/make-offer-button";
 import { CardRail } from "@/components/storefront/card-rail";
 import { getListingById, getTrendingListings } from "@/lib/db/queries/listings";
 import { db } from "@/lib/db";
-import { viewHistory, profiles } from "@/lib/db/schema";
+import { viewHistory, storefronts } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
@@ -70,13 +70,13 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   const isOwner = userId === dbItem.sellerId;
 
   let isInHeader = false;
-  if (isOwner && dbItem.cardId && userId) {
-    const profile = await db.query.profiles.findFirst({
-      where: eq(profiles.userId, userId),
+  if (isOwner && dbItem.cardId && dbItem.storefrontId) {
+    const storefront = await db.query.storefronts.findFirst({
+      where: eq(storefronts.id, dbItem.storefrontId),
       columns: { headerCustomizationIds: true }
     });
-    if (profile && Array.isArray(profile.headerCustomizationIds)) {
-      isInHeader = profile.headerCustomizationIds.includes(dbItem.cardId);
+    if (storefront && Array.isArray(storefront.headerCustomizationIds)) {
+      isInHeader = storefront.headerCustomizationIds.includes(dbItem.cardId);
     }
   }
   const isDraft = item.priceCents === null;

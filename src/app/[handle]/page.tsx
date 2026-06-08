@@ -36,31 +36,32 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   }
 
   const [profileRecord] = await db.select({
+    storefront: storefronts,
     profile: profiles,
     accountType: users.accountType,
     storefrontLayout: users.storefrontLayout,
     isFoundingSeller: users.isFoundingSeller
   })
-  .from(profiles)
-  .innerJoin(users, eq(profiles.userId, users.id))
-  .where(sql`lower(${profiles.handle}) = ${handleLower}`)
+  .from(storefronts)
+  .innerJoin(users, eq(storefronts.userId, users.id))
+  .innerJoin(profiles, eq(storefronts.userId, profiles.userId))
+  .where(sql`lower(${storefronts.handle}) = ${handleLower}`)
   .limit(1);
   
   if (!profileRecord || profileRecord.profile.approvalStatus === "rejected") {
     return {};
   }
-  const seller = profileRecord.profile;
-
-  const displayName = seller.displayName || seller.businessName;
-  const description = seller.bio ? seller.bio : `${displayName}'s card collection on Trax.`;
+  const storefront = profileRecord.storefront;
+  const displayName = storefront.displayName;
+  const description = storefront.bio ? storefront.bio : `${displayName}'s card collection on Trax.`;
 
   return {
-    title: `${displayName} (@${seller.handle}) — Trax`,
+    title: `${displayName} (@${storefront.handle}) — Trax`,
     description,
     openGraph: {
       title: `${displayName} on Trax`,
       description,
-      url: `https://trax.cards/${seller.handle}`,
+      url: `https://trax.cards/${storefront.handle}`,
       siteName: 'Trax',
       type: 'profile',
     },
@@ -79,14 +80,16 @@ export default async function SellerStorePage(props: Props) {
   const handleLower = params.handle.toLowerCase();
   
   const [profileRecord] = await db.select({
+    storefront: storefronts,
     profile: profiles,
     accountType: users.accountType,
     storefrontLayout: users.storefrontLayout,
     isFoundingSeller: users.isFoundingSeller
   })
-  .from(profiles)
-  .innerJoin(users, eq(profiles.userId, users.id))
-  .where(sql`lower(${profiles.handle}) = ${handleLower}`)
+  .from(storefronts)
+  .innerJoin(users, eq(storefronts.userId, users.id))
+  .innerJoin(profiles, eq(storefronts.userId, profiles.userId))
+  .where(sql`lower(${storefronts.handle}) = ${handleLower}`)
   .limit(1);
 
   if (!profileRecord || profileRecord.profile.approvalStatus === "rejected") {
@@ -108,6 +111,7 @@ export default async function SellerStorePage(props: Props) {
     notFound();
   }
   const seller = profileRecord.profile;
+  const storefront = profileRecord.storefront;
   const isSellerLayout = profileRecord.accountType === "seller" && seller.kycStatus === "verified";
   const storefrontLayout = profileRecord.storefrontLayout;
   
@@ -116,7 +120,7 @@ export default async function SellerStorePage(props: Props) {
   const currentTab = searchParams.tab || (isSellerLayout ? "active-listings" : "collection");
 
   const activeConditions = [
-    eq(listings.sellerId, seller.userId),
+    eq(listings.storefrontId, storefront.id),
     inArray(listings.status, ["active", "pending_marketplace_activation"])
   ];
 
@@ -189,7 +193,7 @@ export default async function SellerStorePage(props: Props) {
       photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE item_photos.card_id = listings.card_id), '[]'::json)`,
     })
     .from(listings)
-    .where(and(eq(listings.sellerId, seller.userId), inArray(listings.status, ["active", "pending_marketplace_activation"])))
+    .where(and(eq(listings.storefrontId, storefront.id), inArray(listings.status, ["active", "pending_marketplace_activation"])))
     .orderBy(desc(listings.createdAt));
 
   // Fetch binder cards (all cards owned by the user, or linked to their listings)
@@ -207,7 +211,7 @@ export default async function SellerStorePage(props: Props) {
     .from(cards)
     .leftJoin(listings, eq(cards.id, listings.cardId))
     .where(
-      sql`${cards.ownerId} = ${seller.userId} OR (${listings.sellerId} = ${seller.userId} AND ${listings.deletedAt} IS NULL)`
+      sql`${cards.ownerId} = ${seller.userId} OR (${listings.storefrontId} = ${storefront.id} AND ${listings.deletedAt} IS NULL)`
     )
     .orderBy(desc(cards.createdAt));
 
@@ -215,7 +219,7 @@ export default async function SellerStorePage(props: Props) {
   const binderCards = Array.from(new Map(rawBinderCards.map(c => [c.id, c])).values());
 
   const userCategories = await db.query.categories.findMany({
-    where: eq(categories.userId, seller.userId),
+    where: eq(categories.storefrontId, storefront.id),
     orderBy: (c) => [c.displayOrder],
     with: {
       memberships: true
@@ -225,7 +229,7 @@ export default async function SellerStorePage(props: Props) {
   const isOwner = seller.userId === userId;
   const isPreview = searchParams.preview === "true";
   const displayAsOwner = isOwner && !isPreview;
-  const sellerName = seller.displayName || seller.businessName || "Seller";
+  const sellerName = storefront.displayName || "Seller";
   const possessiveName = getPossessiveName(sellerName, isOwner);
   const grailId = seller.grailCardId || (binderCards.length > 0 ? binderCards[0].id : null);
   
@@ -270,8 +274,8 @@ export default async function SellerStorePage(props: Props) {
   const currentTabInfo = tabs.find(t => t.id === currentTab) || tabs[0];
 
   // Derive hero shelf cards
-  // User selected IDs in profile.headerCustomizationIds (if array)
-  const headerIds = Array.isArray(seller.headerCustomizationIds) ? seller.headerCustomizationIds : [];
+  // User selected IDs in storefront.headerCustomizationIds (if array)
+  const headerIds = Array.isArray(storefront.headerCustomizationIds) ? storefront.headerCustomizationIds : [];
   
   // If owner customized, pick those from binder. Else fallback to top 8 active listings, else top 8 binder cards.
   let heroCardsData = [];
@@ -341,11 +345,11 @@ export default async function SellerStorePage(props: Props) {
       <div className="relative z-10">
         <SellerHero 
           name={sellerName}
-          handle={seller.handle || ''}
-          bio={seller.bio}
-          avatarUrl={seller.profilePhotoUrl}
-          headerStyle={seller.headerStyle}
-          bannerImageUrl={seller.bannerImageUrl}
+          handle={storefront.handle || ''}
+          bio={storefront.bio}
+          avatarUrl={storefront.avatarUrl}
+          headerStyle={storefront.headerStyle}
+          bannerImageUrl={storefront.bannerImageUrl}
           isOwner={displayAsOwner}
           sellerId={seller.userId}
           badges={(seller.badges as string[]) || []}
@@ -362,8 +366,9 @@ export default async function SellerStorePage(props: Props) {
               <HeaderCustomizer 
                 cards={binderCards} 
                 selectedIds={headerIds}
-                headerStyle={seller.headerStyle || 'cards'}
-                bannerImageUrl={seller.bannerImageUrl}
+                headerStyle={storefront.headerStyle || 'cards'}
+                bannerImageUrl={storefront.bannerImageUrl}
+                storefrontId={storefront.id}
                 triggerNode={
                   <button className="absolute top-2 right-2 z-50 flex items-center justify-center w-11 h-11 bg-black/60 text-zinc-300 hover:text-white rounded-full hover:bg-black/80 transition-all backdrop-blur-sm shadow-md border border-white/10" title="Customize Header">
                     <Pencil className="w-5 h-5" /> 
@@ -378,7 +383,7 @@ export default async function SellerStorePage(props: Props) {
         
         {isOwner && (
           <div id="storefront-controls-wrapper" className="flex justify-end pt-4 relative z-50">
-            <StorefrontControls layout={storefrontLayout as "grid" | "categories"} sellerId={seller.userId} sellerHandle={seller.handle || ''} isPreview={isPreview} cards={binderCards} headerIds={headerIds as number[]} theme={theme} themeScope={themeScope} />
+            <StorefrontControls layout={storefrontLayout as "grid" | "categories"} sellerId={seller.userId} sellerHandle={storefront.handle || ''} isPreview={isPreview} cards={binderCards} headerIds={headerIds as number[]} theme={theme} themeScope={themeScope} storefrontId={storefront.id} />
           </div>
         )}
 
@@ -390,7 +395,7 @@ export default async function SellerStorePage(props: Props) {
             {tabs.map((tab) => (
               <Link 
                 key={tab.id}
-                href={`/${seller.handle}?tab=${tab.id}`}
+                href={`/${storefront.handle}?tab=${tab.id}`}
                 className={`pb-4 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${currentTab === tab.id ? 'border-white text-white' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
               >
                 {tab.label}
@@ -416,11 +421,10 @@ export default async function SellerStorePage(props: Props) {
 
         {/* Tab Content Areas */}
         <div className={`relative min-h-[400px] ${theme === 'trax-cosmos' && themeScope === 'storefront-only' ? 'overflow-hidden' : ''}`}>
-          {theme === "trax-cosmos" && themeScope === "storefront-only" && (
-            <div className="absolute inset-0 z-0 -mx-4 md:-mx-8">
-              <CosmosBackground />
-            </div>
-          )}
+          {theme === "trax-cosmos" && themeScope === "storefront-only" && <div className="text-zinc-300 font-medium whitespace-pre-wrap leading-relaxed px-4 lg:px-0">
+                  {storefront.bio || "This seller hasn't written a bio yet."}
+                </div>
+          }
           <div className="relative z-10">
           {(currentTab === "storefront" || currentTab === "active-listings") && (
             <ActiveFilterChips />

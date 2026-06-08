@@ -4,12 +4,12 @@ import { eq, desc } from "drizzle-orm";
 import { StorefrontControlsClient } from "./StorefrontControlsClient";
 import { auth } from "@clerk/nextjs/server";
 
-export async function StorefrontControls({ layout, sellerId, sellerHandle, isPreview, cards: binderCards, headerIds, theme, themeScope }: { layout: "grid" | "categories", sellerId: string, sellerHandle: string, isPreview: boolean, cards: any[], headerIds: number[], theme: string, themeScope: string }) {
+export async function StorefrontControls({ layout, sellerId, sellerHandle, isPreview, cards: binderCards, headerIds, theme, themeScope, storefrontId }: { layout: "grid" | "categories", sellerId: string, sellerHandle: string, isPreview: boolean, cards: any[], headerIds: number[], theme: string, themeScope: string, storefrontId: string }) {
   const { userId } = await auth();
   if (userId !== sellerId) return null;
   
   const userCategories = await db.query.categories.findMany({
-    where: eq(categories.userId, sellerId),
+    where: eq(categories.storefrontId, storefrontId),
     orderBy: (c) => [c.displayOrder]
   });
   
@@ -31,5 +31,5 @@ export async function StorefrontControls({ layout, sellerId, sellerHandle, isPre
   const brands = Array.from(new Set(userCards.map(c => c.set).filter(Boolean))).sort();
   const grades = Array.from(new Set(userCards.map(c => c.gradeTier).filter(Boolean))).sort();
 
-  return <StorefrontControlsClient layout={layout} categories={userCategories} sports={sports as string[]} years={years as string[]} brands={brands as string[]} grades={grades as string[]} isPreview={isPreview} binderCards={binderCards} headerIds={headerIds} sellerHandle={sellerHandle} theme={theme} themeScope={themeScope} />;
+  return <StorefrontControlsClient layout={layout} categories={userCategories} sports={sports as string[]} years={years as string[]} brands={brands as string[]} grades={grades as string[]} isPreview={isPreview} binderCards={binderCards} headerIds={headerIds} sellerHandle={sellerHandle} theme={theme} themeScope={themeScope} storefrontId={storefrontId} />;
 }

@@ -12,7 +12,7 @@ import { createDraft, updateDraft, loadDraft, publishDraft } from "../actions";
 import { Loader2, ImagePlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export default function NewListingPage({ categories = [], storefrontLayout = "grid", initialCard = null }: { categories?: any[], storefrontLayout?: string, initialCard?: any }) {
+export default function NewListingPage({ categories = [], storefrontLayout = "grid", initialCard = null, storefronts = [] }: { categories?: any[], storefrontLayout?: string, initialCard?: any, storefronts?: any[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const draftIdParam = searchParams.get("draftId");
@@ -50,7 +50,8 @@ export default function NewListingPage({ categories = [], storefrontLayout = "gr
 
     shippingMethod: "Standard (USPS Ground Advantage)",
     categoryId: "",
-    mode: mode || "listing"
+    mode: mode || "listing",
+    storefrontId: initialCard?.storefrontId || storefronts?.find(s => s.isDefault)?.id || storefronts?.[0]?.id || ""
   });
 
   useEffect(() => {
@@ -208,6 +209,20 @@ export default function NewListingPage({ categories = [], storefrontLayout = "gr
                 <Label>Player / Character / Subject *</Label>
                 <Input value={formData.subject} onChange={e => handleChange("subject", e.target.value)} placeholder="e.g. Michael Jordan, Charizard" />
               </div>
+              {storefronts && storefronts.length > 1 && (
+                <div className="space-y-2">
+                  <Label>Storefront *</Label>
+                  <select 
+                    value={formData.storefrontId}
+                    onChange={e => handleChange("storefrontId", e.target.value)}
+                    className="w-full h-10 px-3 bg-background border rounded-md"
+                  >
+                    {storefronts.map((s: any) => (
+                      <option key={s.id} value={s.id}>{s.displayName || `@${s.handle}`}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Set *</Label>

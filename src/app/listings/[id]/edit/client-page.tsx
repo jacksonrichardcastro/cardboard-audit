@@ -13,7 +13,8 @@ export default function EditListingClient({ listing, card, handle, categories = 
   handle?: string,
   categories?: any[],
   storefrontLayout?: string,
-  cardMemberships?: any[]
+  cardMemberships?: any[],
+  storefronts?: any[]
 }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -58,7 +59,8 @@ export default function EditListingClient({ listing, card, handle, categories = 
       kind: p.kind,
       sortOrder: p.sortOrder,
       url: p.storagePath
-    }))
+    })),
+    storefrontId: listing.storefrontId || storefronts?.find(s => s.isDefault)?.id || storefronts?.[0]?.id || ""
   });
 
   // Warn on unsaved changes
@@ -179,6 +181,7 @@ export default function EditListingClient({ listing, card, handle, categories = 
           mode="listing"
           categories={categories}
           storefrontLayout={storefrontLayout}
+          storefronts={storefronts}
         />
       </div>
 

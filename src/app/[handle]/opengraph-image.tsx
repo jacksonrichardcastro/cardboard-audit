@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
 import { db } from "@/lib/db";
-import { profiles, users } from "@/lib/db/schema";
+import { storefronts } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 import fs from "fs";
 import path from "path";
@@ -18,11 +18,10 @@ export default async function Image(props: { params: Promise<{ handle: string }>
   const handleLower = params.handle.toLowerCase();
 
   const [profileRecord] = await db.select({
-    profile: profiles,
+    storefront: storefronts,
   })
-  .from(profiles)
-  .innerJoin(users, eq(profiles.userId, users.id))
-  .where(sql`lower(${profiles.handle}) = ${handleLower}`)
+  .from(storefronts)
+  .where(sql`lower(${storefronts.handle}) = ${handleLower}`)
   .limit(1);
 
   if (!profileRecord) {
@@ -32,20 +31,20 @@ export default async function Image(props: { params: Promise<{ handle: string }>
     );
   }
 
-  const seller = profileRecord.profile;
-  const displayName = (seller.displayName || seller.businessName || seller.handle || "Seller").trim();
-  const bio = seller.bio && seller.bio.trim().length > 0 ? seller.bio.trim() : `${displayName}'s storefront on Trax. By the hobby. For the hobby.`;
+  const storefront = profileRecord.storefront;
+  const displayName = (storefront.displayName || storefront.handle || "Seller").trim();
+  const bio = storefront.bio && storefront.bio.trim().length > 0 ? storefront.bio.trim() : `${displayName}'s storefront on Trax. By the hobby. For the hobby.`;
   const initial = displayName.charAt(0).toUpperCase();
 
   let validAvatarUrl = null;
-  if (seller.profilePhotoUrl) {
+  if (storefront.avatarUrl) {
     try {
-      const res = await fetch(seller.profilePhotoUrl, { method: 'HEAD', signal: AbortSignal.timeout(3000) });
+      const res = await fetch(storefront.avatarUrl, { method: 'HEAD', signal: AbortSignal.timeout(3000) });
       if (res.ok) {
-        validAvatarUrl = seller.profilePhotoUrl;
+        validAvatarUrl = storefront.avatarUrl;
       }
     } catch (e) {
-      console.warn("OG Image avatar fetch failed for", seller.handle, e);
+      console.warn("OG Image avatar fetch failed for", storefront.handle, e);
     }
   }
 

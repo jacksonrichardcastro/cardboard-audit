@@ -173,10 +173,11 @@ export async function publishDraft(draftId: number, isDemo: boolean = false) {
         grade: formData.grade || null,
         description: formData.description || null,
         priceCents,
-        quantity: 1,
+        quantity: formData.quantity || 1,
         edition: formData.edition || null,
         graded: formData.graded || false,
         shippingMethod: formData.shippingMethod || "seller_managed",
+        storefrontId: formData.storefrontId || null,
       }).returning();
       returnId = newListing.id;
     }

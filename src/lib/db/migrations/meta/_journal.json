@@ -113,6 +113,13 @@
       "when": 1780894180149,
       "tag": "0015_sudden_black_panther",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1780939599423,
+      "tag": "0016_lazy_meteorite",
+      "breakpoints": true
     }
   ]
 }

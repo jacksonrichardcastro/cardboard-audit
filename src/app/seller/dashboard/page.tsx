@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { profiles, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { StorefrontsList } from "@/components/storefront/StorefrontsList";
 import { EditProfileForm } from "@/app/edit-profile/EditProfileForm";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -72,6 +73,12 @@ export default async function SellerDashboardPage(props: {
           >
             Payouts
           </TabsTrigger>
+          <TabsTrigger 
+            value="storefronts" 
+            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet-500 rounded-none px-4 py-2"
+          >
+            Storefronts
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="settings" className="space-y-6">
@@ -132,6 +139,10 @@ export default async function SellerDashboardPage(props: {
           <div className="text-center py-24 bg-card/50 border border-white/10 rounded-xl">
             <p className="text-zinc-500">Payout management coming soon.</p>
           </div>
+        </TabsContent>
+
+        <TabsContent value="storefronts">
+          <StorefrontsList />
         </TabsContent>
       </Tabs>
     </div>
