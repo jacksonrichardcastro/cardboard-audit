@@ -18,7 +18,8 @@ export function ListingFormFields({
   draftId,
   mode,
   categories,
-  storefrontLayout
+  storefrontLayout,
+  storefronts
 }: {
   formData: any;
   handleChange: (field: string, value: any) => void;

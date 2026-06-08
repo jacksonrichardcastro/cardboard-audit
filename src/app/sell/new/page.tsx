@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { profiles, users, categories, cards } from "@/lib/db/schema";
+import { profiles, users, categories, cards, storefronts } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import ClientPage from "./client-page";
 

@@ -8,19 +8,38 @@ import { Button } from "@/components/ui/button";
 import { Flame, Menu, User, Tag, ShieldCheck, LogOut } from "lucide-react";
 import { useClerk } from "@clerk/nextjs";
 import { HotPill } from "@/components/shared/HotPill";
+import { switchActiveStorefrontAction } from "@/app/actions/storefronts";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Check, Plus } from "lucide-react";
+import { CreateStorefrontModal } from "@/components/storefront/CreateStorefrontModal";
+
+export type StorefrontProfile = {
+  id: string;
+  handle: string;
+  avatarUrl: string | null;
+  displayName: string | null;
+  isDefault: boolean;
+};
 
 export function MobileMenu({ 
   isSignedIn, 
   isAdmin, 
-  userProfile 
+  userProfile,
+  storefronts,
+  activeStorefrontId
 }: { 
   isSignedIn: boolean; 
   isAdmin?: boolean;
   userProfile?: { handle: string | null; displayName: string | null; avatarUrl?: string | null } | null;
+  storefronts?: StorefrontProfile[];
+  activeStorefrontId?: string | null;
 }) {
   const [open, setOpen] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
   const { signOut } = useClerk();
   const router = useRouter();
+
+  const activeStorefront = storefronts?.find(s => s.id === activeStorefrontId) || storefronts?.find(s => s.isDefault) || storefronts?.[0];
 
   const handleLinkClick = () => {
     setOpen(false);
@@ -32,7 +51,8 @@ export function MobileMenu({
   };
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <>
+      <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger 
         render={
           <Button variant="ghost" size="icon">
@@ -77,6 +97,54 @@ export function MobileMenu({
               </div>
             ) : (
               <div className="flex flex-col gap-4">
+                {storefronts && storefronts.length > 0 && (
+                  <>
+                    <div className="px-4 py-1.5 text-xs font-semibold text-violet-500 uppercase tracking-wider">
+                      Your Storefronts
+                    </div>
+                    {storefronts.map((storefront) => {
+                      const isActive = activeStorefront?.id === storefront.id;
+                      return (
+                        <button
+                          key={storefront.id}
+                          onClick={async () => {
+                            if (!isActive) {
+                              const res = await switchActiveStorefrontAction(storefront.id);
+                              if (res.success) {
+                                window.location.reload();
+                              }
+                            }
+                            handleLinkClick();
+                          }}
+                          className={`flex items-center justify-between text-sm font-medium px-4 py-2 ${isActive ? 'text-violet-500' : 'text-zinc-300 hover:text-white'}`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-6 w-6 rounded">
+                              <AvatarImage src={storefront.avatarUrl || ""} alt={storefront.displayName || storefront.handle} />
+                              <AvatarFallback className="rounded text-[10px] bg-violet-100 text-violet-900 dark:bg-violet-900/30 dark:text-violet-300">
+                                {(storefront.displayName || storefront.handle || "U").charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="truncate max-w-[200px]">
+                              {storefront.displayName || `@${storefront.handle}`}
+                            </span>
+                          </div>
+                          {isActive && <Check className="h-4 w-4 text-violet-500" />}
+                        </button>
+                      );
+                    })}
+                    <button onClick={() => { handleLinkClick(); setCreateModalOpen(true); }} className="text-sm font-medium flex items-center gap-3 px-4 py-2 text-violet-500 hover:text-violet-400">
+                      <div className="h-6 w-6 rounded border border-violet-500/30 flex items-center justify-center bg-violet-500/10">
+                        <Plus className="h-4 w-4" />
+                      </div>
+                      Add Storefront
+                    </button>
+                    <button onClick={() => { handleLinkClick(); router.push("/seller/dashboard?tab=storefronts"); }} className="text-sm font-medium flex items-center gap-2 pl-4 pt-2 text-zinc-300 hover:text-white text-left">
+                      Manage Storefronts
+                    </button>
+                    <div className="h-px bg-border/50 mx-4 mt-2" />
+                  </>
+                )}
                 {isAdmin && (
                   <>
                     <Link href="/admin" onClick={handleLinkClick} className="text-sm font-medium flex items-center gap-2 pl-4 text-violet-500">
@@ -117,5 +185,13 @@ export function MobileMenu({
         </div>
       </SheetContent>
     </Sheet>
+    <CreateStorefrontModal 
+      open={createModalOpen} 
+      onOpenChange={setCreateModalOpen} 
+      onCreated={() => {
+        setCreateModalOpen(false);
+      }} 
+    />
+    </>
   );
 }

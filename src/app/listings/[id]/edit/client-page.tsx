@@ -7,7 +7,7 @@ import { ListingFormFields } from "@/components/sell/ListingFormFields";
 import { Button } from "@/components/ui/button";
 import { RemoveListingModal } from "@/components/listings/RemoveListingModal";
 
-export default function EditListingClient({ listing, card, handle, categories = [], storefrontLayout = "grid", cardMemberships = [] }: { 
+export default function EditListingClient({ listing, card, handle, categories = [], storefrontLayout = "grid", cardMemberships = [], storefronts = [] }: { 
   listing: any, 
   card: any,
   handle?: string,

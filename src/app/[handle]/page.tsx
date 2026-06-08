@@ -348,8 +348,8 @@ export default async function SellerStorePage(props: Props) {
           handle={storefront.handle || ''}
           bio={storefront.bio}
           avatarUrl={storefront.avatarUrl}
-          headerStyle={storefront.headerStyle}
-          bannerImageUrl={storefront.bannerImageUrl}
+          headerStyle={seller.headerStyle}
+          bannerImageUrl={seller.bannerImageUrl}
           isOwner={displayAsOwner}
           sellerId={seller.userId}
           badges={(seller.badges as string[]) || []}
@@ -366,8 +366,8 @@ export default async function SellerStorePage(props: Props) {
               <HeaderCustomizer 
                 cards={binderCards} 
                 selectedIds={headerIds}
-                headerStyle={storefront.headerStyle || 'cards'}
-                bannerImageUrl={storefront.bannerImageUrl}
+                headerStyle={seller.headerStyle || 'cards'}
+                bannerImageUrl={seller.bannerImageUrl}
                 storefrontId={storefront.id}
                 triggerNode={
                   <button className="absolute top-2 right-2 z-50 flex items-center justify-center w-11 h-11 bg-black/60 text-zinc-300 hover:text-white rounded-full hover:bg-black/80 transition-all backdrop-blur-sm shadow-md border border-white/10" title="Customize Header">

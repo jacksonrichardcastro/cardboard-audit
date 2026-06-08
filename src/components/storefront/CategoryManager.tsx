@@ -12,6 +12,7 @@ interface CategoryManagerProps {
   categories: any[];
   sports: string[];
   years: string[];
+  brands: string[];
   grades: string[];
   storefrontId: string;
 }

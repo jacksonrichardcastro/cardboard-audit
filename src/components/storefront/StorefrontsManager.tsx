@@ -101,7 +101,7 @@ export function StorefrontsManager({
           const isActive = storefront.id === activeId;
           
           return (
-            <Card key={storefront.id} className={\`bg-card/50 border-white/10 \${isActive ? 'ring-2 ring-violet-500 shadow-[0_0_15px_rgba(139,92,246,0.2)]' : ''}\`}>
+            <Card key={storefront.id} className={`bg-card/50 border-white/10 ${isActive ? 'ring-2 ring-violet-500 shadow-[0_0_15px_rgba(139,92,246,0.2)]' : ''}`}>
               <CardHeader className="flex flex-row items-start justify-between pb-2">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-10 w-10 border border-white/10">
@@ -126,10 +126,8 @@ export function StorefrontsManager({
                 </div>
                 
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 -mt-2 -mr-2">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
+                  <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 -mt-2 -mr-2" />}>
+                    <MoreVertical className="h-4 w-4" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
                     {!isActive && (
@@ -137,10 +135,8 @@ export function StorefrontsManager({
                         <SwitchCamera className="mr-2 h-4 w-4" /> Switch to Storefront
                       </DropdownMenuItem>
                     )}
-                    <DropdownMenuItem asChild className="cursor-pointer">
-                      <Link href={\`/\${storefront.handle}\`}>
-                        <LinkIcon className="mr-2 h-4 w-4" /> View Public Page
-                      </Link>
+                    <DropdownMenuItem render={<Link href={`/${storefront.handle}`} />} className="cursor-pointer">
+                      <LinkIcon className="mr-2 h-4 w-4" /> View Public Page
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     {!storefront.isDefault && (

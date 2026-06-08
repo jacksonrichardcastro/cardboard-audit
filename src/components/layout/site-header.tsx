@@ -103,7 +103,7 @@ export async function SiteHeader() {
             <NavAuthControls isSignedIn={isSignedIn} storefronts={userStorefronts} activeStorefrontId={activeStorefrontId} isAdmin={isAdmin} />
           </div>
           <div className="md:hidden">
-            <MobileMenu isSignedIn={isSignedIn} userProfile={null} isAdmin={isAdmin} />
+            <MobileMenu isSignedIn={isSignedIn} userProfile={null} isAdmin={isAdmin} storefronts={userStorefronts} activeStorefrontId={activeStorefrontId} />
           </div>
         </div>
         </div>

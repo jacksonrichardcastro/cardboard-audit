@@ -31,6 +31,7 @@ interface StorefrontControlsClientProps {
   binderCards: any[];
   headerIds: number[];
   sellerHandle: string;
+  theme: string;
   themeScope: string;
   storefrontId: string;
 }

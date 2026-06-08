@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Button } from "@/components/ui/button";
 import { Check, Edit3, Loader2 } from "lucide-react";
 import { updateStorefrontAction } from "@/app/actions/storefronts";
+import { updateSellerProfile } from "@/app/actions/profile";
 
 interface Card {
   id: number;
@@ -72,7 +73,7 @@ export function HeaderCustomizer({ cards, selectedIds, headerStyle = 'cards', ba
 
       if (!uploadRes.ok) throw new Error("Failed to upload image to bucket");
 
-      await updateStorefrontAction(storefrontId, {
+      await updateSellerProfile({
         headerStyle: 'banner',
         bannerImageUrl: publicUrl,
       });
@@ -101,7 +102,9 @@ export function HeaderCustomizer({ cards, selectedIds, headerStyle = 'cards', ba
     startTransition(async () => {
       try {
         await updateStorefrontAction(storefrontId, {
-          headerCustomizationIds: localSelection,
+          headerCustomizationIds: localSelection
+        });
+        await updateSellerProfile({
           headerStyle: localMode
         });
         setOpen(false);
