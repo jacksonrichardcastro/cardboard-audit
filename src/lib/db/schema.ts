@@ -85,6 +85,7 @@ export const cards = pgTable("cards", {
 export const listings = pgTable("listings", {
   id: serial("id").primaryKey(),
   sellerId: varchar("seller_id", { length: 255 }).notNull().references(() => users.id),
+  storefrontId: uuid("storefront_id").references(() => storefronts.id, { onDelete: "set null" }),
   cardId: integer("card_id").notNull().references(() => cards.id, { onDelete: "cascade" }),
   // Some fields copied for fast querying/historical preservation during sale
   title: varchar("title", { length: 255 }).notNull(),
@@ -120,6 +121,7 @@ export const listings = pgTable("listings", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => ({
   sellerIdx: index("seller_idx").on(table.sellerId),
+  storefrontIdx: index("idx_listings_storefront_id").on(table.storefrontId),
   categoryIdx: index("category_idx").on(table.category, table.subcategory),
   sportIdx: index("sport_idx").on(table.sport),
   listingTypeIdx: index("listing_type_idx").on(table.listingType),
@@ -242,6 +244,35 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   listings: many(listings),
   ordersAsBuyer: many(orders, { relationName: "buyer" }),
   ordersAsSeller: many(orders, { relationName: "seller" }),
+}));
+
+export const storefronts = pgTable("storefronts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  handle: varchar("handle", { length: 50 }).notNull().unique(),
+  displayName: varchar("display_name", { length: 100 }),
+  bio: text("bio"),
+  avatarUrl: text("avatar_url"),
+  theme: varchar("theme", { length: 50 }).notNull().default("trax-cosmos"),
+  themeScope: varchar("theme_scope", { length: 50 }).default("profile-wide"),
+  headerCustomizationIds: json("header_customization_ids").default([]),
+  hiddenBadges: json("hidden_badges").$type<string[]>().default([]),
+  isDefaultForUser: boolean("is_default_for_user").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  userIdIdx: index("idx_storefronts_user_id").on(table.userId),
+  handleIdx: index("idx_storefronts_handle").on(sql`LOWER(${table.handle})`),
+  userDefaultIdx: index("idx_storefronts_user_default").on(table.userId),
+}));
+
+export const storefrontsRelations = relations(storefronts, ({ one, many }) => ({
+  user: one(users, {
+    fields: [storefronts.userId],
+    references: [users.id]
+  }),
+  listings: many(listings),
+  categories: many(categories)
 }));
 
 export const profilesRelations = relations(profiles, ({ one }) => ({
@@ -367,12 +398,14 @@ export const viewHistory = pgTable("view_history", {
 export const categories = pgTable("categories", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  storefrontId: uuid("storefront_id").references(() => storefronts.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 100 }).notNull(),
   isAutoManaged: boolean("is_auto_managed").notNull().default(false),
   displayOrder: integer("display_order").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => ({
   userOrderIdx: index("categories_user_order_idx").on(table.userId, table.displayOrder),
+  storefrontIdx: index("idx_categories_storefront_id").on(table.storefrontId),
 }));
 
 export const categoryMemberships = pgTable("category_memberships", {
@@ -449,6 +482,7 @@ export const handleHistory = pgTable('handle_history', {
 
   id: uuid('id').primaryKey().defaultRandom(),
   userId: varchar('user_id', { length: 255 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
+  storefrontId: uuid('storefront_id').references(() => storefronts.id, { onDelete: 'cascade' }),
   oldHandle: varchar('old_handle', { length: 50 }).notNull(),
   newHandle: varchar('new_handle', { length: 50 }).notNull(),
   changedAt: timestamp('changed_at', { withTimezone: true }).notNull().defaultNow(),

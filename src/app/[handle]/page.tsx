@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { RESERVED_HANDLES } from "@/lib/reserved-handles";
 import { db } from "@/lib/db";
 import { QuickUploadModal } from "@/components/sell/QuickUploadModal";
-import { profiles, listings, users, cards, itemPhotos, categories, handleHistory } from "@/lib/db/schema";
+import { profiles, listings, users, cards, itemPhotos, categories, handleHistory, storefronts } from "@/lib/db/schema";
 import { eq, desc, and, inArray, sql } from "drizzle-orm";
 import { Metadata } from "next";
 import Link from "next/link";
@@ -96,12 +96,12 @@ export default async function SellerStorePage(props: Props) {
       orderBy: desc(handleHistory.changedAt),
     });
     
-    if (historyEntry) {
-      const currentProfile = await db.query.profiles.findFirst({
-        where: eq(profiles.userId, historyEntry.userId)
+    if (historyEntry && historyEntry.storefrontId) {
+      const currentStorefront = await db.query.storefronts.findFirst({
+        where: eq(storefronts.id, historyEntry.storefrontId)
       });
-      if (currentProfile?.handle) {
-        redirect(`/${currentProfile.handle}`);
+      if (currentStorefront?.handle) {
+        redirect(`/${currentStorefront.handle}`);
       }
     }
     
