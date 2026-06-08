@@ -17,7 +17,7 @@ import { LogOut, User, Tag, ShieldCheck } from "lucide-react";
 import { StorefrontProfile } from "./site-header";
 import { Check, Plus } from "lucide-react";
 import { switchActiveStorefrontAction } from "@/app/actions/storefronts";
-import { CreateStorefrontModal } from "@/components/storefront/CreateStorefrontModal";
+
 import { useState } from "react";
 
 export function NavAuthControls({
@@ -34,7 +34,7 @@ export function NavAuthControls({
   const { signOut } = useClerk();
   const { user } = useUser();
   const router = useRouter();
-  const [createModalOpen, setCreateModalOpen] = useState(false);
+
   
   const activeStorefront = storefronts?.find(s => s.id === activeStorefrontId) || storefronts?.find(s => s.isDefault) || storefronts?.[0];
 
@@ -69,7 +69,7 @@ export function NavAuthControls({
             </>
           )}
 
-          {storefronts && storefronts.length > 0 && (
+          {storefronts && storefronts.length >= 2 && (
             <>
               <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Your Storefronts
@@ -104,12 +104,7 @@ export function NavAuthControls({
                   </DropdownMenuItem>
                 );
               })}
-              <DropdownMenuItem onClick={(e) => { e.preventDefault(); setCreateModalOpen(true); }} className="cursor-pointer text-violet-600 dark:text-violet-400 hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
-                <div className="w-full flex items-center px-2 py-2">
-                  <Plus className="mr-2 h-4 w-4" />
-                  <span>Add Storefront</span>
-                </div>
-              </DropdownMenuItem>
+
               <DropdownMenuItem onClick={() => router.push("/seller/dashboard?tab=storefronts")} className="cursor-pointer hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 p-0">
                 <div className="w-full flex items-center px-2 py-1.5">
                   <span className="text-sm font-medium pl-[24px]">Manage Storefronts</span>
@@ -151,13 +146,7 @@ export function NavAuthControls({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <CreateStorefrontModal 
-        open={createModalOpen} 
-        onOpenChange={setCreateModalOpen} 
-        onCreated={() => {
-          setCreateModalOpen(false);
-        }} 
-      />
+
       </>
     );
   }

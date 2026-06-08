@@ -11,7 +11,7 @@ import { HotPill } from "@/components/shared/HotPill";
 import { switchActiveStorefrontAction } from "@/app/actions/storefronts";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Check, Plus } from "lucide-react";
-import { CreateStorefrontModal } from "@/components/storefront/CreateStorefrontModal";
+
 
 export type StorefrontProfile = {
   id: string;
@@ -35,7 +35,7 @@ export function MobileMenu({
   activeStorefrontId?: string | null;
 }) {
   const [open, setOpen] = useState(false);
-  const [createModalOpen, setCreateModalOpen] = useState(false);
+
   const { signOut } = useClerk();
   const router = useRouter();
 
@@ -51,8 +51,7 @@ export function MobileMenu({
   };
 
   return (
-    <>
-      <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger 
         render={
           <Button variant="ghost" size="icon">
@@ -97,7 +96,7 @@ export function MobileMenu({
               </div>
             ) : (
               <div className="flex flex-col gap-4">
-                {storefronts && storefronts.length > 0 && (
+                {storefronts && storefronts.length >= 2 && (
                   <>
                     <div className="px-4 py-1.5 text-xs font-semibold text-violet-500 uppercase tracking-wider">
                       Your Storefronts
@@ -133,12 +132,7 @@ export function MobileMenu({
                         </button>
                       );
                     })}
-                    <button onClick={() => { handleLinkClick(); setCreateModalOpen(true); }} className="text-sm font-medium flex items-center gap-3 px-4 py-2 text-violet-500 hover:text-violet-400">
-                      <div className="h-6 w-6 rounded border border-violet-500/30 flex items-center justify-center bg-violet-500/10">
-                        <Plus className="h-4 w-4" />
-                      </div>
-                      Add Storefront
-                    </button>
+
                     <button onClick={() => { handleLinkClick(); router.push("/seller/dashboard?tab=storefronts"); }} className="text-sm font-medium flex items-center gap-2 pl-4 pt-2 text-zinc-300 hover:text-white text-left">
                       Manage Storefronts
                     </button>
@@ -185,13 +179,5 @@ export function MobileMenu({
         </div>
       </SheetContent>
     </Sheet>
-    <CreateStorefrontModal 
-      open={createModalOpen} 
-      onOpenChange={setCreateModalOpen} 
-      onCreated={() => {
-        setCreateModalOpen(false);
-      }} 
-    />
-    </>
   );
 }
