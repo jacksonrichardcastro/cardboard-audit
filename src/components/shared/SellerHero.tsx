@@ -168,10 +168,6 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
                   </div>
                 );
 
-                if (customizerNode) {
-                  return cardContent;
-                }
-                
                 if (!listingId) {
                   return cardContent; // Default placeholders have no listingId
                 }
