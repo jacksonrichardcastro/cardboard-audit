@@ -70,7 +70,7 @@ export default async function Home(props: Props) {
   if (!hasSearchQuery) {
     const homeRows = await getHomeRows();
     const trendingPool = await getMarketplaceTrendingListings();
-    recentListings = shuffleArray(trendingPool).map(mapListingToUIFormat);
+    recentListings = shuffleArray(trendingPool).slice(0, 15).map(mapListingToUIFormat);
     recommendedMapped = homeRows.featured;
   } else {
     // If there is a search query, dbListings is populated
