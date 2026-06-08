@@ -15,7 +15,9 @@ export function ListingFormFields({
   fileInputRef,
   isUploadingFiles,
   draftId,
-  mode
+  mode,
+  categories,
+  storefrontLayout
 }: {
   formData: any;
   handleChange: (field: string, value: any) => void;

@@ -1,7 +1,7 @@
 "use server";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
-import { users, categories, cards, categoryMemberships, profiles } from "@/lib/db/schema";
+import { users, categories, cards, categoryMemberships, profiles, listings } from "@/lib/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
