@@ -110,7 +110,7 @@ export function MobileMenu({
                             if (!isActive) {
                               const res = await switchActiveStorefrontAction(storefront.id);
                               if (res.success) {
-                                window.location.reload();
+                                window.location.href = `/${storefront.handle}`;
                               }
                             }
                             handleLinkClick();

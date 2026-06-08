@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { QuickUploadModal } from "@/components/sell/QuickUploadModal";
 import { profiles, listings, users, cards, itemPhotos, categories, handleHistory, storefronts } from "@/lib/db/schema";
 import { eq, desc, and, inArray, sql } from "drizzle-orm";
+export const dynamic = 'force-dynamic';
 import { Metadata } from "next";
 import Link from "next/link";
 import { SellerHero } from "@/components/shared/SellerHero";
@@ -210,7 +211,9 @@ export default async function SellerStorePage(props: Props) {
     .from(cards)
     .leftJoin(listings, eq(cards.id, listings.cardId))
     .where(
-      sql`${cards.ownerId} = ${seller.userId} OR (${listings.storefrontId} = ${storefront.id} AND ${listings.deletedAt} IS NULL)`
+      storefront.isDefaultForUser
+        ? sql`${cards.ownerId} = ${seller.userId} OR (${listings.storefrontId} = ${storefront.id} AND ${listings.deletedAt} IS NULL)`
+        : sql`${listings.storefrontId} = ${storefront.id} AND ${listings.deletedAt} IS NULL`
     )
     .orderBy(desc(cards.createdAt));
 
