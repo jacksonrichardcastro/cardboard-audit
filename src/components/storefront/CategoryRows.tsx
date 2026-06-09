@@ -127,38 +127,28 @@ export function CategoryRows({ categories, cards, isOwner, sellerName, tab, allB
                         // Active Listings Card
                         const listing = item;
                         return (
-                          <div key={listing.id} className="snap-start shrink-0 w-[160px] md:w-[180px] lg:w-[200px] block group relative rounded-xl overflow-hidden bg-[#111111] border border-white/5 hover:border-white/10 hover:-translate-y-1 transition-all duration-300">
-                            <Link href={`/listings/${listing.id}`} className="block">
-                              <div className="relative aspect-[5/7] w-full overflow-hidden bg-black">
-                                <img src={photoUrl} alt={listing.title} className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                          <Link key={listing.id} href={`/listings/${listing.id}`} className="snap-start shrink-0 w-[160px] md:w-[180px] lg:w-[200px] block group relative rounded-xl overflow-hidden bg-[#111111] border border-white/5 hover:border-white/10 hover:-translate-y-1 transition-all duration-300">
+                            <div className="relative aspect-[5/7] w-full overflow-hidden bg-black">
+                              <img src={photoUrl} alt={listing.title} className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                            </div>
+                            <div className="p-2.5 text-center flex flex-col items-center">
+                              <h3 className="text-[11px] md:text-sm font-medium line-clamp-1 text-zinc-300 mb-1.5 w-full">{listing.title}</h3>
+                              <div className="flex flex-col gap-1 mb-2 w-full items-center">
+                                {listing.discountType && listing.discountAmount ? (
+                                  <div className="flex items-center justify-center gap-1.5 w-full">
+                                    <span className="text-[10px] md:text-[11px] text-zinc-500 line-through shrink-0">${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
+                                    <p className="text-sm md:text-[15px] font-bold text-[#7C3AED] shrink-0">
+                                      ${((listing.discountType === 'percent' ? listing.priceCents * (1 - listing.discountAmount / 10000) : Math.max(0, listing.priceCents - listing.discountAmount)) / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <p className="text-sm md:text-[15px] font-bold text-white text-center w-full">${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                                )}
+                                <p className="text-[10px] md:text-[11px] text-zinc-500 truncate w-full text-center">
+                                  {listing.grade ? `${listing.gradingCompany} ${listing.grade}` : listing.condition}
+                                </p>
                               </div>
-                              <div className="p-2.5 text-center flex flex-col items-center">
-                                <h3 className="text-[11px] md:text-sm font-medium line-clamp-1 text-zinc-300 mb-1.5 w-full">{listing.title}</h3>
-                                <div className="flex flex-col gap-1 mb-2 w-full items-center">
-                                  {listing.discountType && listing.discountAmount ? (
-                                    <div className="flex items-center justify-center gap-1.5 w-full">
-                                      <span className="text-[10px] md:text-[11px] text-zinc-500 line-through shrink-0">${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
-                                      <p className="text-sm md:text-[15px] font-bold text-[#7C3AED] shrink-0">
-                                        ${((listing.discountType === 'percent' ? listing.priceCents * (1 - listing.discountAmount / 10000) : listing.priceCents - listing.discountAmount) / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
-                                      </p>
-                                    </div>
-                                  ) : (
-                                    <p className="text-sm md:text-[15px] font-bold text-white text-center w-full">${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                                  )}
-                                  <p className="text-[10px] md:text-[11px] text-zinc-500 truncate w-full text-center">
-                                    {listing.grade ? `${listing.gradingCompany} ${listing.grade}` : listing.condition}
-                                  </p>
-                                </div>
-                              </div>
-                            </Link>
-                            
-                            {isOwner && (
-                              <div className="absolute top-2 right-2 z-20">
-                                <button onClick={(e) => { e.preventDefault(); router.push(`/listings/${listing.id}/edit`); }} className="bg-black/60 hover:bg-black/80 backdrop-blur-md p-1.5 rounded-full border border-white/10 text-white transition-colors opacity-100 lg:opacity-0 lg:group-hover:opacity-100 shadow-md">
-                                  <Edit2 className="w-4 h-4 mx-auto" />
-                                </button>
-                              </div>
-                            )}
+                            </div>
                             
                             <div className="grid grid-cols-2 gap-2 px-2.5 pb-2.5">
                               <Button onClick={(e) => handleAction(e, listing.id)} className="h-7 w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-[9px] sm:text-[10px] md:text-xs font-semibold px-1 sm:px-2 rounded z-20 relative">
@@ -170,7 +160,7 @@ export function CategoryRows({ categories, cards, isOwner, sellerName, tab, allB
                                 <span className="hidden sm:inline">Make Offer</span>
                               </Button>
                             </div>
-                          </div>
+                          </Link>
                         );
                       } else {
                         // Binder Card

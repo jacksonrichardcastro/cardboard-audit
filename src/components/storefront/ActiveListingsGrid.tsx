@@ -57,84 +57,54 @@ export function ActiveListingsGrid({ isOwner, listings }: ActiveListingsGridProp
           : 'https://placehold.co/400x550';
         
         return (
-          <div key={listing.id} className={`group relative rounded-xl overflow-hidden bg-[#111111] border border-white/5 hover:border-white/10 hover:-translate-y-1 transition-all duration-300 mx-auto w-full`}>
+          <Link key={listing.id} href={`/listings/${listing.id}`} className={`group relative rounded-xl overflow-hidden bg-[#111111] border border-white/5 hover:border-white/10 hover:-translate-y-1 transition-all duration-300 mx-auto w-full block`}>
 
-            <Link href={`/listings/${listing.id}`} className="block">
-              <div className="relative aspect-[5/7] w-full overflow-hidden bg-black">
-                <img
-                  src={photoUrl}
-                  alt={listing.title}
-                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  loading="lazy"
-                />
-              </div>
-              <div className="p-2.5 text-center flex flex-col items-center">
-                <h3 className="text-[11px] md:text-sm font-medium line-clamp-1 text-zinc-300 mb-1.5 w-full">
-                  {listing.title}
-                </h3>
-                <div className="flex flex-col gap-1 mb-2 w-full items-center">
-                  {listing.discountType && listing.discountAmount ? (
-                    <div className="flex items-center justify-center gap-1.5 w-full">
-                      <span className="text-[10px] md:text-[11px] text-zinc-500 line-through shrink-0">
-                        ${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
-                      </span>
-                      <p className="text-sm md:text-[15px] font-bold text-[#7C3AED] shrink-0">
-                        ${((listing.discountType === 'percent' 
-                          ? listing.priceCents * (1 - (listing.discountAmount || 0) / 10000)
-                          : listing.discountType === 'dollar'
-                          ? Math.max(0, listing.priceCents - (listing.discountAmount || 0))
-                          : listing.priceCents) / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
-                      </p>
-                      <div className="bg-[#7C3AED]/20 border border-[#7C3AED]/50 text-[#7C3AED] text-[8px] md:text-[9px] font-bold px-1 py-0.5 rounded-sm uppercase tracking-wider whitespace-nowrap shrink-0">
-                        {listing.discountType === 'percent' 
-                          ? `${listing.discountAmount / 100}%` 
-                          : `$${(listing.discountAmount / 100).toFixed(0)}`}
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-sm md:text-[15px] font-bold text-white text-center w-full">
-                      ${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </p>
-                  )}
-                  {((listing.quantity || 1) > 1) && (
-                    <span className="text-[9px] md:text-[10px] text-zinc-400 bg-zinc-800/50 px-1.5 py-0.5 rounded-full mt-0.5">
-                      {listing.quantity} available
+            <div className="relative aspect-[5/7] w-full overflow-hidden bg-black">
+              <img
+                src={photoUrl}
+                alt={listing.title}
+                className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                loading="lazy"
+              />
+            </div>
+            <div className="p-2.5 text-center flex flex-col items-center">
+              <h3 className="text-[11px] md:text-sm font-medium line-clamp-1 text-zinc-300 mb-1.5 w-full">
+                {listing.title}
+              </h3>
+              <div className="flex flex-col gap-1 mb-2 w-full items-center">
+                {listing.discountType && listing.discountAmount ? (
+                  <div className="flex items-center justify-center gap-1.5 w-full">
+                    <span className="text-[10px] md:text-[11px] text-zinc-500 line-through shrink-0">
+                      ${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                     </span>
-                  )}
-                  <p className="text-[10px] md:text-[11px] text-zinc-500 truncate w-full text-center">
-                    {listing.grade ? `${listing.gradingCompany} ${listing.grade}` : listing.condition}
+                    <p className="text-sm md:text-[15px] font-bold text-[#7C3AED] shrink-0">
+                      ${((listing.discountType === 'percent' 
+                        ? listing.priceCents * (1 - (listing.discountAmount || 0) / 10000)
+                        : listing.discountType === 'dollar'
+                        ? Math.max(0, listing.priceCents - (listing.discountAmount || 0))
+                        : listing.priceCents) / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                    </p>
+                    <div className="bg-[#7C3AED]/20 border border-[#7C3AED]/50 text-[#7C3AED] text-[8px] md:text-[9px] font-bold px-1 py-0.5 rounded-sm uppercase tracking-wider whitespace-nowrap shrink-0">
+                      {listing.discountType === 'percent' 
+                        ? `${listing.discountAmount / 100}%` 
+                        : `$${(listing.discountAmount / 100).toFixed(0)}`}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm md:text-[15px] font-bold text-white text-center w-full">
+                    ${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </p>
-                </div>
+                )}
+                {((listing.quantity || 1) > 1) && (
+                  <span className="text-[9px] md:text-[10px] text-zinc-400 bg-zinc-800/50 px-1.5 py-0.5 rounded-full mt-0.5">
+                    {listing.quantity} available
+                  </span>
+                )}
+                <p className="text-[10px] md:text-[11px] text-zinc-500 truncate w-full text-center">
+                  {listing.grade ? `${listing.gradingCompany} ${listing.grade}` : listing.condition}
+                </p>
               </div>
-            </Link>
-
-            {isOwner && (
-              <div className="absolute top-2 right-2 z-20">
-                <button 
-                  onClick={(e) => { e.preventDefault(); router.push(`/listings/${listing.id}/edit`); }}
-                  className="bg-black/60 hover:bg-black/80 backdrop-blur-md p-1.5 rounded-full border border-white/10 text-white transition-colors opacity-100 lg:opacity-0 lg:group-hover:opacity-100 shadow-md"
-                >
-                  <Edit2 className="w-4 h-4 mx-auto" />
-                </button>
-              </div>
-            )}
-            
-            {isOwner && (
-              <div className="absolute top-2 left-2 z-20">
-                <RunDiscountModal
-                  listingId={listing.id}
-                  listingPriceCents={listing.priceCents}
-                  currentType={listing.discountType}
-                  currentAmount={listing.discountAmount}
-                  currentUntil={listing.discountActiveUntil}
-                  triggerNode={
-                    <button className="bg-black/60 hover:bg-black/80 backdrop-blur-md p-1.5 rounded-full border border-white/10 text-white transition-colors shadow-md">
-                      <Flame className="w-4 h-4 text-orange-500 mx-auto" />
-                    </button>
-                  }
-                />
-              </div>
-            )}
+            </div>
             
             {/* STRICT V16 CONFIRMATION: BIN + Offer Flow (No "Bid Now") */}
             <div className="grid grid-cols-2 gap-2 px-2.5 pb-2.5">
@@ -147,7 +117,7 @@ export function ActiveListingsGrid({ isOwner, listings }: ActiveListingsGridProp
                 <span className="hidden sm:inline">Make Offer</span>
               </Button>
             </div>
-          </div>
+          </Link>
         )
       })}
     </div>
