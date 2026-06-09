@@ -2,7 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
-import { profiles, listings, cards } from "@/lib/db/schema";
+import { profiles, listings, cards, storefronts } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
@@ -151,6 +151,14 @@ export async function updateStorefrontTheme(theme: string, scope?: string | null
       storefrontThemeScope: scope || undefined
     })
     .where(eq(profiles.userId, userId));
+
+  await db
+    .update(storefronts)
+    .set({ 
+      theme: theme,
+      themeScope: scope || undefined
+    })
+    .where(eq(storefronts.userId, userId));
 
   const [seller] = await db.select({ handle: profiles.handle }).from(profiles).where(eq(profiles.userId, userId)).limit(1);
   if (seller?.handle) {
