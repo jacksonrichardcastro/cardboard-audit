@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { QuickUploadModal } from "@/components/sell/QuickUploadModal";
 import { profiles, listings, users, cards, itemPhotos, categories, handleHistory, storefronts } from "@/lib/db/schema";
 import { eq, desc, and, inArray, sql } from "drizzle-orm";
+export const dynamic = 'force-dynamic';
 import { Metadata } from "next";
 import Link from "next/link";
 import { SellerHero } from "@/components/shared/SellerHero";
@@ -174,7 +175,7 @@ export default async function SellerStorePage(props: Props) {
       photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE item_photos.card_id = listings.card_id), '[]'::json)`,
     })
     .from(listings)
-    .where(and(eq(listings.storefrontId, storefront.id), eq(listings.status, "active"), sql`${listings.deletedAt} IS NULL`, ...activeConditions))
+    .where(and(eq(listings.storefrontId, storefront.id), inArray(listings.status, ["active", "pending_marketplace_activation"]), sql`${listings.deletedAt} IS NULL`, ...activeConditions))
     .orderBy(desc(listings.createdAt));
 
   // Fetch unfiltered active listings for the header strip fallback
@@ -210,7 +211,9 @@ export default async function SellerStorePage(props: Props) {
     .from(cards)
     .leftJoin(listings, eq(cards.id, listings.cardId))
     .where(
-      sql`${cards.ownerId} = ${seller.userId} OR (${listings.storefrontId} = ${storefront.id} AND ${listings.deletedAt} IS NULL)`
+      storefront.isDefaultForUser
+        ? sql`${cards.ownerId} = ${seller.userId} OR (${listings.storefrontId} = ${storefront.id} AND ${listings.deletedAt} IS NULL)`
+        : sql`${listings.storefrontId} = ${storefront.id} AND ${listings.deletedAt} IS NULL`
     )
     .orderBy(desc(cards.createdAt));
 
