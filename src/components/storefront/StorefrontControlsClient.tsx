@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { LayoutGrid, ListTree, Settings2, Loader2, Settings, Eye, Image as ImageIcon, Sparkles, Palette } from "lucide-react";
+import { LayoutGrid, ListTree, Settings2, Loader2, Settings, Eye, Image as ImageIcon, Sparkles, Palette, Trees } from "lucide-react";
 import { updateStorefrontLayout } from "@/app/actions/categories";
 import { updateStorefrontTheme } from "@/app/actions/profile";
 import { toast } from "sonner";
@@ -80,7 +80,7 @@ export function StorefrontControlsClient({ layout, categories, sports, years, br
   const handleThemeChange = (value: string) => {
     if (value === theme) return;
     startTransition(() => {
-      updateStorefrontTheme(value, value === "trax-cosmos" ? themeScope : null)
+      updateStorefrontTheme(value, (value === "trax-cosmos" || value === "trax-wood") ? themeScope : null)
         .then(() => toast.success("Theme updated"));
     });
   };
@@ -88,7 +88,7 @@ export function StorefrontControlsClient({ layout, categories, sports, years, br
   const handleScopeChange = (value: string) => {
     if (value === themeScope) return;
     startTransition(() => {
-      updateStorefrontTheme("trax-cosmos", value)
+      updateStorefrontTheme(theme, value)
         .then(() => toast.success("Theme scope updated"));
     });
   };
@@ -147,11 +147,20 @@ export function StorefrontControlsClient({ layout, categories, sports, years, br
             </DropdownMenuRadioItem>
             <DropdownMenuRadioItem value="trax-cosmos" className="cursor-pointer focus:bg-[#7C3AED]/15 focus:text-white group" onSelect={(e) => e.preventDefault()}>
               <Sparkles className="w-4 h-4 mr-2 group-data-[state=checked]:text-[#7C3AED]" />
-              <span className="group-data-[state=checked]:text-[#7C3AED]">Trax Cosmos</span>
+              <div className="flex flex-col">
+                <span className="group-data-[state=checked]:text-[#7C3AED]">Trax Cosmos</span>
+              </div>
+            </DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="trax-wood" className="cursor-pointer focus:bg-[#7C3AED]/15 focus:text-white group" onSelect={(e) => e.preventDefault()}>
+              <Trees className="w-4 h-4 mr-2 group-data-[state=checked]:text-[#7C3AED]" />
+              <div className="flex flex-col">
+                <span className="group-data-[state=checked]:text-[#7C3AED]">Trax Wood</span>
+                <span className="text-[10px] text-zinc-500 group-data-[state=checked]:text-[#7C3AED]/70">Warm wood grain backdrop.</span>
+              </div>
             </DropdownMenuRadioItem>
           </DropdownMenuRadioGroup>
 
-          {theme === "trax-cosmos" && (
+          {(theme === "trax-cosmos" || theme === "trax-wood") && (
             <div className="px-2 py-1.5 mt-1 ml-4 border-l border-white/10">
               <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1">
                 Apply to

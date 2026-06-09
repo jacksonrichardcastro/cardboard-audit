@@ -16,6 +16,7 @@ import { Lock, Plus, ListTree, Settings, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HeaderCustomizer } from "@/components/shared/HeaderCustomizer";
 import { CosmosBackground } from "@/components/marketplace/CosmosBackground";
+import { WoodBackground } from "@/components/marketplace/WoodBackground";
 import { StorefrontControls } from "@/components/storefront/StorefrontControls";
 import { BinderValueToggle } from "@/components/shared/binder-value-toggle";
 import { FiltersDrawer } from "@/components/storefront/FiltersDrawer";
@@ -345,6 +346,9 @@ export default async function SellerStorePage(props: Props) {
           <CosmosBackground />
         </div>
       )}
+      {theme === "trax-wood" && themeScope === "profile-wide" && (
+        <WoodBackground scope="profile-wide" />
+      )}
       <div className="relative z-10">
         <SellerHero 
           name={displayName}
@@ -423,11 +427,14 @@ export default async function SellerStorePage(props: Props) {
         </div>
 
         {/* Tab Content Areas */}
-        <div className={`relative min-h-[400px] ${theme === 'trax-cosmos' && themeScope === 'storefront-only' ? 'overflow-hidden' : ''}`}>
+        <div className={`relative min-h-[400px] ${(theme === 'trax-cosmos' || theme === 'trax-wood') && themeScope === 'storefront-only' ? 'overflow-hidden' : ''}`}>
           {theme === "trax-cosmos" && themeScope === "storefront-only" && <div className="text-zinc-300 font-medium whitespace-pre-wrap leading-relaxed px-4 lg:px-0">
                   {storefront.bio || "This seller hasn't written a bio yet."}
                 </div>
           }
+          {theme === "trax-wood" && themeScope === "storefront-only" && (
+            <WoodBackground scope="storefront-only" />
+          )}
           <div className="relative z-10">
           {(currentTab === "storefront" || currentTab === "active-listings") && (
             <ActiveFilterChips />
