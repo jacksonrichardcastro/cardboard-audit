@@ -133,7 +133,7 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
       )}
 
       {/* Hero Card Shelf or Banner */}
-      <div className="relative w-full max-w-7xl mx-auto px-4 md:px-8 mt-2">
+      <div className="relative w-full max-w-screen-2xl mx-auto mt-2">
         {headerStyle === 'banner' && bannerImageUrl ? (
           <div className="relative h-40 md:h-52 w-full flex overflow-hidden rounded-xl border border-white/10 shadow-2xl bg-zinc-900">
             {customizerNode}
