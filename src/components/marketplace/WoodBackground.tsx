@@ -5,9 +5,14 @@ import Image from 'next/image';
 export function WoodBackground({ scope = 'storefront-only' }: { scope?: 'storefront-only' | 'profile-wide' }) {
   // If storefront-only, the layout handles absolute positioning in the content area.
   // We use fixed or absolute based on scope via the parent's container,
-  // but to match the prompt's base markup:
+  const isProfile = scope === 'profile-wide';
+  
   return (
-    <div className="fixed inset-0 z-0 pointer-events-none" style={{ zIndex: -10 }} aria-hidden="true">
+    <div 
+      className={`${isProfile ? 'fixed' : 'absolute'} inset-0 w-full h-full pointer-events-none`} 
+      style={{ zIndex: isProfile ? 0 : -10 }} 
+      aria-hidden="true"
+    >
       <Image
         src="/themes/trax-wood-bg.jpg"
         alt="Wood Background"
