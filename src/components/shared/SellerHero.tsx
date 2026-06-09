@@ -35,9 +35,10 @@ interface SellerHeroProps {
   locationCity?: string | null;
   locationState?: string | null;
   transparentBackground?: boolean;
+  hideCosmicGlow?: boolean;
 }
 
-export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerImageUrl, isOwner, sellerId, heroCards = [], customizerNode, badges = [], isFoundingSeller = false, identityVerified = false, hiddenBadges = [], presenceStatus = "online", locationCity, locationState, transparentBackground = false }: SellerHeroProps) {
+export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerImageUrl, isOwner, sellerId, heroCards = [], customizerNode, badges = [], isFoundingSeller = false, identityVerified = false, hiddenBadges = [], presenceStatus = "online", locationCity, locationState, transparentBackground = false, hideCosmicGlow = false }: SellerHeroProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -125,9 +126,11 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
   return (
     <div className={`relative w-full ${transparentBackground ? 'bg-transparent' : 'bg-black'} pt-0 pb-6 md:pb-8 flex flex-col items-center`}>
       {/* Ambient Radial Glow Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-[600px] bg-[#7C3AED]/20 blur-[120px] rounded-full opacity-50" />
-      </div>
+      {!hideCosmicGlow && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-[600px] bg-[#7C3AED]/20 blur-[120px] rounded-full opacity-50" />
+        </div>
+      )}
 
       {/* Hero Card Shelf or Banner */}
       <div className="relative w-full max-w-7xl mx-auto px-4 md:px-8 mt-2">
