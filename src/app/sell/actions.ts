@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { listingDrafts, profiles, cards, listings, itemPhotos, categoryMemberships } from "@/lib/db/schema";
+import { listingDrafts, profiles, cards, listings, itemPhotos, categoryMemberships, storefronts } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
@@ -159,6 +159,14 @@ export async function publishDraft(draftId: number, isDemo: boolean = false) {
     // c. Insert Listing if not binder mode
     let returnId = newCard.id; // Default return cardId for binder
     if (formData.mode !== "binder") {
+      let resolvedStorefrontId = formData.storefrontId;
+      if (!resolvedStorefrontId) {
+        const defaultStorefront = await tx.query.storefronts.findFirst({
+          where: and(eq(storefronts.userId, userId), eq(storefronts.isDefaultForUser, true))
+        });
+        resolvedStorefrontId = defaultStorefront?.id || null;
+      }
+
       const priceCents = Math.round(parseFloat(formData.price || "0") * 100);
       const [newListing] = await tx.insert(listings).values({
         sellerId: userId,
@@ -177,7 +185,7 @@ export async function publishDraft(draftId: number, isDemo: boolean = false) {
         edition: formData.edition || null,
         graded: formData.graded || false,
         shippingMethod: formData.shippingMethod || "seller_managed",
-        storefrontId: formData.storefrontId || null,
+        storefrontId: resolvedStorefrontId,
       }).returning();
       returnId = newListing.id;
     }
