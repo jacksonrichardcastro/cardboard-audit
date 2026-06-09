@@ -36,9 +36,10 @@ interface SellerHeroProps {
   locationState?: string | null;
   transparentBackground?: boolean;
   hideCosmicGlow?: boolean;
+  theme?: string | null;
 }
 
-export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerImageUrl, isOwner, sellerId, heroCards = [], customizerNode, badges = [], isFoundingSeller = false, identityVerified = false, hiddenBadges = [], presenceStatus = "online", locationCity, locationState, transparentBackground = false, hideCosmicGlow = false }: SellerHeroProps) {
+export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerImageUrl, isOwner, sellerId, heroCards = [], customizerNode, badges = [], isFoundingSeller = false, identityVerified = false, hiddenBadges = [], presenceStatus = "online", locationCity, locationState, transparentBackground = false, hideCosmicGlow = false, theme }: SellerHeroProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -140,6 +141,48 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
             {/* Subtle bottom shelf glow to match the original gradient effect overlapping the avatar */}
             <div className="absolute bottom-0 left-0 w-full h-1/3 bg-gradient-to-t from-[#7C3AED]/40 to-transparent pointer-events-none z-10" />
             <img src={bannerImageUrl} alt={`${name} Banner`} className="absolute inset-0 w-full h-full object-cover" />
+          </div>
+        ) : theme === 'trax-wood' ? (
+          <div className="relative h-40 md:h-52 w-full flex items-center overflow-hidden rounded-xl border border-white/10 shadow-2xl bg-black">
+            {customizerNode}
+            <img src="/themes/trax-wood-header-bg.jpg" alt="Wood Display Shelf" className="absolute inset-0 w-full h-full object-cover opacity-90" />
+            <div className="absolute inset-0 shadow-[inset_0_0_40px_rgba(0,0,0,0.8)] pointer-events-none z-0" />
+            
+            <div 
+              ref={(el) => {
+                if (el) {
+                  // Center the scroll position on mount
+                  el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2;
+                }
+              }}
+              className="absolute inset-0 w-full h-full flex items-center gap-2 md:gap-4 px-[10vw] overflow-x-auto scrollbar-hide snap-none"
+              style={{
+                WebkitOverflowScrolling: 'touch'
+              }}
+            >
+              {displayCards.map((card, i) => {
+                const listingId = card.activeListingId ?? card.draftListingId;
+                
+                const cardContent = (
+                  <div 
+                    key={customizerNode ? `${card.id}-${i}` : undefined} 
+                    className="relative flex-shrink-0 w-20 md:w-28 aspect-[5/7] rounded-lg border border-white/10 overflow-hidden shadow-xl transform transition-transform duration-500 hover:-translate-y-4 hover:scale-105 hover:z-10 cursor-pointer"
+                  >
+                    <img src={card.url} alt={card.title || "Hero Card"} className="absolute inset-0 w-full h-full object-cover" />
+                  </div>
+                );
+
+                if (!listingId) {
+                  return cardContent; // Default placeholders have no listingId
+                }
+
+                return (
+                  <Link key={`${card.id}-${i}`} href={`/listings/${listingId}`}>
+                    {cardContent}
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         ) : (
           <div className="relative h-40 md:h-52 w-full flex items-center overflow-hidden rounded-xl border border-white/10 bg-black/50 shadow-2xl backdrop-blur-sm">

@@ -369,6 +369,7 @@ export default async function SellerStorePage(props: Props) {
           heroCards={formattedHeroCards}
           transparentBackground={themeScope === 'profile-wide'}
           hideCosmicGlow={theme === 'trax-wood'}
+          theme={theme}
           customizerNode={
             displayAsOwner ? (
               <HeaderCustomizer 
