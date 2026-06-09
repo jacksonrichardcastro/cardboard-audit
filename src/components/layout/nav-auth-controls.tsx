@@ -83,7 +83,7 @@ export function NavAuthControls({
                       if (!isActive) {
                         const res = await switchActiveStorefrontAction(storefront.id);
                         if (res.success) {
-                          window.location.href = `/${storefront.handle}`;
+                          window.location.reload();
                         }
                       }
                     }} 
