@@ -149,21 +149,20 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
             <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] pointer-events-none z-0" />
             
             {/* Gold trim — top */}
-            <div 
-              className="absolute top-0 left-0 right-0 h-2 z-20 pointer-events-none"
-              style={{
-                background: 'linear-gradient(to bottom, #6b4d1a 0%, #a07628 25%, #c9a14d 50%, #a07628 75%, #6b4d1a 100%)',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.7)'
-              }}
-            />
-            {/* Gold trim — bottom */}
-            <div 
-              className="absolute bottom-0 left-0 right-0 h-2 z-20 pointer-events-none"
-              style={{
-                background: 'linear-gradient(to top, #6b4d1a 0%, #a07628 25%, #c9a14d 50%, #a07628 75%, #6b4d1a 100%)',
-                boxShadow: '0 -2px 4px rgba(0, 0, 0, 0.7)'
-              }}
-            />
+            <div className="absolute top-0 left-0 right-0 h-2 z-20 pointer-events-none overflow-hidden">
+              <img src="/themes/trax-gold-trim.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" />
+              {/* Subtle dark gradient at outer edges for inset mounting depth */}
+              <div className="absolute inset-0" style={{
+                background: 'linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.3) 100%)'
+              }} />
+            </div>
+            {/* Gold trim — bottom (mirror) */}
+            <div className="absolute bottom-0 left-0 right-0 h-2 z-20 pointer-events-none overflow-hidden">
+              <img src="/themes/trax-gold-trim.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" />
+              <div className="absolute inset-0" style={{
+                background: 'linear-gradient(to top, rgba(0,0,0,0.35) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.3) 100%)'
+              }} />
+            </div>
             
             <div 
               ref={(el) => {
