@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { profiles, handleHistory } from '@/lib/db/schema'
+import { profiles, handleHistory, storefronts } from '@/lib/db/schema'
 import { eq, and, ne, sql } from 'drizzle-orm'
 import { auth } from '@clerk/nextjs/server'
 import { revalidatePath } from 'next/cache'
@@ -74,6 +74,12 @@ export async function changeHandleAction(newHandleRaw: string) {
       })
     }
     await tx.update(profiles).set({ handle: newHandle }).where(eq(profiles.userId, profile.userId))
+    await tx.update(storefronts)
+      .set({ handle: newHandle })
+      .where(and(
+        eq(storefronts.userId, profile.userId),
+        eq(storefronts.isDefaultForUser, true)
+      ))
   })
 
   if (oldHandle) {
