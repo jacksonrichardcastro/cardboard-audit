@@ -148,6 +148,23 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
             <img src="/themes/trax-wood-header-bg.jpg" alt="Wood Display Shelf" className="absolute inset-0 w-full h-full object-cover object-center" />
             <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] pointer-events-none z-0" />
             
+            {/* Gold trim — top */}
+            <div 
+              className="absolute top-0 left-0 right-0 h-[3px] z-20 pointer-events-none"
+              style={{
+                background: 'linear-gradient(to right, #8b6914 0%, #d4af37 50%, #8b6914 100%)',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.6)'
+              }}
+            />
+            {/* Gold trim — bottom */}
+            <div 
+              className="absolute bottom-0 left-0 right-0 h-[3px] z-20 pointer-events-none"
+              style={{
+                background: 'linear-gradient(to right, #8b6914 0%, #d4af37 50%, #8b6914 100%)',
+                boxShadow: '0 -1px 3px rgba(0, 0, 0, 0.6)'
+              }}
+            />
+            
             <div 
               ref={(el) => {
                 if (el) {
