@@ -237,8 +237,13 @@ export default async function SellerStorePage(props: Props) {
   const possessiveName = getPossessiveName(displayName, isOwner);
   const grailId = seller.grailCardId || (binderCards.length > 0 ? binderCards[0].id : null);
   
-  const theme = storefront.theme || 'trax-default';
-  const themeScope = storefront.themeScope || 'storefront-only';
+  const validThemes = ['trax-cosmos', 'trax-wood', 'trax-default'];
+  const rawTheme = storefront.theme || '';
+  const theme = validThemes.includes(rawTheme) ? rawTheme : 'trax-cosmos';
+  
+  const validScopes = ['profile-wide', 'storefront-only'];
+  const rawScope = storefront.themeScope || '';
+  const themeScope = validScopes.includes(rawScope) ? rawScope : 'profile-wide';
   
   let pendingCategoryCount = 0;
   if (displayAsOwner && storefrontLayout === "categories") {
@@ -430,10 +435,7 @@ export default async function SellerStorePage(props: Props) {
 
         {/* Tab Content Areas */}
         <div className={`relative min-h-[400px] ${(theme === 'trax-cosmos' || theme === 'trax-wood') && themeScope === 'storefront-only' ? 'overflow-hidden' : ''}`}>
-          {theme === "trax-cosmos" && themeScope === "storefront-only" && <div className="text-zinc-300 font-medium whitespace-pre-wrap leading-relaxed px-4 lg:px-0">
-                  {storefront.bio || "This seller hasn't written a bio yet."}
-                </div>
-          }
+
           {theme === "trax-wood" && themeScope === "storefront-only" && (
             <WoodBackground scope="storefront-only" />
           )}

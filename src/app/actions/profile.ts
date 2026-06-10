@@ -78,13 +78,16 @@ export async function updateSellerProfile(data: { bio?: string | null; locationC
 
   if (data.storefrontId) {
     const { storefronts } = await import("@/lib/db/schema");
-    await db.update(storefronts)
-      .set({
-        displayName: data.displayName || null,
-        bio: data.bio || null,
-        avatarUrl: data.profilePhotoUrl || null,
-      })
-      .where(and(eq(storefronts.id, data.storefrontId), eq(storefronts.userId, userId)));
+      const sfUpdateData: any = {};
+      if (data.displayName !== undefined) sfUpdateData.displayName = data.displayName || null;
+      if (data.bio !== undefined) sfUpdateData.bio = data.bio || null;
+      if (data.profilePhotoUrl !== undefined) sfUpdateData.avatarUrl = data.profilePhotoUrl || null;
+      
+      if (Object.keys(sfUpdateData).length > 0) {
+        await db.update(storefronts)
+          .set(sfUpdateData)
+          .where(and(eq(storefronts.id, data.storefrontId), eq(storefronts.userId, userId)));
+      }
   }
 
   const [seller] = await db.select({ handle: profiles.handle }).from(profiles).where(eq(profiles.userId, userId)).limit(1);
