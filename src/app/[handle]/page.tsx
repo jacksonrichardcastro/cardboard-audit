@@ -452,6 +452,7 @@ export default async function SellerStorePage(props: Props) {
                 isOwner={displayAsOwner} 
                 sellerName={displayName}
                 tab="binder"
+                theme={theme}
                 allBinderCards={binderCards}
               />
             ) : (
@@ -497,12 +498,14 @@ export default async function SellerStorePage(props: Props) {
                 isOwner={displayAsOwner}
                 sellerName={displayName}
                 tab="storefront"
+                theme={theme}
                 allBinderCards={binderCards}
               />
             ) : (
               <ActiveListingsGrid 
                 isOwner={displayAsOwner}
                 listings={activeListings as any} 
+                theme={theme}
               />
             )
           )}
@@ -515,6 +518,7 @@ export default async function SellerStorePage(props: Props) {
                 isOwner={displayAsOwner}
                 sellerName={displayName}
                 tab="storefront"
+                theme={theme}
                 allBinderCards={binderCards}
               />
             ) : (

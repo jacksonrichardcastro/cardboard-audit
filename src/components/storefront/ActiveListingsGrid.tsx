@@ -10,6 +10,7 @@ import { RunDiscountModal } from "./RunDiscountModal";
 
 export interface ActiveListingsGridProps {
   isOwner?: boolean;
+  theme?: string;
   listings: {
     id: number;
     title: string;
@@ -25,7 +26,7 @@ export interface ActiveListingsGridProps {
   }[];
 }
 
-export function ActiveListingsGrid({ isOwner, listings }: ActiveListingsGridProps) {
+export function ActiveListingsGrid({ isOwner, listings, theme }: ActiveListingsGridProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const { isSignedIn } = useAuth();
@@ -67,58 +68,75 @@ export function ActiveListingsGrid({ isOwner, listings }: ActiveListingsGridProp
                 loading="lazy"
               />
             </div>
-            <div className="p-2.5 text-center flex flex-col items-center">
-              <h3 className="text-[11px] md:text-sm font-medium line-clamp-1 text-zinc-300 mb-1.5 w-full">
-                {listing.title}
-              </h3>
-              <div className="flex flex-col gap-1 mb-2 w-full items-center">
-                {listing.discountType && listing.discountAmount ? (
-                  <div className="flex items-center justify-center gap-1.5 w-full">
-                    <span className="text-[10px] md:text-[11px] text-zinc-500 line-through shrink-0">
-                      ${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
-                    </span>
-                    <p className="text-sm md:text-[15px] font-bold text-[#7C3AED] shrink-0">
-                      ${((listing.discountType === 'percent' 
-                        ? listing.priceCents * (1 - (listing.discountAmount || 0) / 10000)
-                        : listing.discountType === 'dollar'
-                        ? Math.max(0, listing.priceCents - (listing.discountAmount || 0))
-                        : listing.priceCents) / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+            
+            <div className={`relative flex flex-col w-full h-full ${theme === 'trax-wood' ? 'overflow-hidden' : ''}`}>
+              {theme === 'trax-wood' && (
+                <>
+                  <img 
+                    src="/themes/trax-wood-header-bg.jpg" 
+                    alt="" 
+                    className="absolute inset-0 w-full h-full object-cover" 
+                  />
+                  <div className="absolute inset-0 shadow-[inset_0_4px_15px_rgba(0,0,0,0.5)] pointer-events-none" />
+                  <div className="absolute inset-0 bg-black/40 pointer-events-none" />
+                </>
+              )}
+              
+              <div className="relative z-10 flex flex-col w-full h-full">
+                <div className="p-2.5 text-center flex flex-col items-center">
+                  <h3 className="text-[11px] md:text-sm font-medium line-clamp-1 text-zinc-300 mb-1.5 w-full">
+                    {listing.title}
+                  </h3>
+                  <div className="flex flex-col gap-1 mb-2 w-full items-center">
+                    {listing.discountType && listing.discountAmount ? (
+                      <div className="flex items-center justify-center gap-1.5 w-full">
+                        <span className="text-[10px] md:text-[11px] text-zinc-500 line-through shrink-0">
+                          ${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                        </span>
+                        <p className="text-sm md:text-[15px] font-bold text-[#7C3AED] shrink-0">
+                          ${((listing.discountType === 'percent' 
+                            ? listing.priceCents * (1 - (listing.discountAmount || 0) / 10000)
+                            : listing.discountType === 'dollar'
+                            ? Math.max(0, listing.priceCents - (listing.discountAmount || 0))
+                            : listing.priceCents) / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                        </p>
+                        <div className="bg-[#7C3AED]/20 border border-[#7C3AED]/50 text-[#7C3AED] text-[8px] md:text-[9px] font-bold px-1 py-0.5 rounded-sm uppercase tracking-wider whitespace-nowrap shrink-0">
+                          {listing.discountType === 'percent' 
+                            ? `${listing.discountAmount / 100}%` 
+                            : `$${(listing.discountAmount / 100).toFixed(0)}`}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-sm md:text-[15px] font-bold text-white text-center w-full">
+                        ${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                    )}
+                    {((listing.quantity || 1) > 1) && (
+                      <span className="text-[9px] md:text-[10px] text-zinc-400 bg-zinc-800/50 px-1.5 py-0.5 rounded-full mt-0.5">
+                        {listing.quantity} available
+                      </span>
+                    )}
+                    <p className="text-[10px] md:text-[11px] text-zinc-500 truncate w-full text-center">
+                      {listing.grade ? `${listing.gradingCompany} ${listing.grade}` : listing.condition}
                     </p>
-                    <div className="bg-[#7C3AED]/20 border border-[#7C3AED]/50 text-[#7C3AED] text-[8px] md:text-[9px] font-bold px-1 py-0.5 rounded-sm uppercase tracking-wider whitespace-nowrap shrink-0">
-                      {listing.discountType === 'percent' 
-                        ? `${listing.discountAmount / 100}%` 
-                        : `$${(listing.discountAmount / 100).toFixed(0)}`}
-                    </div>
                   </div>
-                ) : (
-                  <p className="text-sm md:text-[15px] font-bold text-white text-center w-full">
-                    ${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </p>
+                </div>
+                
+                {/* STRICT V16 CONFIRMATION: BIN + Offer Flow (No "Bid Now") */}
+                {!isOwner && (
+                  <div className="grid grid-cols-2 gap-2 px-2.5 pb-2.5">
+                    <Button onClick={(e) => handleAction(e, listing.id)} className="h-7 w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-[9px] sm:text-[10px] md:text-xs font-semibold px-1 sm:px-2 rounded z-20 relative">
+                      <span className="sm:hidden">Buy</span>
+                      <span className="hidden sm:inline">Buy Now</span>
+                    </Button>
+                    <Button onClick={(e) => handleAction(e, listing.id)} variant="outline" className="h-7 w-full border-white/10 bg-white/5 hover:bg-white/10 text-white text-[9px] sm:text-[10px] md:text-xs font-semibold px-1 sm:px-2 rounded z-20 relative">
+                      <span className="sm:hidden">Offer</span>
+                      <span className="hidden sm:inline">Make Offer</span>
+                    </Button>
+                  </div>
                 )}
-                {((listing.quantity || 1) > 1) && (
-                  <span className="text-[9px] md:text-[10px] text-zinc-400 bg-zinc-800/50 px-1.5 py-0.5 rounded-full mt-0.5">
-                    {listing.quantity} available
-                  </span>
-                )}
-                <p className="text-[10px] md:text-[11px] text-zinc-500 truncate w-full text-center">
-                  {listing.grade ? `${listing.gradingCompany} ${listing.grade}` : listing.condition}
-                </p>
               </div>
             </div>
-            
-            {/* STRICT V16 CONFIRMATION: BIN + Offer Flow (No "Bid Now") */}
-            {!isOwner && (
-              <div className="grid grid-cols-2 gap-2 px-2.5 pb-2.5">
-                <Button onClick={(e) => handleAction(e, listing.id)} className="h-7 w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-[9px] sm:text-[10px] md:text-xs font-semibold px-1 sm:px-2 rounded z-20 relative">
-                  <span className="sm:hidden">Buy</span>
-                  <span className="hidden sm:inline">Buy Now</span>
-                </Button>
-                <Button onClick={(e) => handleAction(e, listing.id)} variant="outline" className="h-7 w-full border-white/10 bg-white/5 hover:bg-white/10 text-white text-[9px] sm:text-[10px] md:text-xs font-semibold px-1 sm:px-2 rounded z-20 relative">
-                  <span className="sm:hidden">Offer</span>
-                  <span className="hidden sm:inline">Make Offer</span>
-                </Button>
-              </div>
-            )}
           </Link>
         )
       })}
