@@ -144,7 +144,7 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
             <img src={bannerImageUrl} alt={`${name} Banner`} className="absolute inset-0 w-full h-full object-cover" />
           </div>
         ) : theme === 'trax-wood' ? (
-          <div className="relative h-40 md:h-52 w-full flex items-center overflow-hidden rounded-xl border border-white/10 shadow-2xl bg-black">
+          <div className="relative h-40 md:h-52 w-full flex items-center overflow-hidden rounded-none border border-white/10 shadow-2xl bg-black">
             {customizerNode}
             <img src="/themes/trax-wood-header-bg.jpg" alt="Wood Display Shelf" className="absolute inset-0 w-full h-full object-cover object-center" />
             <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] pointer-events-none z-0" />
