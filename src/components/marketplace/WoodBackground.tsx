@@ -19,6 +19,7 @@ export function WoodBackground({ scope = 'storefront-only' }: { scope?: 'storefr
           alt="Wood Background"
           fill
           className="object-cover opacity-100"
+          style={{ objectPosition: '30% 25%' }}
           priority={isProfile}
           quality={80}
         />

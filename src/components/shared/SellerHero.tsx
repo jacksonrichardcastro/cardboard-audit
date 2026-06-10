@@ -150,18 +150,18 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
             
             {/* Gold trim — top */}
             <div 
-              className="absolute top-0 left-0 right-0 h-[3px] z-20 pointer-events-none"
+              className="absolute top-0 left-0 right-0 h-2 z-20 pointer-events-none"
               style={{
-                background: 'linear-gradient(to right, #8b6914 0%, #d4af37 50%, #8b6914 100%)',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.6)'
+                background: 'linear-gradient(to bottom, #6b4d1a 0%, #a07628 25%, #c9a14d 50%, #a07628 75%, #6b4d1a 100%)',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.7)'
               }}
             />
             {/* Gold trim — bottom */}
             <div 
-              className="absolute bottom-0 left-0 right-0 h-[3px] z-20 pointer-events-none"
+              className="absolute bottom-0 left-0 right-0 h-2 z-20 pointer-events-none"
               style={{
-                background: 'linear-gradient(to right, #8b6914 0%, #d4af37 50%, #8b6914 100%)',
-                boxShadow: '0 -1px 3px rgba(0, 0, 0, 0.6)'
+                background: 'linear-gradient(to top, #6b4d1a 0%, #a07628 25%, #c9a14d 50%, #a07628 75%, #6b4d1a 100%)',
+                boxShadow: '0 -2px 4px rgba(0, 0, 0, 0.7)'
               }}
             />
             
