@@ -375,6 +375,7 @@ export default async function SellerStorePage(props: Props) {
           transparentBackground={themeScope === 'profile-wide'}
           hideCosmicGlow={theme === 'trax-wood'}
           theme={theme}
+          woodTrimStyle={storefront.woodTrimStyle}
           customizerNode={
             displayAsOwner ? (
               <HeaderCustomizer 
@@ -397,7 +398,7 @@ export default async function SellerStorePage(props: Props) {
         
         {isOwner && (
           <div id="storefront-controls-wrapper" className="flex justify-end pt-4 relative z-50">
-            <StorefrontControls layout={storefrontLayout as "grid" | "categories"} sellerId={seller.userId} sellerHandle={storefront.handle || ''} isPreview={isPreview} cards={binderCards} headerIds={headerIds as number[]} theme={theme} themeScope={themeScope} storefrontId={storefront.id} />
+            <StorefrontControls layout={storefrontLayout as "grid" | "categories"} sellerId={seller.userId} sellerHandle={storefront.handle || ''} isPreview={isPreview} cards={binderCards} headerIds={(storefront.headerCustomizationIds as number[]) || []} theme={theme} themeScope={themeScope} woodTrimStyle={storefront.woodTrimStyle} storefrontId={storefront.id} />
           </div>
         )}
 

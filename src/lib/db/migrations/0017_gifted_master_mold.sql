@@ -1,0 +1,1 @@
+ALTER TABLE "storefronts" ADD COLUMN "wood_trim_style" varchar(10) DEFAULT 'c3' NOT NULL;

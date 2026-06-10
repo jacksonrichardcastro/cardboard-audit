@@ -257,6 +257,7 @@ export const storefronts = pgTable("storefronts", {
   themeScope: varchar("theme_scope", { length: 50 }).default("profile-wide"),
   headerCustomizationIds: json("header_customization_ids").default([]),
   hiddenBadges: json("hidden_badges").$type<string[]>().default([]),
+  woodTrimStyle: varchar("wood_trim_style", { length: 10 }).$type<'c2' | 'c3'>().default("c3").notNull(),
   isDefaultForUser: boolean("is_default_for_user").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

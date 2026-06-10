@@ -284,3 +284,21 @@ export async function changeStorefrontHandleAction(storefrontId: string, newHand
     return { error: "Failed to change handle" };
   }
 }
+
+export async function updateWoodTrimStyle(storefrontId: string, trimStyle: 'c2' | 'c3') {
+  const { userId } = await auth();
+  if (!userId) throw new Error('Unauthorized');
+  
+  const storefront = await db.query.storefronts.findFirst({
+    where: and(eq(storefronts.id, storefrontId), eq(storefronts.userId, userId))
+  });
+
+  if (!storefront) throw new Error('Storefront not found or unauthorized');
+
+  await db.update(storefronts)
+    .set({ woodTrimStyle: trimStyle })
+    .where(eq(storefronts.id, storefrontId));
+
+  revalidatePath(`/${storefront.handle}`);
+  revalidatePath("/seller/dashboard");
+}

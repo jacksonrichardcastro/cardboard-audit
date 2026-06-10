@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { LayoutGrid, ListTree, Settings2, Loader2, Settings, Eye, Image as ImageIcon, Sparkles, Palette, Trees } from "lucide-react";
 import { updateStorefrontLayout } from "@/app/actions/categories";
 import { updateStorefrontTheme } from "@/app/actions/profile";
+import { updateWoodTrimStyle } from "@/app/actions/storefronts";
 import { toast } from "sonner";
 import { CategoryManager } from "./CategoryManager";
 import { useRouter } from "next/navigation";
@@ -33,10 +34,11 @@ interface StorefrontControlsClientProps {
   sellerHandle: string;
   theme: string;
   themeScope: string;
+  woodTrimStyle: string;
   storefrontId: string;
 }
 
-export function StorefrontControlsClient({ layout, categories, sports, years, brands, grades, isPreview, binderCards, headerIds, sellerHandle, theme, themeScope, storefrontId }: StorefrontControlsClientProps) {
+export function StorefrontControlsClient({ layout, categories, sports, years, brands, grades, isPreview, binderCards, headerIds, sellerHandle, theme, themeScope, woodTrimStyle, storefrontId }: StorefrontControlsClientProps) {
   const [isPending, startTransition] = useTransition();
   const [manageOpen, setManageOpen] = useState(false);
   const [showChrome, setShowChrome] = useState(true);
@@ -90,6 +92,14 @@ export function StorefrontControlsClient({ layout, categories, sports, years, br
     startTransition(() => {
       updateStorefrontTheme(theme, value)
         .then(() => toast.success("Theme scope updated"));
+    });
+  };
+
+  const handleTrimChange = (trimStyle: 'c2' | 'c3') => {
+    if (trimStyle === woodTrimStyle) return;
+    startTransition(() => {
+      updateWoodTrimStyle(storefrontId, trimStyle)
+        .then(() => toast.success("Trim style updated"));
     });
   };
 
@@ -176,6 +186,24 @@ export function StorefrontControlsClient({ layout, categories, sports, years, br
             </div>
           )}
           
+          {theme === "trax-wood" && (
+            <div className="px-2 py-1.5 mt-2 ml-4 border-l border-white/10">
+              <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-2">
+                Gold Trim Style
+              </div>
+              <div className="flex gap-2 pl-1">
+                <button onClick={() => handleTrimChange('c3')} className={`flex-1 flex flex-col items-center p-1.5 rounded border transition-colors ${woodTrimStyle === 'c3' ? 'border-[#d4af37] bg-[#d4af37]/10' : 'border-white/10 hover:border-white/20'}`}>
+                  <img src="/themes/trax-gold-trim.jpg" className="w-full h-3 object-cover rounded-sm mb-1" />
+                  <span className={`text-[10px] ${woodTrimStyle === 'c3' ? 'text-[#d4af37]' : 'text-zinc-400'}`}>Polished</span>
+                </button>
+                <button onClick={() => handleTrimChange('c2')} className={`flex-1 flex flex-col items-center p-1.5 rounded border transition-colors ${woodTrimStyle === 'c2' ? 'border-[#d4af37] bg-[#d4af37]/10' : 'border-white/10 hover:border-white/20'}`}>
+                  <img src="/themes/trax-gold-trim-c2.jpg" className="w-full h-3 object-cover rounded-sm mb-1" />
+                  <span className={`text-[10px] ${woodTrimStyle === 'c2' ? 'text-[#d4af37]' : 'text-zinc-400'}`}>Antique</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           <DropdownMenuSeparator className="bg-white/10" />
           
           {layout === "categories" && (

@@ -37,9 +37,10 @@ interface SellerHeroProps {
   transparentBackground?: boolean;
   hideCosmicGlow?: boolean;
   theme?: string | null;
+  woodTrimStyle?: string | null;
 }
 
-export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerImageUrl, isOwner, sellerId, heroCards = [], customizerNode, badges = [], isFoundingSeller = false, identityVerified = false, hiddenBadges = [], presenceStatus = "online", locationCity, locationState, transparentBackground = false, hideCosmicGlow = false, theme }: SellerHeroProps) {
+export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerImageUrl, isOwner, sellerId, heroCards = [], customizerNode, badges = [], isFoundingSeller = false, identityVerified = false, hiddenBadges = [], presenceStatus = "online", locationCity, locationState, transparentBackground = false, hideCosmicGlow = false, theme, woodTrimStyle }: SellerHeroProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -150,7 +151,7 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
             
             {/* Gold trim — top */}
             <div className="absolute top-0 left-0 right-0 h-2 z-20 pointer-events-none overflow-hidden">
-              <img src="/themes/trax-gold-trim.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" />
+              <img src={woodTrimStyle === 'c2' ? '/themes/trax-gold-trim-c2.jpg' : '/themes/trax-gold-trim.jpg'} alt="" className="absolute inset-0 w-full h-full object-cover" />
               {/* Subtle dark gradient at outer edges for inset mounting depth */}
               <div className="absolute inset-0" style={{
                 background: 'linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.3) 100%)'
@@ -158,7 +159,7 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
             </div>
             {/* Gold trim — bottom (mirror) */}
             <div className="absolute bottom-0 left-0 right-0 h-2 z-20 pointer-events-none overflow-hidden">
-              <img src="/themes/trax-gold-trim.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" />
+              <img src={woodTrimStyle === 'c2' ? '/themes/trax-gold-trim-c2.jpg' : '/themes/trax-gold-trim.jpg'} alt="" className="absolute inset-0 w-full h-full object-cover" />
               <div className="absolute inset-0" style={{
                 background: 'linear-gradient(to top, rgba(0,0,0,0.35) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.3) 100%)'
               }} />
