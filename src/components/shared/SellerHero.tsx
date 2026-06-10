@@ -145,8 +145,8 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
         ) : theme === 'trax-wood' ? (
           <div className="relative h-40 md:h-52 w-full flex items-center overflow-hidden rounded-xl border border-white/10 shadow-2xl bg-black">
             {customizerNode}
-            <img src="/themes/trax-wood-header-bg.jpg" alt="Wood Display Shelf" className="absolute inset-0 w-full h-full object-cover opacity-90" />
-            <div className="absolute inset-0 shadow-[inset_0_0_40px_rgba(0,0,0,0.8)] pointer-events-none z-0" />
+            <img src="/themes/trax-wood-header-bg.jpg" alt="Wood Display Shelf" className="absolute inset-0 w-full h-full object-cover object-center" />
+            <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] pointer-events-none z-0" />
             
             <div 
               ref={(el) => {
@@ -164,11 +164,15 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
                 const listingId = card.activeListingId ?? card.draftListingId;
                 
                 const cardContent = (
-                  <div 
-                    key={customizerNode ? `${card.id}-${i}` : undefined} 
-                    className="relative flex-shrink-0 w-20 md:w-28 aspect-[5/7] rounded-lg border border-white/10 overflow-hidden shadow-xl transform transition-transform duration-500 hover:-translate-y-4 hover:scale-105 hover:z-10 cursor-pointer"
-                  >
-                    <img src={card.url} alt={card.title || "Hero Card"} className="absolute inset-0 w-full h-full object-cover" />
+                  <div key={customizerNode ? `${card.id}-${i}` : undefined} className="relative flex-shrink-0">
+                    {/* Very subtle vertical slot dividers — left only, to suggest compartments */}
+                    <div className="absolute inset-y-2 -left-px w-px bg-black/30 pointer-events-none" />
+                    {/* Subtle top inset shadow per slot */}
+                    <div className="absolute inset-x-0 top-0 h-2 bg-gradient-to-b from-black/40 to-transparent pointer-events-none z-10" />
+                    {/* The card itself — preserve all existing classes */}
+                    <div className="relative w-20 md:w-28 aspect-[5/7] rounded-lg border border-white/10 overflow-hidden shadow-xl transform transition-transform duration-500 hover:-translate-y-4 hover:scale-105 hover:z-10 cursor-pointer">
+                      <img src={card.url} alt={card.title || "Hero Card"} className="absolute inset-0 w-full h-full object-cover" />
+                    </div>
                   </div>
                 );
 
