@@ -133,33 +133,13 @@ export function CategoryRows({ categories, cards, isOwner, sellerName, tab, them
                               <img src={photoUrl} alt={listing.title} className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                             </div>
                             
-                            <div className={`relative flex flex-col w-full h-full ${theme === 'trax-wood' ? 'overflow-hidden' : ''}`}>
-                              {theme === 'trax-wood' && (
-                                <>
-                                  <img 
-                                    src="/themes/trax-wood-header-bg.jpg" 
-                                    alt="" 
-                                    className="absolute inset-0 w-full h-full object-cover" 
-                                  />
-                                  <div className="absolute inset-0 shadow-[inset_0_4px_15px_rgba(0,0,0,0.5)] pointer-events-none" />
-                                  <div className="absolute inset-0 bg-black/40 pointer-events-none" />
-                                </>
-                              )}
-                              
+                            <div className="relative flex flex-col w-full h-full">
                               <div className="relative z-10 flex flex-col w-full h-full">
-                                <div className={`text-center flex flex-col items-center px-2.5 ${
-                                  theme === 'trax-wood' 
-                                    ? 'pt-1.5 pb-1 justify-between min-h-[90px]' 
-                                    : 'py-2.5'
-                                }`}>
-                                  <h3 className={`text-[11px] md:text-sm line-clamp-1 w-full ${
-                                    theme === 'trax-wood' 
-                                      ? 'font-serif italic text-[#e6c570] mb-0' 
-                                      : 'font-medium text-zinc-300 mb-1.5'
-                                  }`}>{listing.title}</h3>
-                                  <div className={`flex flex-col w-full items-center ${
-                                    theme === 'trax-wood' ? 'gap-0.5' : 'gap-1 mb-2'
-                                  }`}>
+                                <div className="text-center flex flex-col items-center p-2.5">
+                                  <h3 className="text-[11px] md:text-sm font-medium line-clamp-1 text-zinc-300 mb-1.5 w-full">
+                                    {listing.title}
+                                  </h3>
+                                  <div className="flex flex-col gap-1 mb-2 w-full items-center">
                                     {listing.discountType && listing.discountAmount ? (
                                       <div className="flex items-center justify-center gap-1.5 w-full">
                                         <span className="text-[10px] md:text-[11px] text-zinc-500 line-through shrink-0">${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
@@ -168,13 +148,13 @@ export function CategoryRows({ categories, cards, isOwner, sellerName, tab, them
                                         </p>
                                       </div>
                                     ) : (
-                                      <p className={`text-sm md:text-[15px] font-bold text-center w-full ${
-                                        theme === 'trax-wood' ? 'text-[#daa520]' : 'text-white'
-                                      }`}>${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                                      <p className="text-sm md:text-[15px] font-bold text-white text-center w-full">
+                                        ${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                      </p>
                                     )}
-                                    <p className={`text-[10px] md:text-[11px] truncate w-full text-center ${
-                                      theme === 'trax-wood' ? 'text-[#a08055]' : 'text-zinc-500'
-                                    }`}>{listing.grade ? `${listing.gradingCompany} ${listing.grade}` : listing.condition}</p>
+                                    <p className="text-[10px] md:text-[11px] text-zinc-500 truncate w-full text-center">
+                                      {listing.grade ? `${listing.gradingCompany} ${listing.grade}` : listing.condition}
+                                    </p>
                                   </div>
                                 </div>
                                 
