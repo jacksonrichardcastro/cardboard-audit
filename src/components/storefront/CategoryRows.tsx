@@ -152,8 +152,10 @@ export function CategoryRows({ categories, cards, isOwner, sellerName, tab, them
                                     ? 'pt-1.5 pb-1 justify-between min-h-[90px]' 
                                     : 'py-2.5'
                                 }`}>
-                                  <h3 className={`text-[11px] md:text-sm font-medium line-clamp-1 text-zinc-300 w-full ${
-                                    theme === 'trax-wood' ? '' : 'mb-1.5'
+                                  <h3 className={`text-[11px] md:text-sm line-clamp-1 w-full ${
+                                    theme === 'trax-wood' 
+                                      ? 'font-serif italic text-[#e6c570] mb-0' 
+                                      : 'font-medium text-zinc-300 mb-1.5'
                                   }`}>{listing.title}</h3>
                                   <div className={`flex flex-col w-full items-center ${
                                     theme === 'trax-wood' ? 'gap-0.5' : 'gap-1 mb-2'
@@ -166,11 +168,13 @@ export function CategoryRows({ categories, cards, isOwner, sellerName, tab, them
                                         </p>
                                       </div>
                                     ) : (
-                                      <p className="text-sm md:text-[15px] font-bold text-white text-center w-full">${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                                      <p className={`text-sm md:text-[15px] font-bold text-center w-full ${
+                                        theme === 'trax-wood' ? 'text-[#daa520]' : 'text-white'
+                                      }`}>${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                                     )}
-                                    <p className="text-[10px] md:text-[11px] text-zinc-500 truncate w-full text-center">
-                                      {listing.grade ? `${listing.gradingCompany} ${listing.grade}` : listing.condition}
-                                    </p>
+                                    <p className={`text-[10px] md:text-[11px] truncate w-full text-center ${
+                                      theme === 'trax-wood' ? 'text-[#a08055]' : 'text-zinc-500'
+                                    }`}>{listing.grade ? `${listing.gradingCompany} ${listing.grade}` : listing.condition}</p>
                                   </div>
                                 </div>
                                 

@@ -283,7 +283,9 @@ export function SellerHero({ name, handle, bio, avatarUrl, headerStyle, bannerIm
         <div className="flex flex-col items-center gap-2 w-full max-w-full mb-2">
           {/* Centered Name */}
           <div className="flex justify-center items-center min-w-0 w-full">
-            <h1 className="text-xl md:text-2xl font-light font-[family-name:var(--font-display)] text-white tracking-[0.2em] uppercase text-center truncate px-2">
+            <h1 className={`text-xl md:text-2xl font-light font-[family-name:var(--font-display)] text-white tracking-[0.2em] uppercase text-center truncate px-2 ${
+              theme === 'trax-wood' ? 'text-[#d4af37]' : ''
+            }`}>
               {name}
             </h1>
           </div>
