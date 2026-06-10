@@ -83,11 +83,19 @@ export function ActiveListingsGrid({ isOwner, listings, theme }: ActiveListingsG
               )}
               
               <div className="relative z-10 flex flex-col w-full h-full">
-                <div className="p-2.5 text-center flex flex-col items-center">
-                  <h3 className="text-[11px] md:text-sm font-medium line-clamp-1 text-zinc-300 mb-1.5 w-full">
+                <div className={`text-center flex flex-col items-center px-2.5 ${
+                  theme === 'trax-wood' 
+                    ? 'pt-1.5 pb-1 justify-between min-h-[90px]' 
+                    : 'py-2.5'
+                }`}>
+                  <h3 className={`text-[11px] md:text-sm font-medium line-clamp-1 text-zinc-300 w-full ${
+                    theme === 'trax-wood' ? '' : 'mb-1.5'
+                  }`}>
                     {listing.title}
                   </h3>
-                  <div className="flex flex-col gap-1 mb-2 w-full items-center">
+                  <div className={`flex flex-col w-full items-center ${
+                    theme === 'trax-wood' ? 'gap-0.5' : 'gap-1 mb-2'
+                  }`}>
                     {listing.discountType && listing.discountAmount ? (
                       <div className="flex items-center justify-center gap-1.5 w-full">
                         <span className="text-[10px] md:text-[11px] text-zinc-500 line-through shrink-0">
