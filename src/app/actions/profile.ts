@@ -68,6 +68,9 @@ export async function updateSellerProfile(data: { bio?: string | null; locationC
   await db
     .update(profiles)
     .set({
+      bio: data.bio !== undefined ? data.bio : undefined,
+      displayName: data.displayName !== undefined ? data.displayName : undefined,
+      profilePhotoUrl: data.profilePhotoUrl !== undefined ? data.profilePhotoUrl : undefined,
       locationCity: data.locationCity || undefined,
       locationState: data.locationState || undefined,
       headerStyle: data.headerStyle || undefined,

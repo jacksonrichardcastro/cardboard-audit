@@ -130,7 +130,9 @@ export async function publishDraft(draftId: number, isDemo: boolean = false) {
   }
 
   // 4. Database Transaction
-  const listingId = await db.transaction(async (tx) => {
+  let listingId;
+  try {
+    listingId = await db.transaction(async (tx) => {
     // a. Insert Card
     const [newCard] = await tx.insert(cards).values({
       ownerId: userId,
@@ -208,6 +210,12 @@ export async function publishDraft(draftId: number, isDemo: boolean = false) {
 
     return returnId;
   });
+  } catch (error: any) {
+    if (error.code === '23505' && error.constraint_name === 'title_seller_unique') {
+      throw new Error("A listing with this title already exists. Edit the title or check your existing listings.");
+    }
+    throw error;
+  }
 
   // Revalidate cache paths
   revalidatePath("/");

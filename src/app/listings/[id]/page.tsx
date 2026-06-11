@@ -60,6 +60,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
     set: dbItem.set,
     year: dbItem.year,
     cardNumber: dbItem.cardNumber,
+    quantity: dbItem.quantity,
     shipsFrom: dbItem.shipsFrom,
     shippingEstimate: dbItem.shippingEstimate,
     sellerCreatedAt: dbItem.sellerCreatedAt,
@@ -153,6 +154,11 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                   </Badge>
                 )}
                 {item.cardNumber && <Badge variant="secondary" className="border-border/50 px-2 py-1 text-sm bg-transparent">#{item.cardNumber}</Badge>}
+                {(item.quantity || 1) > 1 && (
+                  <Badge variant="outline" className="border-indigo-500/30 text-indigo-400 bg-indigo-500/10 px-2 py-1 text-sm rounded-md font-medium">
+                    {item.quantity} Available
+                  </Badge>
+                )}
               </div>
               
               <div>
@@ -170,7 +176,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                     >
                       Edit Listing
                     </Link>
-                    ${isInHeader && dbItem.cardId ? <RemoveFromHeaderButton cardId={dbItem.cardId} /> : null}
+                    {isInHeader && dbItem.cardId ? <RemoveFromHeaderButton cardId={dbItem.cardId} /> : null}
                     <RemoveListingModal 
                       listingId={item.id}
                       onSuccessRedirectUrl={dbItem.sellerHandle ? `/${dbItem.sellerHandle}` : "/seller/dashboard?tab=listings"}
@@ -236,7 +242,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                     photoUrl={item.photos[0]} 
                     shipsFrom={item.shipsFrom || "Los Angeles, CA"}
                     shippingEstimate={item.shippingEstimate || "3-5 business days via USPS Priority"}
-                    quantity={1} // Phase A: hardcoded default
+                    quantity={item.quantity || 1}
                   />
                 </div>
                 <div className="flex-1">

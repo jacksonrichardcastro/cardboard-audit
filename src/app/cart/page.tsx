@@ -39,8 +39,8 @@ export default function CartPage() {
   const handleCheckout = async () => {
     setCheckoutLoading(true);
     try {
-      const listingIds = items.map(i => i.id);
-      const res = await createCheckoutSessionAction(listingIds);
+      const itemsForCheckout = items.map(i => ({ id: i.id, quantity: 1 }));
+      const res = await createCheckoutSessionAction(itemsForCheckout);
       
       if (res.error) {
         alert(res.error);

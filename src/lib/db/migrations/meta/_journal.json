@@ -120,6 +120,13 @@
       "when": 1780939599423,
       "tag": "0016_lazy_meteorite",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1781120536305,
+      "tag": "0017_gifted_master_mold",
+      "breakpoints": true
     }
   ]
 }

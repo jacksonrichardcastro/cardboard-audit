@@ -1,0 +1,3122 @@
+commit 7614d5978530203bc0c9c5688e4c74b8f4f38d0f
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Mon Jun 8 19:18:39 2026 -0500
+
+    Revert "Fix binder bleed, force-dynamic storefronts, fix storefront switcher navigation"
+    
+    This reverts commit 7c29abbb2cb91bbc111d26fb5009e6b1a68bfa8b.
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index 2152f766..8cd8e37e 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -4,7 +4,6 @@ import { db } from "@/lib/db";
+ import { QuickUploadModal } from "@/components/sell/QuickUploadModal";
+ import { profiles, listings, users, cards, itemPhotos, categories, handleHistory, storefronts } from "@/lib/db/schema";
+ import { eq, desc, and, inArray, sql } from "drizzle-orm";
+-export const dynamic = 'force-dynamic';
+ import { Metadata } from "next";
+ import Link from "next/link";
+ import { SellerHero } from "@/components/shared/SellerHero";
+@@ -211,9 +210,7 @@ export default async function SellerStorePage(props: Props) {
+     .from(cards)
+     .leftJoin(listings, eq(cards.id, listings.cardId))
+     .where(
+-      storefront.isDefaultForUser
+-        ? sql`${cards.ownerId} = ${seller.userId} OR (${listings.storefrontId} = ${storefront.id} AND ${listings.deletedAt} IS NULL)`
+-        : sql`${listings.storefrontId} = ${storefront.id} AND ${listings.deletedAt} IS NULL`
++      sql`${cards.ownerId} = ${seller.userId} OR (${listings.storefrontId} = ${storefront.id} AND ${listings.deletedAt} IS NULL)`
+     )
+     .orderBy(desc(cards.createdAt));
+ 
+
+commit 7c29abbb2cb91bbc111d26fb5009e6b1a68bfa8b
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Mon Jun 8 17:22:12 2026 -0500
+
+    Fix binder bleed, force-dynamic storefronts, fix storefront switcher navigation
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index 8cd8e37e..2152f766 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
+ import { QuickUploadModal } from "@/components/sell/QuickUploadModal";
+ import { profiles, listings, users, cards, itemPhotos, categories, handleHistory, storefronts } from "@/lib/db/schema";
+ import { eq, desc, and, inArray, sql } from "drizzle-orm";
++export const dynamic = 'force-dynamic';
+ import { Metadata } from "next";
+ import Link from "next/link";
+ import { SellerHero } from "@/components/shared/SellerHero";
+@@ -210,7 +211,9 @@ export default async function SellerStorePage(props: Props) {
+     .from(cards)
+     .leftJoin(listings, eq(cards.id, listings.cardId))
+     .where(
+-      sql`${cards.ownerId} = ${seller.userId} OR (${listings.storefrontId} = ${storefront.id} AND ${listings.deletedAt} IS NULL)`
++      storefront.isDefaultForUser
++        ? sql`${cards.ownerId} = ${seller.userId} OR (${listings.storefrontId} = ${storefront.id} AND ${listings.deletedAt} IS NULL)`
++        : sql`${listings.storefrontId} = ${storefront.id} AND ${listings.deletedAt} IS NULL`
+     )
+     .orderBy(desc(cards.createdAt));
+ 
+
+commit 55036cb9d62e4a7da87e1187db6ee456db988499
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Mon Jun 8 16:30:12 2026 -0500
+
+    Fix storefront display name and bio identity fields on public pages
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index 342ee891..8cd8e37e 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -52,8 +52,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
+     return {};
+   }
+   const storefront = profileRecord.storefront;
+-  const displayName = storefront.displayName;
+-  const description = storefront.bio ? storefront.bio : `${displayName}'s card collection on Trax.`;
++  const displayName = (storefront.displayName ?? storefront.handle).trim();
++  const description = storefront.bio ?? `${storefront.handle}'s storefront on Trax. By the hobby. For the hobby.`;
+ 
+   return {
+     title: `${displayName} (@${storefront.handle}) — Trax`,
+@@ -226,8 +226,11 @@ export default async function SellerStorePage(props: Props) {
+   const isOwner = seller.userId === userId;
+   const isPreview = searchParams.preview === "true";
+   const displayAsOwner = isOwner && !isPreview;
+-  const sellerName = storefront.displayName || "Seller";
+-  const possessiveName = getPossessiveName(sellerName, isOwner);
++  const displayName = (storefront.displayName ?? storefront.handle).trim();
++  const bio = storefront.bio ?? `${storefront.handle}'s storefront on Trax. By the hobby. For the hobby.`;
++  const avatarUrl = storefront.avatarUrl;
++
++  const possessiveName = getPossessiveName(displayName, isOwner);
+   const grailId = seller.grailCardId || (binderCards.length > 0 ? binderCards[0].id : null);
+   
+   const theme = storefront.theme || 'trax-default';
+@@ -341,10 +344,10 @@ export default async function SellerStorePage(props: Props) {
+       )}
+       <div className="relative z-10">
+         <SellerHero 
+-          name={sellerName}
++          name={displayName}
+           handle={storefront.handle || ''}
+-          bio={storefront.bio}
+-          avatarUrl={storefront.avatarUrl}
++          bio={bio}
++          avatarUrl={avatarUrl}
+           headerStyle={seller.headerStyle}
+           bannerImageUrl={seller.bannerImageUrl}
+           isOwner={displayAsOwner}
+@@ -433,14 +436,14 @@ export default async function SellerStorePage(props: Props) {
+                 categories={userCategories} 
+                 cards={binderCards} 
+                 isOwner={displayAsOwner} 
+-                sellerName={sellerName}
++                sellerName={displayName}
+                 tab="binder"
+                 allBinderCards={binderCards}
+               />
+             ) : (
+               <BinderGrid 
+                 isOwner={displayAsOwner}
+-                sellerName={sellerName}
++                sellerName={displayName}
+                 cards={binderCards} 
+                 activeListings={activeListings as any}
+                 grailCardId={grailId}
+@@ -451,7 +454,7 @@ export default async function SellerStorePage(props: Props) {
+           {currentTab === "binder" && seller.binderPrivate && !displayAsOwner && (
+             <div className="text-center py-24 bg-zinc-950/50 rounded-xl border border-white/5">
+               <Lock className="w-8 h-8 text-zinc-500 mx-auto mb-4" />
+-              <p className="text-lg text-zinc-400">{sellerName}'s binder is private.</p>
++              <p className="text-lg text-zinc-400">{displayName}'s binder is private.</p>
+             </div>
+           )}
+ 
+@@ -465,7 +468,7 @@ export default async function SellerStorePage(props: Props) {
+           {currentTab === "binder" && seller.binderPrivate && displayAsOwner && (
+             <BinderGrid 
+               isOwner={displayAsOwner}
+-              sellerName={sellerName}
++              sellerName={displayName}
+               cards={binderCards} 
+               activeListings={activeListings}
+               grailCardId={grailId}
+@@ -478,7 +481,7 @@ export default async function SellerStorePage(props: Props) {
+                 categories={userCategories} 
+                 cards={activeListings as any[]} 
+                 isOwner={displayAsOwner}
+-                sellerName={sellerName}
++                sellerName={displayName}
+                 tab="storefront"
+                 allBinderCards={binderCards}
+               />
+@@ -496,7 +499,7 @@ export default async function SellerStorePage(props: Props) {
+                 categories={userCategories} 
+                 cards={[]} 
+                 isOwner={displayAsOwner}
+-                sellerName={sellerName}
++                sellerName={displayName}
+                 tab="storefront"
+                 allBinderCards={binderCards}
+               />
+
+commit 8754d140fec98ec28107e4686fbf2046f16cca3e
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Mon Jun 8 15:47:38 2026 -0500
+
+    Fix DIRECTIVE 25 PHASE C BUG #3: Multi-storefront context propagation
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index e35e64a1..342ee891 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -160,7 +160,6 @@ export default async function SellerStorePage(props: Props) {
+     else if (searchParams.price === '5000-plus') activeConditions.push(gte(listings.priceCents, 500000));
+   }
+ 
+-  // Fetch active listings for Storefront / Active Listings tab
+   const activeListings = await db.select({
+       id: listings.id,
+       cardId: listings.cardId,
+@@ -175,7 +174,7 @@ export default async function SellerStorePage(props: Props) {
+       photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE item_photos.card_id = listings.card_id), '[]'::json)`,
+     })
+     .from(listings)
+-    .where(and(...activeConditions))
++    .where(and(eq(listings.storefrontId, storefront.id), eq(listings.status, "active"), sql`${listings.deletedAt} IS NULL`, ...activeConditions))
+     .orderBy(desc(listings.createdAt));
+ 
+   // Fetch unfiltered active listings for the header strip fallback
+@@ -217,7 +216,6 @@ export default async function SellerStorePage(props: Props) {
+ 
+   // Deduplicate in case a card has multiple listings
+   const binderCards = Array.from(new Map(rawBinderCards.map(c => [c.id, c])).values());
+-
+   const userCategories = await db.query.categories.findMany({
+     where: eq(categories.storefrontId, storefront.id),
+     orderBy: (c) => [c.displayOrder],
+@@ -225,7 +223,6 @@ export default async function SellerStorePage(props: Props) {
+       memberships: true
+     }
+   });
+-
+   const isOwner = seller.userId === userId;
+   const isPreview = searchParams.preview === "true";
+   const displayAsOwner = isOwner && !isPreview;
+@@ -233,8 +230,8 @@ export default async function SellerStorePage(props: Props) {
+   const possessiveName = getPossessiveName(sellerName, isOwner);
+   const grailId = seller.grailCardId || (binderCards.length > 0 ? binderCards[0].id : null);
+   
+-  const theme = seller.storefrontTheme || 'trax-default';
+-  const themeScope = seller.storefrontThemeScope || 'storefront-only';
++  const theme = storefront.theme || 'trax-default';
++  const themeScope = storefront.themeScope || 'storefront-only';
+   
+   let pendingCategoryCount = 0;
+   if (displayAsOwner && storefrontLayout === "categories") {
+@@ -355,7 +352,7 @@ export default async function SellerStorePage(props: Props) {
+           badges={(seller.badges as string[]) || []}
+           isFoundingSeller={profileRecord.isFoundingSeller}
+           identityVerified={seller.identityVerified}
+-          hiddenBadges={(seller.hiddenBadges as string[]) || []}
++          hiddenBadges={(storefront.hiddenBadges as string[]) || []}
+           presenceStatus={seller.presenceStatus}
+           locationCity={seller.locationCity}
+           locationState={seller.locationState}
+
+commit 7771dff34a431a50685f1cf5660a17824fe63f36
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Mon Jun 8 14:04:15 2026 -0500
+
+    feat: complete Phase C storefront switcher UI integration
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index f926a2bc..e35e64a1 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -348,8 +348,8 @@ export default async function SellerStorePage(props: Props) {
+           handle={storefront.handle || ''}
+           bio={storefront.bio}
+           avatarUrl={storefront.avatarUrl}
+-          headerStyle={storefront.headerStyle}
+-          bannerImageUrl={storefront.bannerImageUrl}
++          headerStyle={seller.headerStyle}
++          bannerImageUrl={seller.bannerImageUrl}
+           isOwner={displayAsOwner}
+           sellerId={seller.userId}
+           badges={(seller.badges as string[]) || []}
+@@ -366,8 +366,8 @@ export default async function SellerStorePage(props: Props) {
+               <HeaderCustomizer 
+                 cards={binderCards} 
+                 selectedIds={headerIds}
+-                headerStyle={storefront.headerStyle || 'cards'}
+-                bannerImageUrl={storefront.bannerImageUrl}
++                headerStyle={seller.headerStyle || 'cards'}
++                bannerImageUrl={seller.bannerImageUrl}
+                 storefrontId={storefront.id}
+                 triggerNode={
+                   <button className="absolute top-2 right-2 z-50 flex items-center justify-center w-11 h-11 bg-black/60 text-zinc-300 hover:text-white rounded-full hover:bg-black/80 transition-all backdrop-blur-sm shadow-md border border-white/10" title="Customize Header">
+
+commit b12cb04ee6aadc9aa635f7ec76a77a9b5e796a72
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Mon Jun 8 13:33:18 2026 -0500
+
+    Phase C UI integration
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index e54b6a43..f926a2bc 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -36,31 +36,32 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
+   }
+ 
+   const [profileRecord] = await db.select({
++    storefront: storefronts,
+     profile: profiles,
+     accountType: users.accountType,
+     storefrontLayout: users.storefrontLayout,
+     isFoundingSeller: users.isFoundingSeller
+   })
+-  .from(profiles)
+-  .innerJoin(users, eq(profiles.userId, users.id))
+-  .where(sql`lower(${profiles.handle}) = ${handleLower}`)
++  .from(storefronts)
++  .innerJoin(users, eq(storefronts.userId, users.id))
++  .innerJoin(profiles, eq(storefronts.userId, profiles.userId))
++  .where(sql`lower(${storefronts.handle}) = ${handleLower}`)
+   .limit(1);
+   
+   if (!profileRecord || profileRecord.profile.approvalStatus === "rejected") {
+     return {};
+   }
+-  const seller = profileRecord.profile;
+-
+-  const displayName = seller.displayName || seller.businessName;
+-  const description = seller.bio ? seller.bio : `${displayName}'s card collection on Trax.`;
++  const storefront = profileRecord.storefront;
++  const displayName = storefront.displayName;
++  const description = storefront.bio ? storefront.bio : `${displayName}'s card collection on Trax.`;
+ 
+   return {
+-    title: `${displayName} (@${seller.handle}) — Trax`,
++    title: `${displayName} (@${storefront.handle}) — Trax`,
+     description,
+     openGraph: {
+       title: `${displayName} on Trax`,
+       description,
+-      url: `https://trax.cards/${seller.handle}`,
++      url: `https://trax.cards/${storefront.handle}`,
+       siteName: 'Trax',
+       type: 'profile',
+     },
+@@ -79,14 +80,16 @@ export default async function SellerStorePage(props: Props) {
+   const handleLower = params.handle.toLowerCase();
+   
+   const [profileRecord] = await db.select({
++    storefront: storefronts,
+     profile: profiles,
+     accountType: users.accountType,
+     storefrontLayout: users.storefrontLayout,
+     isFoundingSeller: users.isFoundingSeller
+   })
+-  .from(profiles)
+-  .innerJoin(users, eq(profiles.userId, users.id))
+-  .where(sql`lower(${profiles.handle}) = ${handleLower}`)
++  .from(storefronts)
++  .innerJoin(users, eq(storefronts.userId, users.id))
++  .innerJoin(profiles, eq(storefronts.userId, profiles.userId))
++  .where(sql`lower(${storefronts.handle}) = ${handleLower}`)
+   .limit(1);
+ 
+   if (!profileRecord || profileRecord.profile.approvalStatus === "rejected") {
+@@ -108,6 +111,7 @@ export default async function SellerStorePage(props: Props) {
+     notFound();
+   }
+   const seller = profileRecord.profile;
++  const storefront = profileRecord.storefront;
+   const isSellerLayout = profileRecord.accountType === "seller" && seller.kycStatus === "verified";
+   const storefrontLayout = profileRecord.storefrontLayout;
+   
+@@ -116,7 +120,7 @@ export default async function SellerStorePage(props: Props) {
+   const currentTab = searchParams.tab || (isSellerLayout ? "active-listings" : "collection");
+ 
+   const activeConditions = [
+-    eq(listings.sellerId, seller.userId),
++    eq(listings.storefrontId, storefront.id),
+     inArray(listings.status, ["active", "pending_marketplace_activation"])
+   ];
+ 
+@@ -189,7 +193,7 @@ export default async function SellerStorePage(props: Props) {
+       photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE item_photos.card_id = listings.card_id), '[]'::json)`,
+     })
+     .from(listings)
+-    .where(and(eq(listings.sellerId, seller.userId), inArray(listings.status, ["active", "pending_marketplace_activation"])))
++    .where(and(eq(listings.storefrontId, storefront.id), inArray(listings.status, ["active", "pending_marketplace_activation"])))
+     .orderBy(desc(listings.createdAt));
+ 
+   // Fetch binder cards (all cards owned by the user, or linked to their listings)
+@@ -207,7 +211,7 @@ export default async function SellerStorePage(props: Props) {
+     .from(cards)
+     .leftJoin(listings, eq(cards.id, listings.cardId))
+     .where(
+-      sql`${cards.ownerId} = ${seller.userId} OR (${listings.sellerId} = ${seller.userId} AND ${listings.deletedAt} IS NULL)`
++      sql`${cards.ownerId} = ${seller.userId} OR (${listings.storefrontId} = ${storefront.id} AND ${listings.deletedAt} IS NULL)`
+     )
+     .orderBy(desc(cards.createdAt));
+ 
+@@ -215,7 +219,7 @@ export default async function SellerStorePage(props: Props) {
+   const binderCards = Array.from(new Map(rawBinderCards.map(c => [c.id, c])).values());
+ 
+   const userCategories = await db.query.categories.findMany({
+-    where: eq(categories.userId, seller.userId),
++    where: eq(categories.storefrontId, storefront.id),
+     orderBy: (c) => [c.displayOrder],
+     with: {
+       memberships: true
+@@ -225,7 +229,7 @@ export default async function SellerStorePage(props: Props) {
+   const isOwner = seller.userId === userId;
+   const isPreview = searchParams.preview === "true";
+   const displayAsOwner = isOwner && !isPreview;
+-  const sellerName = seller.displayName || seller.businessName || "Seller";
++  const sellerName = storefront.displayName || "Seller";
+   const possessiveName = getPossessiveName(sellerName, isOwner);
+   const grailId = seller.grailCardId || (binderCards.length > 0 ? binderCards[0].id : null);
+   
+@@ -270,8 +274,8 @@ export default async function SellerStorePage(props: Props) {
+   const currentTabInfo = tabs.find(t => t.id === currentTab) || tabs[0];
+ 
+   // Derive hero shelf cards
+-  // User selected IDs in profile.headerCustomizationIds (if array)
+-  const headerIds = Array.isArray(seller.headerCustomizationIds) ? seller.headerCustomizationIds : [];
++  // User selected IDs in storefront.headerCustomizationIds (if array)
++  const headerIds = Array.isArray(storefront.headerCustomizationIds) ? storefront.headerCustomizationIds : [];
+   
+   // If owner customized, pick those from binder. Else fallback to top 8 active listings, else top 8 binder cards.
+   let heroCardsData = [];
+@@ -341,11 +345,11 @@ export default async function SellerStorePage(props: Props) {
+       <div className="relative z-10">
+         <SellerHero 
+           name={sellerName}
+-          handle={seller.handle || ''}
+-          bio={seller.bio}
+-          avatarUrl={seller.profilePhotoUrl}
+-          headerStyle={seller.headerStyle}
+-          bannerImageUrl={seller.bannerImageUrl}
++          handle={storefront.handle || ''}
++          bio={storefront.bio}
++          avatarUrl={storefront.avatarUrl}
++          headerStyle={storefront.headerStyle}
++          bannerImageUrl={storefront.bannerImageUrl}
+           isOwner={displayAsOwner}
+           sellerId={seller.userId}
+           badges={(seller.badges as string[]) || []}
+@@ -362,8 +366,9 @@ export default async function SellerStorePage(props: Props) {
+               <HeaderCustomizer 
+                 cards={binderCards} 
+                 selectedIds={headerIds}
+-                headerStyle={seller.headerStyle || 'cards'}
+-                bannerImageUrl={seller.bannerImageUrl}
++                headerStyle={storefront.headerStyle || 'cards'}
++                bannerImageUrl={storefront.bannerImageUrl}
++                storefrontId={storefront.id}
+                 triggerNode={
+                   <button className="absolute top-2 right-2 z-50 flex items-center justify-center w-11 h-11 bg-black/60 text-zinc-300 hover:text-white rounded-full hover:bg-black/80 transition-all backdrop-blur-sm shadow-md border border-white/10" title="Customize Header">
+                     <Pencil className="w-5 h-5" /> 
+@@ -378,7 +383,7 @@ export default async function SellerStorePage(props: Props) {
+         
+         {isOwner && (
+           <div id="storefront-controls-wrapper" className="flex justify-end pt-4 relative z-50">
+-            <StorefrontControls layout={storefrontLayout as "grid" | "categories"} sellerId={seller.userId} sellerHandle={seller.handle || ''} isPreview={isPreview} cards={binderCards} headerIds={headerIds as number[]} theme={theme} themeScope={themeScope} />
++            <StorefrontControls layout={storefrontLayout as "grid" | "categories"} sellerId={seller.userId} sellerHandle={storefront.handle || ''} isPreview={isPreview} cards={binderCards} headerIds={headerIds as number[]} theme={theme} themeScope={themeScope} storefrontId={storefront.id} />
+           </div>
+         )}
+ 
+@@ -390,7 +395,7 @@ export default async function SellerStorePage(props: Props) {
+             {tabs.map((tab) => (
+               <Link 
+                 key={tab.id}
+-                href={`/${seller.handle}?tab=${tab.id}`}
++                href={`/${storefront.handle}?tab=${tab.id}`}
+                 className={`pb-4 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${currentTab === tab.id ? 'border-white text-white' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+               >
+                 {tab.label}
+@@ -416,11 +421,10 @@ export default async function SellerStorePage(props: Props) {
+ 
+         {/* Tab Content Areas */}
+         <div className={`relative min-h-[400px] ${theme === 'trax-cosmos' && themeScope === 'storefront-only' ? 'overflow-hidden' : ''}`}>
+-          {theme === "trax-cosmos" && themeScope === "storefront-only" && (
+-            <div className="absolute inset-0 z-0 -mx-4 md:-mx-8">
+-              <CosmosBackground />
+-            </div>
+-          )}
++          {theme === "trax-cosmos" && themeScope === "storefront-only" && <div className="text-zinc-300 font-medium whitespace-pre-wrap leading-relaxed px-4 lg:px-0">
++                  {storefront.bio || "This seller hasn't written a bio yet."}
++                </div>
++          }
+           <div className="relative z-10">
+           {(currentTab === "storefront" || currentTab === "active-listings") && (
+             <ActiveFilterChips />
+
+commit 570fab9e3114be362272d8d24842d4f460649c68
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Mon Jun 8 12:51:21 2026 -0500
+
+    feat(storefronts): Phase B - Schema, Backfill, Server Actions (Directive 25)
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index ab32fcf6..e54b6a43 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
+ import { RESERVED_HANDLES } from "@/lib/reserved-handles";
+ import { db } from "@/lib/db";
+ import { QuickUploadModal } from "@/components/sell/QuickUploadModal";
+-import { profiles, listings, users, cards, itemPhotos, categories, handleHistory } from "@/lib/db/schema";
++import { profiles, listings, users, cards, itemPhotos, categories, handleHistory, storefronts } from "@/lib/db/schema";
+ import { eq, desc, and, inArray, sql } from "drizzle-orm";
+ import { Metadata } from "next";
+ import Link from "next/link";
+@@ -96,12 +96,12 @@ export default async function SellerStorePage(props: Props) {
+       orderBy: desc(handleHistory.changedAt),
+     });
+     
+-    if (historyEntry) {
+-      const currentProfile = await db.query.profiles.findFirst({
+-        where: eq(profiles.userId, historyEntry.userId)
++    if (historyEntry && historyEntry.storefrontId) {
++      const currentStorefront = await db.query.storefronts.findFirst({
++        where: eq(storefronts.id, historyEntry.storefrontId)
+       });
+-      if (currentProfile?.handle) {
+-        redirect(`/${currentProfile.handle}`);
++      if (currentStorefront?.handle) {
++        redirect(`/${currentStorefront.handle}`);
+       }
+     }
+     
+
+commit c024f0ad1ffb25bd5b50f8f42424440f3270d786
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Mon Jun 8 00:25:18 2026 -0500
+
+    fix(SellerHero): remove owner-branch action menu, all header card clicks route to listing detail
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index fc1ce6ce..ab32fcf6 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -318,7 +318,8 @@ export default async function SellerStorePage(props: Props) {
+     id: item.id.toString(),
+     url: (item.photos && item.photos[0]) ? item.photos[0] : 'https://placehold.co/300x400/1a1a1a/333333?text=PSA+10',
+     title: item.title || "Unknown Card",
+-    activeListingId: item.cardId ? item.id : item.listingId
++    activeListingId: item.cardId ? item.id : item.listingId,
++    draftListingId: item.listingId
+   }));
+ 
+   return (
+
+commit 27d3808f021628fec61634aa721d4ee56f73d85e
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Mon Jun 8 00:05:57 2026 -0500
+
+    fix(types): Fix nullable priceCents type errors post migration
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index baa6afda..fc1ce6ce 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -440,7 +440,7 @@ export default async function SellerStorePage(props: Props) {
+                 isOwner={displayAsOwner}
+                 sellerName={sellerName}
+                 cards={binderCards} 
+-                activeListings={activeListings}
++                activeListings={activeListings as any}
+                 grailCardId={grailId}
+               />
+             )
+@@ -483,7 +483,7 @@ export default async function SellerStorePage(props: Props) {
+             ) : (
+               <ActiveListingsGrid 
+                 isOwner={displayAsOwner}
+-                listings={activeListings} 
++                listings={activeListings as any} 
+               />
+             )
+           )}
+
+commit 9ddf1abadde43c8383540e0a9e41960ee6e37319
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Sun Jun 7 23:07:00 2026 -0500
+
+    fix: Implement Directive 22 profile layout and category assignments
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index ecc05050..baa6afda 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -201,6 +201,7 @@ export default async function SellerStorePage(props: Props) {
+       gradingCompany: cards.gradingCompany,
+       condition: cards.condition,
+       priceCents: listings.priceCents,
++      listingId: listings.id,
+       photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE item_photos.card_id = cards.id), '[]'::json)`,
+     })
+     .from(cards)
+@@ -315,7 +316,9 @@ export default async function SellerStorePage(props: Props) {
+ 
+   const formattedHeroCards = alternatingCards.slice(0, 19).map(item => ({
+     id: item.id.toString(),
+-    url: (item.photos && item.photos[0]) ? item.photos[0] : 'https://placehold.co/300x400/1a1a1a/333333?text=PSA+10'
++    url: (item.photos && item.photos[0]) ? item.photos[0] : 'https://placehold.co/300x400/1a1a1a/333333?text=PSA+10',
++    title: item.title || "Unknown Card",
++    activeListingId: item.cardId ? item.id : item.listingId
+   }));
+ 
+   return (
+
+commit 1a1fc85606f8ee3cd7f483abf0031eba0f208d64
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Sun Jun 7 22:15:46 2026 -0500
+
+    fix(storefront): Patrick Touhey bug bundle fixes
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index ac14549f..ecc05050 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -192,20 +192,27 @@ export default async function SellerStorePage(props: Props) {
+     .where(and(eq(listings.sellerId, seller.userId), inArray(listings.status, ["active", "pending_marketplace_activation"])))
+     .orderBy(desc(listings.createdAt));
+ 
+-  // Fetch binder cards
+-  const binderCards = await db.select({
++  // Fetch binder cards (all cards owned by the user, or linked to their listings)
++  const rawBinderCards = await db.select({
+       id: cards.id,
+       title: cards.title,
+       category: cards.category,
+       grade: cards.grade,
+       gradingCompany: cards.gradingCompany,
+       condition: cards.condition,
++      priceCents: listings.priceCents,
+       photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE item_photos.card_id = cards.id), '[]'::json)`,
+     })
+     .from(cards)
+-    .where(eq(cards.ownerId, seller.userId))
++    .leftJoin(listings, eq(cards.id, listings.cardId))
++    .where(
++      sql`${cards.ownerId} = ${seller.userId} OR (${listings.sellerId} = ${seller.userId} AND ${listings.deletedAt} IS NULL)`
++    )
+     .orderBy(desc(cards.createdAt));
+ 
++  // Deduplicate in case a card has multiple listings
++  const binderCards = Array.from(new Map(rawBinderCards.map(c => [c.id, c])).values());
++
+   const userCategories = await db.query.categories.findMany({
+     where: eq(categories.userId, seller.userId),
+     orderBy: (c) => [c.displayOrder],
+
+commit 395d0c259de5f0762baab0eaeec1b3bebf791b82
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Sun Jun 7 18:11:10 2026 -0500
+
+    feat(storefront): Phase B handle history and redirects
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index a1173790..ac14549f 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -1,8 +1,8 @@
+-import { notFound } from "next/navigation";
++import { notFound, redirect } from "next/navigation";
+ import { RESERVED_HANDLES } from "@/lib/reserved-handles";
+ import { db } from "@/lib/db";
+ import { QuickUploadModal } from "@/components/sell/QuickUploadModal";
+-import { profiles, listings, users, cards, itemPhotos, categories } from "@/lib/db/schema";
++import { profiles, listings, users, cards, itemPhotos, categories, handleHistory } from "@/lib/db/schema";
+ import { eq, desc, and, inArray, sql } from "drizzle-orm";
+ import { Metadata } from "next";
+ import Link from "next/link";
+@@ -90,6 +90,21 @@ export default async function SellerStorePage(props: Props) {
+   .limit(1);
+ 
+   if (!profileRecord || profileRecord.profile.approvalStatus === "rejected") {
++    // Check handle history for old handles
++    const historyEntry = await db.query.handleHistory.findFirst({
++      where: sql`LOWER(${handleHistory.oldHandle}) = ${handleLower}`,
++      orderBy: desc(handleHistory.changedAt),
++    });
++    
++    if (historyEntry) {
++      const currentProfile = await db.query.profiles.findFirst({
++        where: eq(profiles.userId, historyEntry.userId)
++      });
++      if (currentProfile?.handle) {
++        redirect(`/${currentProfile.handle}`);
++      }
++    }
++    
+     notFound();
+   }
+   const seller = profileRecord.profile;
+
+commit 4e48c7a62d98249f89c24d5c0e129909042502f2
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Sun Jun 7 16:29:45 2026 -0500
+
+    feat(storefront): add profile badges manager + hide/show functionality
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index e348b5d1..a1173790 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -325,7 +325,7 @@ export default async function SellerStorePage(props: Props) {
+           badges={(seller.badges as string[]) || []}
+           isFoundingSeller={profileRecord.isFoundingSeller}
+           identityVerified={seller.identityVerified}
+-          hiddenBadges={[]}
++          hiddenBadges={(seller.hiddenBadges as string[]) || []}
+           presenceStatus={seller.presenceStatus}
+           locationCity={seller.locationCity}
+           locationState={seller.locationState}
+
+commit 47d62bc0d6f5627519d0a80924d9414a35de1af2
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Sun Jun 7 15:54:10 2026 -0500
+
+    chore: add debug logging for isFoundingSeller + force cache bust
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index d7edbbce..e348b5d1 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -96,6 +96,8 @@ export default async function SellerStorePage(props: Props) {
+   const isSellerLayout = profileRecord.accountType === "seller" && seller.kycStatus === "verified";
+   const storefrontLayout = profileRecord.storefrontLayout;
+   
++  console.log(`[Cache Bust] seller.isFoundingSeller for ${handleLower} =`, profileRecord.isFoundingSeller);
++  
+   const currentTab = searchParams.tab || (isSellerLayout ? "active-listings" : "collection");
+ 
+   const activeConditions = [
+
+commit ad94ab583bc7b8697d2f41484c31952797e75adc
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Sun Jun 7 15:26:45 2026 -0500
+
+    feat(storefront): add BadgeRow UI (Directive 15 Phase A)
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index 7a22c384..d7edbbce 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -38,7 +38,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
+   const [profileRecord] = await db.select({
+     profile: profiles,
+     accountType: users.accountType,
+-    storefrontLayout: users.storefrontLayout
++    storefrontLayout: users.storefrontLayout,
++    isFoundingSeller: users.isFoundingSeller
+   })
+   .from(profiles)
+   .innerJoin(users, eq(profiles.userId, users.id))
+@@ -80,7 +81,8 @@ export default async function SellerStorePage(props: Props) {
+   const [profileRecord] = await db.select({
+     profile: profiles,
+     accountType: users.accountType,
+-    storefrontLayout: users.storefrontLayout
++    storefrontLayout: users.storefrontLayout,
++    isFoundingSeller: users.isFoundingSeller
+   })
+   .from(profiles)
+   .innerJoin(users, eq(profiles.userId, users.id))
+@@ -319,6 +321,9 @@ export default async function SellerStorePage(props: Props) {
+           isOwner={displayAsOwner}
+           sellerId={seller.userId}
+           badges={(seller.badges as string[]) || []}
++          isFoundingSeller={profileRecord.isFoundingSeller}
++          identityVerified={seller.identityVerified}
++          hiddenBadges={[]}
+           presenceStatus={seller.presenceStatus}
+           locationCity={seller.locationCity}
+           locationState={seller.locationState}
+
+commit e11b03391de0bc72bdd9b7e8adcae64af31dad47
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Fri Jun 5 03:07:58 2026 -0500
+
+    fix: enforce fixed sizing for Cosmos profile-wide and for you
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index 1429b62d..7a22c384 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -304,7 +304,9 @@ export default async function SellerStorePage(props: Props) {
+         />
+       )}
+       {theme === "trax-cosmos" && themeScope === "profile-wide" && (
+-        <CosmosBackground />
++        <div className="fixed inset-0 z-0 pointer-events-none">
++          <CosmosBackground />
++        </div>
+       )}
+       <div className="relative z-10">
+         <SellerHero 
+
+commit 8eeb9165a855b269589f2992befc516c05ee800a
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Fri Jun 5 02:48:51 2026 -0500
+
+    fix: Correct Cosmos stacking context and opaque backgrounds
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index 7cb35d4f..1429b62d 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -321,6 +321,7 @@ export default async function SellerStorePage(props: Props) {
+           locationCity={seller.locationCity}
+           locationState={seller.locationState}
+           heroCards={formattedHeroCards}
++          transparentBackground={theme === 'trax-cosmos' && themeScope === 'profile-wide'}
+           customizerNode={
+             displayAsOwner ? (
+               <HeaderCustomizer 
+
+commit d15fb2857f2c78876b31f214eb563bd0495e00c6
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Fri Jun 5 02:31:59 2026 -0500
+
+    feat: Add Cosmos expansion and storefront theming
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index 8e96b223..7cb35d4f 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -14,6 +14,7 @@ import { getPossessiveName } from "@/lib/utils/formatters";
+ import { Lock, Plus, ListTree, Settings, Pencil } from "lucide-react";
+ import { Button } from "@/components/ui/button";
+ import { HeaderCustomizer } from "@/components/shared/HeaderCustomizer";
++import { CosmosBackground } from "@/components/marketplace/CosmosBackground";
+ import { StorefrontControls } from "@/components/storefront/StorefrontControls";
+ import { BinderValueToggle } from "@/components/shared/binder-value-toggle";
+ import { FiltersDrawer } from "@/components/storefront/FiltersDrawer";
+@@ -201,6 +202,9 @@ export default async function SellerStorePage(props: Props) {
+   const possessiveName = getPossessiveName(sellerName, isOwner);
+   const grailId = seller.grailCardId || (binderCards.length > 0 ? binderCards[0].id : null);
+   
++  const theme = seller.storefrontTheme || 'trax-default';
++  const themeScope = seller.storefrontThemeScope || 'storefront-only';
++  
+   let pendingCategoryCount = 0;
+   if (displayAsOwner && storefrontLayout === "categories") {
+     const categorizedCardIds = new Set();
+@@ -289,14 +293,19 @@ export default async function SellerStorePage(props: Props) {
+   }));
+ 
+   return (
+-    <div className="min-h-screen bg-black text-white selection:bg-[#7C3AED]/30 relative">
++    <div className={`min-h-screen bg-black text-white selection:bg-[#7C3AED]/30 relative ${theme === 'trax-cosmos' && themeScope === 'profile-wide' ? 'overflow-hidden' : ''}`}>
+       {/* Ambient background glow */}
+-      <div 
+-        className="absolute inset-0 pointer-events-none z-0"
+-        style={{
+-          backgroundImage: 'radial-gradient(80% 50% at 50% 0%, rgba(124, 58, 237, 0.45) 0%, rgba(124, 58, 237, 0.20) 30%, rgba(0, 0, 0, 0) 70%)'
+-        }}
+-      />
++      {theme === "trax-default" && (
++        <div 
++          className="absolute inset-0 pointer-events-none z-0"
++          style={{
++            backgroundImage: 'radial-gradient(80% 50% at 50% 0%, rgba(124, 58, 237, 0.45) 0%, rgba(124, 58, 237, 0.20) 30%, rgba(0, 0, 0, 0) 70%)'
++          }}
++        />
++      )}
++      {theme === "trax-cosmos" && themeScope === "profile-wide" && (
++        <CosmosBackground />
++      )}
+       <div className="relative z-10">
+         <SellerHero 
+           name={sellerName}
+@@ -333,7 +342,7 @@ export default async function SellerStorePage(props: Props) {
+         
+         {isOwner && (
+           <div id="storefront-controls-wrapper" className="flex justify-end pt-4 relative z-50">
+-            <StorefrontControls layout={storefrontLayout as "grid" | "categories"} sellerId={seller.userId} sellerHandle={seller.handle || ''} isPreview={isPreview} cards={binderCards} headerIds={headerIds as number[]} />
++            <StorefrontControls layout={storefrontLayout as "grid" | "categories"} sellerId={seller.userId} sellerHandle={seller.handle || ''} isPreview={isPreview} cards={binderCards} headerIds={headerIds as number[]} theme={theme} themeScope={themeScope} />
+           </div>
+         )}
+ 
+@@ -370,7 +379,13 @@ export default async function SellerStorePage(props: Props) {
+         </div>
+ 
+         {/* Tab Content Areas */}
+-        <div className="min-h-[400px]">
++        <div className={`relative min-h-[400px] ${theme === 'trax-cosmos' && themeScope === 'storefront-only' ? 'overflow-hidden' : ''}`}>
++          {theme === "trax-cosmos" && themeScope === "storefront-only" && (
++            <div className="absolute inset-0 z-0 -mx-4 md:-mx-8">
++              <CosmosBackground />
++            </div>
++          )}
++          <div className="relative z-10">
+           {(currentTab === "storefront" || currentTab === "active-listings") && (
+             <ActiveFilterChips />
+           )}
+@@ -467,6 +482,7 @@ export default async function SellerStorePage(props: Props) {
+               <p className="text-lg text-zinc-500">Blog posts coming soon.</p>
+             </div>
+           )}
++          </div>
+         </div>
+       </main>
+       </div>
+
+commit c1f38ff790a1deb2a869872fc5ad36a2184e2fc5
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Fri Jun 5 01:26:21 2026 -0500
+
+    feat: add dynamic open graph images for storefronts
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index 3f14bf95..8e96b223 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -58,7 +58,14 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
+     openGraph: {
+       title: `${displayName} on Trax`,
+       description,
+-      images: seller.profilePhotoUrl ? [seller.profilePhotoUrl] : [],
++      url: `https://trax.cards/${seller.handle}`,
++      siteName: 'Trax',
++      type: 'profile',
++    },
++    twitter: {
++      card: 'summary_large_image',
++      title: `${displayName} on Trax`,
++      description,
+     },
+   };
+ }
+
+commit 236451e192491166d1192130570a51db40445756
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Wed Jun 3 16:45:59 2026 -0500
+
+    Directive 12 Micro-Micro-Polish push
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index abf03682..3f14bf95 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -11,7 +11,7 @@ import { ActiveListingsGrid } from "@/components/storefront/ActiveListingsGrid";
+ import { BinderGrid } from "@/components/shared/BinderGrid";
+ import { auth } from "@clerk/nextjs/server";
+ import { getPossessiveName } from "@/lib/utils/formatters";
+-import { Lock, Plus, ListTree, Settings, Edit3 } from "lucide-react";
++import { Lock, Plus, ListTree, Settings, Pencil } from "lucide-react";
+ import { Button } from "@/components/ui/button";
+ import { HeaderCustomizer } from "@/components/shared/HeaderCustomizer";
+ import { StorefrontControls } from "@/components/storefront/StorefrontControls";
+@@ -313,8 +313,8 @@ export default async function SellerStorePage(props: Props) {
+                 headerStyle={seller.headerStyle || 'cards'}
+                 bannerImageUrl={seller.bannerImageUrl}
+                 triggerNode={
+-                  <button className="absolute top-2 right-2 z-50 p-2 bg-black/60 text-zinc-300 hover:text-white rounded-full hover:bg-black/80 transition-all backdrop-blur-sm shadow-md border border-white/10" title="Customize Header">
+-                    <Edit3 className="w-4 h-4" /> 
++                  <button className="absolute top-2 right-2 z-50 flex items-center justify-center w-11 h-11 bg-black/60 text-zinc-300 hover:text-white rounded-full hover:bg-black/80 transition-all backdrop-blur-sm shadow-md border border-white/10" title="Customize Header">
++                    <Pencil className="w-5 h-5" /> 
+                   </button>
+                 }
+               />
+
+commit 4d768fd73ae726213c08c508012d478380e3e632
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Wed Jun 3 13:33:19 2026 -0500
+
+    Directive 12 Iteration 2 Micro-Polish
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index 43ba211e..abf03682 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -310,6 +310,8 @@ export default async function SellerStorePage(props: Props) {
+               <HeaderCustomizer 
+                 cards={binderCards} 
+                 selectedIds={headerIds}
++                headerStyle={seller.headerStyle || 'cards'}
++                bannerImageUrl={seller.bannerImageUrl}
+                 triggerNode={
+                   <button className="absolute top-2 right-2 z-50 p-2 bg-black/60 text-zinc-300 hover:text-white rounded-full hover:bg-black/80 transition-all backdrop-blur-sm shadow-md border border-white/10" title="Customize Header">
+                     <Edit3 className="w-4 h-4" /> 
+@@ -323,7 +325,7 @@ export default async function SellerStorePage(props: Props) {
+       <main className="max-w-7xl mx-auto px-4 md:px-8 pb-12">
+         
+         {isOwner && (
+-          <div className="flex justify-end pt-4 relative">
++          <div id="storefront-controls-wrapper" className="flex justify-end pt-4 relative z-50">
+             <StorefrontControls layout={storefrontLayout as "grid" | "categories"} sellerId={seller.userId} sellerHandle={seller.handle || ''} isPreview={isPreview} cards={binderCards} headerIds={headerIds as number[]} />
+           </div>
+         )}
+
+commit d34b78318e9237769e9ae4ca9c64bdcc2e77af1d
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Wed Jun 3 12:39:47 2026 -0500
+
+    Directive 12 Iteration 2 Polish
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index a514b864..43ba211e 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -11,7 +11,7 @@ import { ActiveListingsGrid } from "@/components/storefront/ActiveListingsGrid";
+ import { BinderGrid } from "@/components/shared/BinderGrid";
+ import { auth } from "@clerk/nextjs/server";
+ import { getPossessiveName } from "@/lib/utils/formatters";
+-import { Lock, Plus, ListTree, Settings } from "lucide-react";
++import { Lock, Plus, ListTree, Settings, Edit3 } from "lucide-react";
+ import { Button } from "@/components/ui/button";
+ import { HeaderCustomizer } from "@/components/shared/HeaderCustomizer";
+ import { StorefrontControls } from "@/components/storefront/StorefrontControls";
+@@ -305,23 +305,30 @@ export default async function SellerStorePage(props: Props) {
+           locationCity={seller.locationCity}
+           locationState={seller.locationState}
+           heroCards={formattedHeroCards}
++          customizerNode={
++            displayAsOwner ? (
++              <HeaderCustomizer 
++                cards={binderCards} 
++                selectedIds={headerIds}
++                triggerNode={
++                  <button className="absolute top-2 right-2 z-50 p-2 bg-black/60 text-zinc-300 hover:text-white rounded-full hover:bg-black/80 transition-all backdrop-blur-sm shadow-md border border-white/10" title="Customize Header">
++                    <Edit3 className="w-4 h-4" /> 
++                  </button>
++                }
++              />
++            ) : null
++          }
+         />
+ 
+       <main className="max-w-7xl mx-auto px-4 md:px-8 pb-12">
+         
+         {isOwner && (
+           <div className="flex justify-end pt-4 relative">
+-            <StorefrontControls layout={storefrontLayout as "grid" | "categories"} sellerId={seller.userId} isPreview={isPreview} cards={binderCards} headerIds={headerIds as number[]} />
++            <StorefrontControls layout={storefrontLayout as "grid" | "categories"} sellerId={seller.userId} sellerHandle={seller.handle || ''} isPreview={isPreview} cards={binderCards} headerIds={headerIds as number[]} />
+           </div>
+         )}
+ 
+-        {isPreview && (
+-          <div className="fixed top-[max(env(safe-area-inset-top),20px)] left-1/2 -translate-x-1/2 z-[100]">
+-            <Link href={`/${seller.handle}`} className="flex items-center gap-2 px-4 py-2 bg-white text-black font-semibold rounded-full shadow-lg hover:bg-zinc-200 transition-colors text-sm">
+-              Exit Preview
+-            </Link>
+-          </div>
+-        )}
++
+ 
+         {/* Navigation Tabs Row */}
+         <div className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-white/10 mb-6 mt-0 pt-6 md:pt-8 gap-4 relative">
+
+commit ca668c8c1b412700d8018c4d4fa2fd83123584c9
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Wed Jun 3 11:46:17 2026 -0500
+
+    Directive 12 Iteration 2: Storefront chrome cleanup, view mode popover, empty category tap-to-add, compact icon bar
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index 636f2256..a514b864 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -14,7 +14,6 @@ import { getPossessiveName } from "@/lib/utils/formatters";
+ import { Lock, Plus, ListTree, Settings } from "lucide-react";
+ import { Button } from "@/components/ui/button";
+ import { HeaderCustomizer } from "@/components/shared/HeaderCustomizer";
+-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+ import { StorefrontControls } from "@/components/storefront/StorefrontControls";
+ import { BinderValueToggle } from "@/components/shared/binder-value-toggle";
+ import { FiltersDrawer } from "@/components/storefront/FiltersDrawer";
+@@ -189,12 +188,14 @@ export default async function SellerStorePage(props: Props) {
+   });
+ 
+   const isOwner = seller.userId === userId;
++  const isPreview = searchParams.preview === "true";
++  const displayAsOwner = isOwner && !isPreview;
+   const sellerName = seller.displayName || seller.businessName || "Seller";
+   const possessiveName = getPossessiveName(sellerName, isOwner);
+   const grailId = seller.grailCardId || (binderCards.length > 0 ? binderCards[0].id : null);
+   
+   let pendingCategoryCount = 0;
+-  if (isOwner && storefrontLayout === "categories") {
++  if (displayAsOwner && storefrontLayout === "categories") {
+     const categorizedCardIds = new Set();
+     userCategories.forEach(c => {
+       if (c.memberships) {
+@@ -297,7 +298,7 @@ export default async function SellerStorePage(props: Props) {
+           avatarUrl={seller.profilePhotoUrl}
+           headerStyle={seller.headerStyle}
+           bannerImageUrl={seller.bannerImageUrl}
+-          isOwner={isOwner}
++          isOwner={displayAsOwner}
+           sellerId={seller.userId}
+           badges={(seller.badges as string[]) || []}
+           presenceStatus={seller.presenceStatus}
+@@ -309,27 +310,16 @@ export default async function SellerStorePage(props: Props) {
+       <main className="max-w-7xl mx-auto px-4 md:px-8 pb-12">
+         
+         {isOwner && (
+-          <div className="flex justify-end pt-4">
+-            <Sheet>
+-              <SheetTrigger className="flex items-center gap-2 px-4 py-2 border border-white/20 bg-zinc-900/80 backdrop-blur-sm text-white hover:bg-white/10 rounded-full text-sm font-medium transition-colors">
+-                <Settings className="w-4 h-4" />
+-                Manage Storefront
+-              </SheetTrigger>
+-              <SheetContent className="bg-zinc-950 border-zinc-800 text-white flex flex-col">
+-                <SheetHeader>
+-                  <SheetTitle className="text-white">Manage Storefront</SheetTitle>
+-                </SheetHeader>
+-                <div className="flex-1 py-6 flex flex-col gap-6">
+-                  <div className="space-y-4">
+-                    <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Appearance</h3>
+-                    <div className="flex flex-col gap-3 items-start">
+-                      <StorefrontControls layout={storefrontLayout as "grid" | "categories"} sellerId={seller.userId} />
+-                      <HeaderCustomizer cards={binderCards} selectedIds={headerIds as number[]} />
+-                    </div>
+-                  </div>
+-                </div>
+-              </SheetContent>
+-            </Sheet>
++          <div className="flex justify-end pt-4 relative">
++            <StorefrontControls layout={storefrontLayout as "grid" | "categories"} sellerId={seller.userId} isPreview={isPreview} cards={binderCards} headerIds={headerIds as number[]} />
++          </div>
++        )}
++
++        {isPreview && (
++          <div className="fixed top-[max(env(safe-area-inset-top),20px)] left-1/2 -translate-x-1/2 z-[100]">
++            <Link href={`/${seller.handle}`} className="flex items-center gap-2 px-4 py-2 bg-white text-black font-semibold rounded-full shadow-lg hover:bg-zinc-200 transition-colors text-sm">
++              Exit Preview
++            </Link>
+           </div>
+         )}
+ 
+@@ -355,11 +345,11 @@ export default async function SellerStorePage(props: Props) {
+           </div>
+ 
+           <div className="pb-4 flex items-center z-10 gap-2">
+-            {isOwner && currentTab !== "blog" && currentTab !== "ratings" && (
+-              <QuickUploadModal label={`Add to ${currentTabInfo.label}`} />
++            {displayAsOwner && currentTab !== "blog" && currentTab !== "ratings" && (
++              <QuickUploadModal />
+             )}
+             <FiltersDrawer />
+-            <BinderValueToggle isOwner={isOwner} />
++            <BinderValueToggle isOwner={displayAsOwner} />
+           </div>
+         </div>
+ 
+@@ -374,13 +364,14 @@ export default async function SellerStorePage(props: Props) {
+               <CategoryRows 
+                 categories={userCategories} 
+                 cards={binderCards} 
+-                isOwner={isOwner} 
++                isOwner={displayAsOwner} 
+                 sellerName={sellerName}
+                 tab="binder"
++                allBinderCards={binderCards}
+               />
+             ) : (
+               <BinderGrid 
+-                isOwner={isOwner}
++                isOwner={displayAsOwner}
+                 sellerName={sellerName}
+                 cards={binderCards} 
+                 activeListings={activeListings}
+@@ -389,23 +380,23 @@ export default async function SellerStorePage(props: Props) {
+             )
+           )}
+ 
+-          {currentTab === "binder" && seller.binderPrivate && !isOwner && (
++          {currentTab === "binder" && seller.binderPrivate && !displayAsOwner && (
+             <div className="text-center py-24 bg-zinc-950/50 rounded-xl border border-white/5">
+               <Lock className="w-8 h-8 text-zinc-500 mx-auto mb-4" />
+               <p className="text-lg text-zinc-400">{sellerName}'s binder is private.</p>
+             </div>
+           )}
+ 
+-          {currentTab === "binder" && seller.binderPrivate && isOwner && (
++          {currentTab === "binder" && seller.binderPrivate && displayAsOwner && (
+             <div className="mb-4 p-4 bg-violet-500/10 border border-violet-500/20 rounded-lg text-violet-200 text-sm flex items-center justify-center gap-2">
+               <Lock className="w-4 h-4" />
+               Your binder is currently private. Only you can see this tab.
+             </div>
+           )}
+ 
+-          {currentTab === "binder" && seller.binderPrivate && isOwner && (
++          {currentTab === "binder" && seller.binderPrivate && displayAsOwner && (
+             <BinderGrid 
+-              isOwner={isOwner}
++              isOwner={displayAsOwner}
+               sellerName={sellerName}
+               cards={binderCards} 
+               activeListings={activeListings}
+@@ -418,13 +409,14 @@ export default async function SellerStorePage(props: Props) {
+               <CategoryRows 
+                 categories={userCategories} 
+                 cards={activeListings as any[]} 
+-                isOwner={isOwner}
++                isOwner={displayAsOwner}
+                 sellerName={sellerName}
+                 tab="storefront"
++                allBinderCards={binderCards}
+               />
+             ) : (
+               <ActiveListingsGrid 
+-                isOwner={isOwner}
++                isOwner={displayAsOwner}
+                 listings={activeListings} 
+               />
+             )
+@@ -435,9 +427,10 @@ export default async function SellerStorePage(props: Props) {
+               <CategoryRows 
+                 categories={userCategories} 
+                 cards={[]} 
+-                isOwner={isOwner}
++                isOwner={displayAsOwner}
+                 sellerName={sellerName}
+                 tab="storefront"
++                allBinderCards={binderCards}
+               />
+             ) : (
+               <div className="text-center py-24 bg-zinc-950/50 rounded-xl border border-white/5 flex flex-col items-center">
+
+commit b39c1923faa116e2c8afe56e30396f077bbee9b4
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Wed Jun 3 09:31:30 2026 -0500
+
+    feat: relocate storefront controls into Manage Storefront sheet
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index b5e2d326..636f2256 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -11,9 +11,10 @@ import { ActiveListingsGrid } from "@/components/storefront/ActiveListingsGrid";
+ import { BinderGrid } from "@/components/shared/BinderGrid";
+ import { auth } from "@clerk/nextjs/server";
+ import { getPossessiveName } from "@/lib/utils/formatters";
+-import { Lock, Plus, ListTree } from "lucide-react";
++import { Lock, Plus, ListTree, Settings } from "lucide-react";
+ import { Button } from "@/components/ui/button";
+ import { HeaderCustomizer } from "@/components/shared/HeaderCustomizer";
++import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+ import { StorefrontControls } from "@/components/storefront/StorefrontControls";
+ import { BinderValueToggle } from "@/components/shared/binder-value-toggle";
+ import { FiltersDrawer } from "@/components/storefront/FiltersDrawer";
+@@ -303,16 +304,35 @@ export default async function SellerStorePage(props: Props) {
+           locationCity={seller.locationCity}
+           locationState={seller.locationState}
+           heroCards={formattedHeroCards}
+-          customizerNode={isOwner ? (
+-            <div className="absolute top-4 right-4 z-40 flex items-center gap-2">
+-              <StorefrontControls layout={storefrontLayout as "grid" | "categories"} sellerId={seller.userId} />
+-              <HeaderCustomizer cards={binderCards} selectedIds={headerIds as number[]} />
+-            </div>
+-          ) : undefined}
+         />
+ 
+       <main className="max-w-7xl mx-auto px-4 md:px-8 pb-12">
+         
++        {isOwner && (
++          <div className="flex justify-end pt-4">
++            <Sheet>
++              <SheetTrigger className="flex items-center gap-2 px-4 py-2 border border-white/20 bg-zinc-900/80 backdrop-blur-sm text-white hover:bg-white/10 rounded-full text-sm font-medium transition-colors">
++                <Settings className="w-4 h-4" />
++                Manage Storefront
++              </SheetTrigger>
++              <SheetContent className="bg-zinc-950 border-zinc-800 text-white flex flex-col">
++                <SheetHeader>
++                  <SheetTitle className="text-white">Manage Storefront</SheetTitle>
++                </SheetHeader>
++                <div className="flex-1 py-6 flex flex-col gap-6">
++                  <div className="space-y-4">
++                    <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Appearance</h3>
++                    <div className="flex flex-col gap-3 items-start">
++                      <StorefrontControls layout={storefrontLayout as "grid" | "categories"} sellerId={seller.userId} />
++                      <HeaderCustomizer cards={binderCards} selectedIds={headerIds as number[]} />
++                    </div>
++                  </div>
++                </div>
++              </SheetContent>
++            </Sheet>
++          </div>
++        )}
++
+         {/* Navigation Tabs Row */}
+         <div className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-white/10 mb-6 mt-0 pt-6 md:pt-8 gap-4 relative">
+           <nav className="flex items-center gap-6 overflow-x-auto pb-[-1px] scrollbar-hide relative z-10">
+
+commit f4d234d04c5fd069f6183636c9a7ce34c9278473
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Wed Jun 3 09:12:22 2026 -0500
+
+    fix: resolve categories variable shadowing and schema import in profile page
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index aac94131..b5e2d326 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
+ import { RESERVED_HANDLES } from "@/lib/reserved-handles";
+ import { db } from "@/lib/db";
+ import { QuickUploadModal } from "@/components/sell/QuickUploadModal";
+-import { profiles, listings, users, cards, itemPhotos } from "@/lib/db/schema";
++import { profiles, listings, users, cards, itemPhotos, categories } from "@/lib/db/schema";
+ import { eq, desc, and, inArray, sql } from "drizzle-orm";
+ import { Metadata } from "next";
+ import Link from "next/link";
+@@ -256,19 +256,19 @@ export default async function SellerStorePage(props: Props) {
+ 
+   // Alternate them manually to prevent any clumping
+   const alternatingCards: any[] = [];
+-  const categories: Record<string, any[]> = { "Sports": [], "TCG": [], "Other": [] };
++  const demoCategories: Record<string, any[]> = { "Sports": [], "TCG": [], "Other": [] };
+   dedupedHeroCardsData.forEach(c => {
+     const cat = c.category || "Other";
+-    if (!categories[cat]) categories[cat] = [];
+-    categories[cat].push(c);
++    if (!demoCategories[cat]) demoCategories[cat] = [];
++    demoCategories[cat].push(c);
+   });
+   
+   let added = true;
+   while (added) {
+     added = false;
+-    for (const key of Object.keys(categories)) {
+-      if (categories[key].length > 0) {
+-        alternatingCards.push(categories[key].shift());
++    for (const key of Object.keys(demoCategories)) {
++      if (demoCategories[key].length > 0) {
++        alternatingCards.push(demoCategories[key].shift());
+         added = true;
+       }
+     }
+
+commit a58957b19b2de5b83055df6b08a5769dfc6f5658
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Wed Jun 3 08:13:56 2026 -0500
+
+    fix: resolve potential TypeScript error with sellerName being null
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index 24a9f0de..aac94131 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -188,7 +188,7 @@ export default async function SellerStorePage(props: Props) {
+   });
+ 
+   const isOwner = seller.userId === userId;
+-  const sellerName = seller.displayName || seller.businessName;
++  const sellerName = seller.displayName || seller.businessName || "Seller";
+   const possessiveName = getPossessiveName(sellerName, isOwner);
+   const grailId = seller.grailCardId || (binderCards.length > 0 ? binderCards[0].id : null);
+   
+
+commit 099f9d676b17797b2189315105ff8ee02fe665b5
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Wed Jun 3 08:00:59 2026 -0500
+
+    feat: directive 12 - storefront layout toggle and curated category rows
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index 1cc14578..24a9f0de 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -11,12 +11,14 @@ import { ActiveListingsGrid } from "@/components/storefront/ActiveListingsGrid";
+ import { BinderGrid } from "@/components/shared/BinderGrid";
+ import { auth } from "@clerk/nextjs/server";
+ import { getPossessiveName } from "@/lib/utils/formatters";
+-import { Lock, Plus } from "lucide-react";
++import { Lock, Plus, ListTree } from "lucide-react";
+ import { Button } from "@/components/ui/button";
+ import { HeaderCustomizer } from "@/components/shared/HeaderCustomizer";
++import { StorefrontControls } from "@/components/storefront/StorefrontControls";
+ import { BinderValueToggle } from "@/components/shared/binder-value-toggle";
+ import { FiltersDrawer } from "@/components/storefront/FiltersDrawer";
+ import { ActiveFilterChips } from "@/components/storefront/ActiveFilterChips";
++import { CategoryRows } from "@/components/storefront/CategoryRows";
+ import { like, lte, gte, between } from "drizzle-orm";
+ 
+ interface Props {
+@@ -34,7 +36,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
+ 
+   const [profileRecord] = await db.select({
+     profile: profiles,
+-    accountType: users.accountType
++    accountType: users.accountType,
++    storefrontLayout: users.storefrontLayout
+   })
+   .from(profiles)
+   .innerJoin(users, eq(profiles.userId, users.id))
+@@ -68,7 +71,8 @@ export default async function SellerStorePage(props: Props) {
+   
+   const [profileRecord] = await db.select({
+     profile: profiles,
+-    accountType: users.accountType
++    accountType: users.accountType,
++    storefrontLayout: users.storefrontLayout
+   })
+   .from(profiles)
+   .innerJoin(users, eq(profiles.userId, users.id))
+@@ -80,6 +84,7 @@ export default async function SellerStorePage(props: Props) {
+   }
+   const seller = profileRecord.profile;
+   const isSellerLayout = profileRecord.accountType === "seller" && seller.kycStatus === "verified";
++  const storefrontLayout = profileRecord.storefrontLayout;
+   
+   const currentTab = searchParams.tab || (isSellerLayout ? "active-listings" : "collection");
+ 
+@@ -174,20 +179,49 @@ export default async function SellerStorePage(props: Props) {
+     .where(eq(cards.ownerId, seller.userId))
+     .orderBy(desc(cards.createdAt));
+ 
++  const userCategories = await db.query.categories.findMany({
++    where: eq(categories.userId, seller.userId),
++    orderBy: (c) => [c.displayOrder],
++    with: {
++      memberships: true
++    }
++  });
++
+   const isOwner = seller.userId === userId;
+   const sellerName = seller.displayName || seller.businessName;
+   const possessiveName = getPossessiveName(sellerName, isOwner);
+   const grailId = seller.grailCardId || (binderCards.length > 0 ? binderCards[0].id : null);
+   
++  let pendingCategoryCount = 0;
++  if (isOwner && storefrontLayout === "categories") {
++    const categorizedCardIds = new Set();
++    userCategories.forEach(c => {
++      if (c.memberships) {
++        c.memberships.forEach((m: any) => categorizedCardIds.add(m.cardId));
++      }
++    });
++    pendingCategoryCount = binderCards.filter(c => !categorizedCardIds.has(c.id)).length;
++  }
++  
+   const tabs = isSellerLayout 
+     ? [
+         { id: "storefront", label: "Storefront", possessive: "Storefront" },
+-        { id: "binder", label: "Binder", possessive: "Binder" },
++        { id: "binder", label: pendingCategoryCount > 0 ? (
++          <span className="flex items-center gap-1.5">
++            Binder
++            <span className="bg-[#7C3AED]/20 border border-[#7C3AED]/30 text-[#7C3AED] px-1.5 py-[1px] rounded font-bold text-[10px] leading-none">{pendingCategoryCount} waiting</span>
++          </span>
++        ) : "Binder", possessive: "Binder" },
+         { id: "ratings", label: "Ratings", possessive: "Ratings" },
+         { id: "blog", label: "Blog", possessive: "Blog" }
+       ]
+     : [
+-        { id: "collection", label: "Collection", possessive: "Binder" },
++        { id: "collection", label: pendingCategoryCount > 0 ? (
++          <span className="flex items-center gap-1.5">
++            Collection
++            <span className="bg-[#7C3AED]/20 border border-[#7C3AED]/30 text-[#7C3AED] px-1.5 py-[1px] rounded font-bold text-[10px] leading-none">{pendingCategoryCount} waiting</span>
++          </span>
++        ) : "Collection", possessive: "Binder" },
+         { id: "active-listings", label: "Active Listings", possessive: "Listings" },
+         { id: "ratings", label: "Ratings", possessive: "Ratings" },
+         { id: "blog", label: "Blog", possessive: "Blog" }
+@@ -269,7 +303,12 @@ export default async function SellerStorePage(props: Props) {
+           locationCity={seller.locationCity}
+           locationState={seller.locationState}
+           heroCards={formattedHeroCards}
+-          customizerNode={isOwner ? <HeaderCustomizer cards={binderCards} selectedIds={headerIds as number[]} /> : undefined}
++          customizerNode={isOwner ? (
++            <div className="absolute top-4 right-4 z-40 flex items-center gap-2">
++              <StorefrontControls layout={storefrontLayout as "grid" | "categories"} sellerId={seller.userId} />
++              <HeaderCustomizer cards={binderCards} selectedIds={headerIds as number[]} />
++            </div>
++          ) : undefined}
+         />
+ 
+       <main className="max-w-7xl mx-auto px-4 md:px-8 pb-12">
+@@ -311,13 +350,23 @@ export default async function SellerStorePage(props: Props) {
+           )}
+ 
+           {(currentTab === "collection" || (currentTab === "binder" && !seller.binderPrivate)) && (
+-            <BinderGrid 
+-              isOwner={isOwner}
+-              sellerName={sellerName}
+-              cards={binderCards} 
+-              activeListings={activeListings}
+-              grailCardId={grailId}
+-            />
++            storefrontLayout === "categories" && userCategories.length > 0 ? (
++              <CategoryRows 
++                categories={userCategories} 
++                cards={binderCards} 
++                isOwner={isOwner} 
++                sellerName={sellerName}
++                tab="binder"
++              />
++            ) : (
++              <BinderGrid 
++                isOwner={isOwner}
++                sellerName={sellerName}
++                cards={binderCards} 
++                activeListings={activeListings}
++                grailCardId={grailId}
++              />
++            )
+           )}
+ 
+           {currentTab === "binder" && seller.binderPrivate && !isOwner && (
+@@ -345,17 +394,37 @@ export default async function SellerStorePage(props: Props) {
+           )}
+ 
+           {(currentTab === "storefront" || currentTab === "active-listings") && activeListings.length > 0 && (
+-            <ActiveListingsGrid 
+-              isOwner={isOwner}
+-              listings={activeListings} 
+-            />
++            storefrontLayout === "categories" && userCategories.length > 0 ? (
++              <CategoryRows 
++                categories={userCategories} 
++                cards={activeListings as any[]} 
++                isOwner={isOwner}
++                sellerName={sellerName}
++                tab="storefront"
++              />
++            ) : (
++              <ActiveListingsGrid 
++                isOwner={isOwner}
++                listings={activeListings} 
++              />
++            )
+           )}
+ 
+           {(currentTab === "storefront" || currentTab === "active-listings") && activeListings.length === 0 && (
+-            <div className="text-center py-24 bg-zinc-950/50 rounded-xl border border-white/5 flex flex-col items-center">
+-              <p className="text-lg text-zinc-500 mb-2">No listings yet. Draft your first listing to get started.</p>
+-              {!isSellerLayout && <p className="text-sm text-zinc-600">Want to sell on Trax? Upgrade to a Seller account.</p>}
+-            </div>
++            storefrontLayout === "categories" && userCategories.length > 0 ? (
++              <CategoryRows 
++                categories={userCategories} 
++                cards={[]} 
++                isOwner={isOwner}
++                sellerName={sellerName}
++                tab="storefront"
++              />
++            ) : (
++              <div className="text-center py-24 bg-zinc-950/50 rounded-xl border border-white/5 flex flex-col items-center">
++                <p className="text-lg text-zinc-500 mb-2">No listings yet. Draft your first listing to get started.</p>
++                {!isSellerLayout && <p className="text-sm text-zinc-600">Want to sell on Trax? Upgrade to a Seller account.</p>}
++              </div>
++            )
+           )}
+ 
+           {currentTab === "ratings" && (
+
+commit 5f905b92f36e3ba93614899c0a1b7fcd46db9de6
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Mon Jun 1 21:51:50 2026 -0500
+
+    Implement 5 urgent fixes for founding seller feedback
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index ca06d6e9..1cc14578 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -266,6 +266,8 @@ export default async function SellerStorePage(props: Props) {
+           sellerId={seller.userId}
+           badges={(seller.badges as string[]) || []}
+           presenceStatus={seller.presenceStatus}
++          locationCity={seller.locationCity}
++          locationState={seller.locationState}
+           heroCards={formattedHeroCards}
+           customizerNode={isOwner ? <HeaderCustomizer cards={binderCards} selectedIds={headerIds as number[]} /> : undefined}
+         />
+
+commit 7d52a85e5d65c0c241937dc368d96dba3e2e09ce
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Mon Jun 1 17:28:15 2026 -0500
+
+    Fix final polish bundle 15 items
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index 8e6e98c9..ca06d6e9 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -294,7 +294,7 @@ export default async function SellerStorePage(props: Props) {
+           </div>
+ 
+           <div className="pb-4 flex items-center z-10 gap-2">
+-            {isOwner && (
++            {isOwner && currentTab !== "blog" && currentTab !== "ratings" && (
+               <QuickUploadModal label={`Add to ${currentTabInfo.label}`} />
+             )}
+             <FiltersDrawer />
+
+commit d5f86d9cafc73704b042b44179781e1f1587de90
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Mon Jun 1 13:25:57 2026 -0500
+
+    Fixes A-S: Mobile UI, Cropper, Storefront Polish, Stripe Copy, Auth Sync
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index 9974dea4..8e6e98c9 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -1,6 +1,7 @@
+ import { notFound } from "next/navigation";
+ import { RESERVED_HANDLES } from "@/lib/reserved-handles";
+ import { db } from "@/lib/db";
++import { QuickUploadModal } from "@/components/sell/QuickUploadModal";
+ import { profiles, listings, users, cards, itemPhotos } from "@/lib/db/schema";
+ import { eq, desc, and, inArray, sql } from "drizzle-orm";
+ import { Metadata } from "next";
+@@ -80,7 +81,7 @@ export default async function SellerStorePage(props: Props) {
+   const seller = profileRecord.profile;
+   const isSellerLayout = profileRecord.accountType === "seller" && seller.kycStatus === "verified";
+   
+-  const currentTab = searchParams.tab || (isSellerLayout ? "storefront" : "collection");
++  const currentTab = searchParams.tab || (isSellerLayout ? "active-listings" : "collection");
+ 
+   const activeConditions = [
+     eq(listings.sellerId, seller.userId),
+@@ -272,7 +273,7 @@ export default async function SellerStorePage(props: Props) {
+       <main className="max-w-7xl mx-auto px-4 md:px-8 pb-12">
+         
+         {/* Navigation Tabs Row */}
+-        <div className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-white/10 mb-6 mt-0 gap-4 relative">
++        <div className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-white/10 mb-6 mt-0 pt-6 md:pt-8 gap-4 relative">
+           <nav className="flex items-center gap-6 overflow-x-auto pb-[-1px] scrollbar-hide relative z-10">
+             {tabs.map((tab) => (
+               <Link 
+@@ -294,17 +295,7 @@ export default async function SellerStorePage(props: Props) {
+ 
+           <div className="pb-4 flex items-center z-10 gap-2">
+             {isOwner && (
+-              <Button 
+-                asChild
+-                variant="outline" 
+-                size="sm" 
+-                className="flex items-center gap-2 bg-zinc-900 border-white/10 hover:bg-zinc-800 text-zinc-300 pointer-events-auto"
+-              >
+-                <Link href="/sell">
+-                  <Plus className="w-4 h-4" />
+-                  <span className="hidden sm:inline">Add to {currentTabInfo.label}</span>
+-                </Link>
+-              </Button>
++              <QuickUploadModal label={`Add to ${currentTabInfo.label}`} />
+             )}
+             <FiltersDrawer />
+             <BinderValueToggle isOwner={isOwner} />
+@@ -360,7 +351,7 @@ export default async function SellerStorePage(props: Props) {
+ 
+           {(currentTab === "storefront" || currentTab === "active-listings") && activeListings.length === 0 && (
+             <div className="text-center py-24 bg-zinc-950/50 rounded-xl border border-white/5 flex flex-col items-center">
+-              <p className="text-lg text-zinc-500 mb-2">No active listings...yet 👀</p>
++              <p className="text-lg text-zinc-500 mb-2">No listings yet. Draft your first listing to get started.</p>
+               {!isSellerLayout && <p className="text-sm text-zinc-600">Want to sell on Trax? Upgrade to a Seller account.</p>}
+             </div>
+           )}
+
+commit bd81233672bc03bf8d16bbeba9a42f4099448bb8
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Mon Jun 1 09:32:11 2026 -0500
+
+    fix: import inArray
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index 6a2c53d3..9974dea4 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
+ import { RESERVED_HANDLES } from "@/lib/reserved-handles";
+ import { db } from "@/lib/db";
+ import { profiles, listings, users, cards, itemPhotos } from "@/lib/db/schema";
+-import { eq, desc, and, sql } from "drizzle-orm";
++import { eq, desc, and, inArray, sql } from "drizzle-orm";
+ import { Metadata } from "next";
+ import Link from "next/link";
+ import { SellerHero } from "@/components/shared/SellerHero";
+
+commit f0938909532c2fc5c91ae83ca1fa70abe1b7ff9d
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Mon Jun 1 09:31:21 2026 -0500
+
+    feat: beta period listing state machine
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index 1dc6c2c1..6a2c53d3 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -84,7 +84,7 @@ export default async function SellerStorePage(props: Props) {
+ 
+   const activeConditions = [
+     eq(listings.sellerId, seller.userId),
+-    eq(listings.status, "ACTIVE")
++    inArray(listings.status, ["active", "pending_marketplace_activation"])
+   ];
+ 
+   if (searchParams.sport) {
+@@ -156,7 +156,7 @@ export default async function SellerStorePage(props: Props) {
+       photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE item_photos.card_id = listings.card_id), '[]'::json)`,
+     })
+     .from(listings)
+-    .where(and(eq(listings.sellerId, seller.userId), eq(listings.status, "ACTIVE")))
++    .where(and(eq(listings.sellerId, seller.userId), inArray(listings.status, ["active", "pending_marketplace_activation"])))
+     .orderBy(desc(listings.createdAt));
+ 
+   // Fetch binder cards
+
+commit 700a56d1a0f6fbe94cbcee0ddd4db5f2a29ab6fa
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Mon Jun 1 01:11:04 2026 -0500
+
+    fix: trending row IDs, revert featured row dedupe, distinct storefront header
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index dc19ff23..1dc6c2c1 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -208,18 +208,38 @@ export default async function SellerStorePage(props: Props) {
+     heroCardsData = binderCards;
+   }
+ 
+-  // Dedupe heroCardsData by title so it alternates beautifully and removes duplicates
++  // Programmatic diverse alternating selector for hero strip
+   const seenTitles = new Set();
+-  const dedupedHeroCardsData = heroCardsData.filter(c => {
+-    const title = c.title.replace(/\\(.*?\\)|#\\d+/g, '').trim().toLowerCase();
+-    if (seenTitles.has(title)) return false;
+-    seenTitles.add(title);
+-    return true;
++  const dedupedHeroCardsData: any[] = [];
++  for (const c of heroCardsData) {
++    const baseTitle = c.title.split('#')[0].split('(')[0].trim().toLowerCase();
++    if (!seenTitles.has(baseTitle)) {
++      seenTitles.add(baseTitle);
++      dedupedHeroCardsData.push(c);
++    }
++  }
++
++  // Alternate them manually to prevent any clumping
++  const alternatingCards: any[] = [];
++  const categories: Record<string, any[]> = { "Sports": [], "TCG": [], "Other": [] };
++  dedupedHeroCardsData.forEach(c => {
++    const cat = c.category || "Other";
++    if (!categories[cat]) categories[cat] = [];
++    categories[cat].push(c);
+   });
++  
++  let added = true;
++  while (added) {
++    added = false;
++    for (const key of Object.keys(categories)) {
++      if (categories[key].length > 0) {
++        alternatingCards.push(categories[key].shift());
++        added = true;
++      }
++    }
++  }
+ 
+-  // Since the grid needs to start with Sports, activeListings starts with Sports.
+-  // To make the header strip start with Pokemon, we offset by 1.
+-  const formattedHeroCards = dedupedHeroCardsData.slice(1, 20).map(item => ({
++  const formattedHeroCards = alternatingCards.slice(0, 19).map(item => ({
+     id: item.id.toString(),
+     url: (item.photos && item.photos[0]) ? item.photos[0] : 'https://placehold.co/300x400/1a1a1a/333333?text=PSA+10'
+   }));
+
+commit 28c3cbb55e76733a5e4b1f4777a85d52da6cd5a5
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Mon Jun 1 00:44:55 2026 -0500
+
+    fix: hardcode trending row, fix ticker animation, restore storefront header
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index d683bdd9..dc19ff23 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -208,9 +208,18 @@ export default async function SellerStorePage(props: Props) {
+     heroCardsData = binderCards;
+   }
+ 
++  // Dedupe heroCardsData by title so it alternates beautifully and removes duplicates
++  const seenTitles = new Set();
++  const dedupedHeroCardsData = heroCardsData.filter(c => {
++    const title = c.title.replace(/\\(.*?\\)|#\\d+/g, '').trim().toLowerCase();
++    if (seenTitles.has(title)) return false;
++    seenTitles.add(title);
++    return true;
++  });
++
+   // Since the grid needs to start with Sports, activeListings starts with Sports.
+   // To make the header strip start with Pokemon, we offset by 1.
+-  const formattedHeroCards = heroCardsData.slice(1, 20).map(item => ({
++  const formattedHeroCards = dedupedHeroCardsData.slice(1, 20).map(item => ({
+     id: item.id.toString(),
+     url: (item.photos && item.photos[0]) ? item.photos[0] : 'https://placehold.co/300x400/1a1a1a/333333?text=PSA+10'
+   }));
+
+commit 7ceb73044f514e4c688a7ebc7694e186fa83f258
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Sun May 31 20:56:41 2026 -0500
+
+    feat: Add binder value toggle, beta pill, and discount feature
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index f2bd3393..d683bdd9 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -13,6 +13,7 @@ import { getPossessiveName } from "@/lib/utils/formatters";
+ import { Lock, Plus } from "lucide-react";
+ import { Button } from "@/components/ui/button";
+ import { HeaderCustomizer } from "@/components/shared/HeaderCustomizer";
++import { BinderValueToggle } from "@/components/shared/binder-value-toggle";
+ import { FiltersDrawer } from "@/components/storefront/FiltersDrawer";
+ import { ActiveFilterChips } from "@/components/storefront/ActiveFilterChips";
+ import { like, lte, gte, between } from "drizzle-orm";
+@@ -131,6 +132,9 @@ export default async function SellerStorePage(props: Props) {
+       grade: listings.grade,
+       gradingCompany: listings.gradingCompany,
+       condition: listings.condition,
++      discountType: listings.discountType,
++      discountAmount: listings.discountAmount,
++      discountActiveUntil: listings.discountActiveUntil,
+       photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE item_photos.card_id = listings.card_id), '[]'::json)`,
+     })
+     .from(listings)
+@@ -146,6 +150,9 @@ export default async function SellerStorePage(props: Props) {
+       grade: listings.grade,
+       gradingCompany: listings.gradingCompany,
+       condition: listings.condition,
++      discountType: listings.discountType,
++      discountAmount: listings.discountAmount,
++      discountActiveUntil: listings.discountActiveUntil,
+       photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE item_photos.card_id = listings.card_id), '[]'::json)`,
+     })
+     .from(listings)
+@@ -271,12 +278,7 @@ export default async function SellerStorePage(props: Props) {
+               </Button>
+             )}
+             <FiltersDrawer />
+-            <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 rounded-lg border border-white/5">
+-              <Lock className="w-4 h-4 text-zinc-500" />
+-              <span className="text-xs font-semibold text-zinc-400">
+-                {isOwner ? `$${(2450000 / 100).toLocaleString()}` : "Private Value"}
+-              </span>
+-            </div>
++            <BinderValueToggle isOwner={isOwner} />
+           </div>
+         </div>
+ 
+
+commit 07d2ab4527bcc1d6742aed7670aa8a6beb29ccb0
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Sun May 31 18:20:35 2026 -0500
+
+    feat: storefront customization dashboard and hero
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index 480a8805..f2bd3393 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -228,6 +228,7 @@ export default async function SellerStorePage(props: Props) {
+           isOwner={isOwner}
+           sellerId={seller.userId}
+           badges={(seller.badges as string[]) || []}
++          presenceStatus={seller.presenceStatus}
+           heroCards={formattedHeroCards}
+           customizerNode={isOwner ? <HeaderCustomizer cards={binderCards} selectedIds={headerIds as number[]} /> : undefined}
+         />
+
+commit 4b48635c6df322148f0f532a4f98a64b8eb530f9
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Sun May 31 18:00:08 2026 -0500
+
+    feat: wire storefront +button
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index 9eb9030a..480a8805 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -258,13 +258,15 @@ export default async function SellerStorePage(props: Props) {
+           <div className="pb-4 flex items-center z-10 gap-2">
+             {isOwner && (
+               <Button 
++                asChild
+                 variant="outline" 
+                 size="sm" 
+                 className="flex items-center gap-2 bg-zinc-900 border-white/10 hover:bg-zinc-800 text-zinc-300 pointer-events-auto"
+-                disabled
+               >
+-                <Plus className="w-4 h-4" />
+-                <span className="hidden sm:inline">Add to {currentTabInfo.label}</span>
++                <Link href="/sell">
++                  <Plus className="w-4 h-4" />
++                  <span className="hidden sm:inline">Add to {currentTabInfo.label}</span>
++                </Link>
+               </Button>
+             )}
+             <FiltersDrawer />
+
+commit 0b47b3f1719e0cfdd5546f6f5605229074eee077
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Fri May 29 15:53:34 2026 -0500
+
+    feat: add plus button stubs to storefront and binder
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index 2db360ae..9eb9030a 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -10,7 +10,8 @@ import { ActiveListingsGrid } from "@/components/storefront/ActiveListingsGrid";
+ import { BinderGrid } from "@/components/shared/BinderGrid";
+ import { auth } from "@clerk/nextjs/server";
+ import { getPossessiveName } from "@/lib/utils/formatters";
+-import { Lock } from "lucide-react";
++import { Lock, Plus } from "lucide-react";
++import { Button } from "@/components/ui/button";
+ import { HeaderCustomizer } from "@/components/shared/HeaderCustomizer";
+ import { FiltersDrawer } from "@/components/storefront/FiltersDrawer";
+ import { ActiveFilterChips } from "@/components/storefront/ActiveFilterChips";
+@@ -255,6 +256,17 @@ export default async function SellerStorePage(props: Props) {
+           </div>
+ 
+           <div className="pb-4 flex items-center z-10 gap-2">
++            {isOwner && (
++              <Button 
++                variant="outline" 
++                size="sm" 
++                className="flex items-center gap-2 bg-zinc-900 border-white/10 hover:bg-zinc-800 text-zinc-300 pointer-events-auto"
++                disabled
++              >
++                <Plus className="w-4 h-4" />
++                <span className="hidden sm:inline">Add to {currentTabInfo.label}</span>
++              </Button>
++            )}
+             <FiltersDrawer />
+             <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 rounded-lg border border-white/5">
+               <Lock className="w-4 h-4 text-zinc-500" />
+
+commit 1fe0f431e65ea3594812cfaab431c52020365cfe
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Thu May 28 10:23:46 2026 -0500
+
+    style: increase opacity of profile background gradient to match dashboard
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index dc20fdd1..2db360ae 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -210,8 +210,12 @@ export default async function SellerStorePage(props: Props) {
+   return (
+     <div className="min-h-screen bg-black text-white selection:bg-[#7C3AED]/30 relative">
+       {/* Ambient background glow */}
+-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#7C3AED]/10 via-black to-black opacity-50 z-0" />
+-      
++      <div 
++        className="absolute inset-0 pointer-events-none z-0"
++        style={{
++          backgroundImage: 'radial-gradient(80% 50% at 50% 0%, rgba(124, 58, 237, 0.45) 0%, rgba(124, 58, 237, 0.20) 30%, rgba(0, 0, 0, 0) 70%)'
++        }}
++      />
+       <div className="relative z-10">
+         <SellerHero 
+           name={sellerName}
+
+commit 582c6d96c154bde73fb6954d114606dc54b2da23
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Wed May 27 01:45:00 2026 -0500
+
+    fix: decouple header strip from active listings filter
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index 30488549..dc20fdd1 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -136,6 +136,21 @@ export default async function SellerStorePage(props: Props) {
+     .where(and(...activeConditions))
+     .orderBy(desc(listings.createdAt));
+ 
++  // Fetch unfiltered active listings for the header strip fallback
++  const unfilteredActiveListings = await db.select({
++      id: listings.id,
++      cardId: listings.cardId,
++      title: listings.title,
++      priceCents: listings.priceCents,
++      grade: listings.grade,
++      gradingCompany: listings.gradingCompany,
++      condition: listings.condition,
++      photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE item_photos.card_id = listings.card_id), '[]'::json)`,
++    })
++    .from(listings)
++    .where(and(eq(listings.sellerId, seller.userId), eq(listings.status, "ACTIVE")))
++    .orderBy(desc(listings.createdAt));
++
+   // Fetch binder cards
+   const binderCards = await db.select({
+       id: cards.id,
+@@ -179,8 +194,8 @@ export default async function SellerStorePage(props: Props) {
+   let heroCardsData = [];
+   if (headerIds.length > 0) {
+     heroCardsData = binderCards.filter(c => headerIds.includes(c.id));
+-  } else if (activeListings.length > 0) {
+-    heroCardsData = activeListings;
++  } else if (unfilteredActiveListings.length > 0) {
++    heroCardsData = unfilteredActiveListings;
+   } else {
+     heroCardsData = binderCards;
+   }
+
+commit fa888b07266c1b0a571a97493e47406c13fdee82
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Wed May 27 01:07:00 2026 -0500
+
+    fix: explicit array types for TS strict mode
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index 5c683fc1..30488549 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -18,7 +18,7 @@ import { like, lte, gte, between } from "drizzle-orm";
+ 
+ interface Props {
+   params: Promise<{ handle: string }>;
+-  searchParams: Promise<{ tab?: string }>;
++  searchParams: Promise<Record<string, string | undefined>>;
+ }
+ 
+ export async function generateMetadata(props: Props): Promise<Metadata> {
+
+commit 1a8398fc657b2edab1dbd67a510798f2b90aa8f8
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Wed May 27 01:02:09 2026 -0500
+
+    feat: V1 category system phase 1
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index 4ded23e5..5c683fc1 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -12,6 +12,9 @@ import { auth } from "@clerk/nextjs/server";
+ import { getPossessiveName } from "@/lib/utils/formatters";
+ import { Lock } from "lucide-react";
+ import { HeaderCustomizer } from "@/components/shared/HeaderCustomizer";
++import { FiltersDrawer } from "@/components/storefront/FiltersDrawer";
++import { ActiveFilterChips } from "@/components/storefront/ActiveFilterChips";
++import { like, lte, gte, between } from "drizzle-orm";
+ 
+ interface Props {
+   params: Promise<{ handle: string }>;
+@@ -77,6 +80,47 @@ export default async function SellerStorePage(props: Props) {
+   
+   const currentTab = searchParams.tab || (isSellerLayout ? "storefront" : "collection");
+ 
++  const activeConditions = [
++    eq(listings.sellerId, seller.userId),
++    eq(listings.status, "ACTIVE")
++  ];
++
++  if (searchParams.sport) {
++    if (searchParams.sport === 'tcg' || searchParams.sport === 'non-sport') {
++      activeConditions.push(like(listings.sport, `${searchParams.sport}%`));
++    } else {
++      activeConditions.push(eq(listings.sport, searchParams.sport));
++    }
++  }
++  
++  if (searchParams.listing_type) {
++    activeConditions.push(eq(listings.listingType, searchParams.listing_type));
++  }
++
++  if (searchParams.grade) {
++    const gradeMap: Record<string, string> = {
++      'psa-10': 'PSA 10',
++      'psa-9': 'PSA 9',
++      'other-graded': 'Other Graded',
++      'raw': 'Raw / Ungraded'
++    };
++    if (gradeMap[searchParams.grade]) {
++      activeConditions.push(eq(listings.gradeTier, gradeMap[searchParams.grade]));
++    }
++  }
++
++  if (searchParams.era) {
++    activeConditions.push(eq(listings.era, searchParams.era));
++  }
++
++  if (searchParams.price) {
++    if (searchParams.price === 'under-50') activeConditions.push(lte(listings.priceCents, 5000));
++    else if (searchParams.price === '50-200') activeConditions.push(between(listings.priceCents, 5000, 20000));
++    else if (searchParams.price === '200-1000') activeConditions.push(between(listings.priceCents, 20000, 100000));
++    else if (searchParams.price === '1000-5000') activeConditions.push(between(listings.priceCents, 100000, 500000));
++    else if (searchParams.price === '5000-plus') activeConditions.push(gte(listings.priceCents, 500000));
++  }
++
+   // Fetch active listings for Storefront / Active Listings tab
+   const activeListings = await db.select({
+       id: listings.id,
+@@ -89,10 +133,7 @@ export default async function SellerStorePage(props: Props) {
+       photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE item_photos.card_id = listings.card_id), '[]'::json)`,
+     })
+     .from(listings)
+-    .where(and(
+-      eq(listings.sellerId, seller.userId),
+-      eq(listings.status, "ACTIVE")
+-    ))
++    .where(and(...activeConditions))
+     .orderBy(desc(listings.createdAt));
+ 
+   // Fetch binder cards
+@@ -194,7 +235,8 @@ export default async function SellerStorePage(props: Props) {
+             </h2>
+           </div>
+ 
+-          <div className="pb-4 flex items-center z-10">
++          <div className="pb-4 flex items-center z-10 gap-2">
++            <FiltersDrawer />
+             <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 rounded-lg border border-white/5">
+               <Lock className="w-4 h-4 text-zinc-500" />
+               <span className="text-xs font-semibold text-zinc-400">
+@@ -206,6 +248,10 @@ export default async function SellerStorePage(props: Props) {
+ 
+         {/* Tab Content Areas */}
+         <div className="min-h-[400px]">
++          {(currentTab === "storefront" || currentTab === "active-listings") && (
++            <ActiveFilterChips />
++          )}
++
+           {(currentTab === "collection" || (currentTab === "binder" && !seller.binderPrivate)) && (
+             <BinderGrid 
+               isOwner={isOwner}
+
+commit cbe225e5e22ae556a88ee5a84cf0b07159686054
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Tue May 26 22:56:35 2026 -0500
+
+    fix: restore single photoUrl logic and fix typings
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index de7f171f..4ded23e5 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -148,7 +148,7 @@ export default async function SellerStorePage(props: Props) {
+   // To make the header strip start with Pokemon, we offset by 1.
+   const formattedHeroCards = heroCardsData.slice(1, 20).map(item => ({
+     id: item.id.toString(),
+-    url: (item.photos && item.photos.length > 1) ? item.photos[1] : (item.photos && item.photos[0]) ? item.photos[0] : 'https://placehold.co/300x400/1a1a1a/333333?text=PSA+10'
++    url: (item.photos && item.photos[0]) ? item.photos[0] : 'https://placehold.co/300x400/1a1a1a/333333?text=PSA+10'
+   }));
+ 
+   return (
+
+commit a4a397a03f8f4f46cee2fea10986e22c43869830
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Tue May 26 22:29:45 2026 -0500
+
+    feat: dual photo support for slabbed vs raw pokemon cards
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index 4ded23e5..de7f171f 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -148,7 +148,7 @@ export default async function SellerStorePage(props: Props) {
+   // To make the header strip start with Pokemon, we offset by 1.
+   const formattedHeroCards = heroCardsData.slice(1, 20).map(item => ({
+     id: item.id.toString(),
+-    url: (item.photos && item.photos[0]) ? item.photos[0] : 'https://placehold.co/300x400/1a1a1a/333333?text=PSA+10'
++    url: (item.photos && item.photos.length > 1) ? item.photos[1] : (item.photos && item.photos[0]) ? item.photos[0] : 'https://placehold.co/300x400/1a1a1a/333333?text=PSA+10'
+   }));
+ 
+   return (
+
+commit 147283709d6c2781a0a6059dadf25fbb6885059d
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Tue May 26 21:59:44 2026 -0500
+
+    fix: explicit 19 local cards, correct ordering and exact card sizing
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index 8cc5a061..4ded23e5 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -144,7 +144,9 @@ export default async function SellerStorePage(props: Props) {
+     heroCardsData = binderCards;
+   }
+ 
+-  const formattedHeroCards = heroCardsData.slice(0, 19).map(item => ({
++  // Since the grid needs to start with Sports, activeListings starts with Sports.
++  // To make the header strip start with Pokemon, we offset by 1.
++  const formattedHeroCards = heroCardsData.slice(1, 20).map(item => ({
+     id: item.id.toString(),
+     url: (item.photos && item.photos[0]) ? item.photos[0] : 'https://placehold.co/300x400/1a1a1a/333333?text=PSA+10'
+   }));
+
+commit 65334d7c1fef9a955569bf947737663f0d7916b8
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Tue May 26 21:38:37 2026 -0500
+
+    feat: horizontal scrolling header strip with 19 cards checkerboard
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index e9567715..8cc5a061 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -144,7 +144,7 @@ export default async function SellerStorePage(props: Props) {
+     heroCardsData = binderCards;
+   }
+ 
+-  const formattedHeroCards = heroCardsData.slice(0, 12).map(item => ({
++  const formattedHeroCards = heroCardsData.slice(0, 19).map(item => ({
+     id: item.id.toString(),
+     url: (item.photos && item.photos[0]) ? item.photos[0] : 'https://placehold.co/300x400/1a1a1a/333333?text=PSA+10'
+   }));
+
+commit 2513575d0ad0f64aaca53d514f2388c1ddac7ae6
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Tue May 26 21:24:15 2026 -0500
+
+    fix: resolve SQL photo duplication bug and reduce header cards
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index f57f8b95..e9567715 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -86,7 +86,7 @@ export default async function SellerStorePage(props: Props) {
+       grade: listings.grade,
+       gradingCompany: listings.gradingCompany,
+       condition: listings.condition,
+-      photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE card_id = ${listings.cardId}), '[]'::json)`,
++      photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE item_photos.card_id = listings.card_id), '[]'::json)`,
+     })
+     .from(listings)
+     .where(and(
+@@ -103,7 +103,7 @@ export default async function SellerStorePage(props: Props) {
+       grade: cards.grade,
+       gradingCompany: cards.gradingCompany,
+       condition: cards.condition,
+-      photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE card_id = ${cards.id}), '[]'::json)`,
++      photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE item_photos.card_id = cards.id), '[]'::json)`,
+     })
+     .from(cards)
+     .where(eq(cards.ownerId, seller.userId))
+
+commit 0c822d6315744b8e419a7818acee7c2efb77fba9
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Tue May 26 20:43:23 2026 -0500
+
+    feat: restore edge-bleed header, upgrade mock data, add buyer badges
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index 95b25d02..f57f8b95 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -144,7 +144,7 @@ export default async function SellerStorePage(props: Props) {
+     heroCardsData = binderCards;
+   }
+ 
+-  const formattedHeroCards = heroCardsData.slice(0, 8).map(item => ({
++  const formattedHeroCards = heroCardsData.slice(0, 12).map(item => ({
+     id: item.id.toString(),
+     url: (item.photos && item.photos[0]) ? item.photos[0] : 'https://placehold.co/300x400/1a1a1a/333333?text=PSA+10'
+   }));
+
+commit d7052204628d9bc44c1469dff95ce3615408b24a
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Tue May 26 20:05:55 2026 -0500
+
+    feat: extract and integrate seller badges
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index 300e035e..95b25d02 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -164,6 +164,7 @@ export default async function SellerStorePage(props: Props) {
+           bannerImageUrl={seller.bannerImageUrl}
+           isOwner={isOwner}
+           sellerId={seller.userId}
++          badges={(seller.badges as string[]) || []}
+           heroCards={formattedHeroCards}
+           customizerNode={isOwner ? <HeaderCustomizer cards={binderCards} selectedIds={headerIds as number[]} /> : undefined}
+         />
+
+commit 1a138bcde3809553c6590efbbe9e82bfa2f1f539
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Tue May 26 19:56:58 2026 -0500
+
+    feat: complete phase 2 layout forking and migrations
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index c30c5977..300e035e 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -1,7 +1,7 @@
+ import { notFound } from "next/navigation";
+ import { RESERVED_HANDLES } from "@/lib/reserved-handles";
+ import { db } from "@/lib/db";
+-import { sellers, listings } from "@/lib/db/schema";
++import { profiles, listings, users, cards, itemPhotos } from "@/lib/db/schema";
+ import { eq, desc, and, sql } from "drizzle-orm";
+ import { Metadata } from "next";
+ import Link from "next/link";
+@@ -11,6 +11,7 @@ import { BinderGrid } from "@/components/shared/BinderGrid";
+ import { auth } from "@clerk/nextjs/server";
+ import { getPossessiveName } from "@/lib/utils/formatters";
+ import { Lock } from "lucide-react";
++import { HeaderCustomizer } from "@/components/shared/HeaderCustomizer";
+ 
+ interface Props {
+   params: Promise<{ handle: string }>;
+@@ -25,11 +26,19 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
+     return {};
+   }
+ 
+-  const [seller] = await db.select().from(sellers).where(sql`lower(${sellers.handle}) = ${handleLower}`).limit(1);
++  const [profileRecord] = await db.select({
++    profile: profiles,
++    accountType: users.accountType
++  })
++  .from(profiles)
++  .innerJoin(users, eq(profiles.userId, users.id))
++  .where(sql`lower(${profiles.handle}) = ${handleLower}`)
++  .limit(1);
+   
+-  if (!seller || seller.approvalStatus !== "approved") {
++  if (!profileRecord || profileRecord.profile.approvalStatus === "rejected") {
+     return {};
+   }
++  const seller = profileRecord.profile;
+ 
+   const displayName = seller.displayName || seller.businessName;
+   const description = seller.bio ? seller.bio : `${displayName}'s card collection on Trax.`;
+@@ -51,27 +60,33 @@ export default async function SellerStorePage(props: Props) {
+   const searchParams = await props.searchParams;
+   const handleLower = params.handle.toLowerCase();
+   
+-  // Default to collection tab if none specified
+-  const currentTab = searchParams.tab || "collection"; 
++  const [profileRecord] = await db.select({
++    profile: profiles,
++    accountType: users.accountType
++  })
++  .from(profiles)
++  .innerJoin(users, eq(profiles.userId, users.id))
++  .where(sql`lower(${profiles.handle}) = ${handleLower}`)
++  .limit(1);
+ 
+-  if (RESERVED_HANDLES.has(handleLower)) {
+-    notFound();
+-  }
+-
+-  const [seller] = await db.select().from(sellers).where(sql`lower(${sellers.handle}) = ${handleLower}`).limit(1);
+-
+-  if (!seller || seller.approvalStatus !== "approved") {
++  if (!profileRecord || profileRecord.profile.approvalStatus === "rejected") {
+     notFound();
+   }
++  const seller = profileRecord.profile;
++  const isSellerLayout = profileRecord.accountType === "seller" && seller.kycStatus === "verified";
++  
++  const currentTab = searchParams.tab || (isSellerLayout ? "storefront" : "collection");
+ 
++  // Fetch active listings for Storefront / Active Listings tab
+   const activeListings = await db.select({
+       id: listings.id,
++      cardId: listings.cardId,
+       title: listings.title,
+       priceCents: listings.priceCents,
+       grade: listings.grade,
+       gradingCompany: listings.gradingCompany,
+       condition: listings.condition,
+-      photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM listing_photos WHERE listing_id = ${listings.id}), '[]'::json)`,
++      photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE card_id = ${listings.cardId}), '[]'::json)`,
+     })
+     .from(listings)
+     .where(and(
+@@ -80,10 +95,59 @@ export default async function SellerStorePage(props: Props) {
+     ))
+     .orderBy(desc(listings.createdAt));
+ 
++  // Fetch binder cards
++  const binderCards = await db.select({
++      id: cards.id,
++      title: cards.title,
++      category: cards.category,
++      grade: cards.grade,
++      gradingCompany: cards.gradingCompany,
++      condition: cards.condition,
++      photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE card_id = ${cards.id}), '[]'::json)`,
++    })
++    .from(cards)
++    .where(eq(cards.ownerId, seller.userId))
++    .orderBy(desc(cards.createdAt));
++
+   const isOwner = seller.userId === userId;
+   const sellerName = seller.displayName || seller.businessName;
+   const possessiveName = getPossessiveName(sellerName, isOwner);
+-  const grailId = seller.grailListingId || (activeListings.length > 0 ? activeListings[0].id : null);
++  const grailId = seller.grailCardId || (binderCards.length > 0 ? binderCards[0].id : null);
++  
++  const tabs = isSellerLayout 
++    ? [
++        { id: "storefront", label: "Storefront", possessive: "Storefront" },
++        { id: "binder", label: "Binder", possessive: "Binder" },
++        { id: "ratings", label: "Ratings", possessive: "Ratings" },
++        { id: "blog", label: "Blog", possessive: "Blog" }
++      ]
++    : [
++        { id: "collection", label: "Collection", possessive: "Binder" },
++        { id: "active-listings", label: "Active Listings", possessive: "Listings" },
++        { id: "ratings", label: "Ratings", possessive: "Ratings" },
++        { id: "blog", label: "Blog", possessive: "Blog" }
++      ];
++
++  const currentTabInfo = tabs.find(t => t.id === currentTab) || tabs[0];
++
++  // Derive hero shelf cards
++  // User selected IDs in profile.headerCustomizationIds (if array)
++  const headerIds = Array.isArray(seller.headerCustomizationIds) ? seller.headerCustomizationIds : [];
++  
++  // If owner customized, pick those from binder. Else fallback to top 8 active listings, else top 8 binder cards.
++  let heroCardsData = [];
++  if (headerIds.length > 0) {
++    heroCardsData = binderCards.filter(c => headerIds.includes(c.id));
++  } else if (activeListings.length > 0) {
++    heroCardsData = activeListings;
++  } else {
++    heroCardsData = binderCards;
++  }
++
++  const formattedHeroCards = heroCardsData.slice(0, 8).map(item => ({
++    id: item.id.toString(),
++    url: (item.photos && item.photos[0]) ? item.photos[0] : 'https://placehold.co/300x400/1a1a1a/333333?text=PSA+10'
++  }));
+ 
+   return (
+     <div className="min-h-screen bg-black text-white selection:bg-[#7C3AED]/30 relative">
+@@ -100,51 +164,30 @@ export default async function SellerStorePage(props: Props) {
+           bannerImageUrl={seller.bannerImageUrl}
+           isOwner={isOwner}
+           sellerId={seller.userId}
+-        // Passing the listings photos to the background shelf if they exist
+-        heroCards={activeListings.slice(0, 8).map(l => ({ 
+-          id: l.id.toString(), 
+-          url: (l.photos && l.photos[0]) ? l.photos[0] : 'https://placehold.co/300x400/1a1a1a/333333?text=PSA+10' 
+-        }))}
+-      />
++          heroCards={formattedHeroCards}
++          customizerNode={isOwner ? <HeaderCustomizer cards={binderCards} selectedIds={headerIds as number[]} /> : undefined}
++        />
+ 
+       <main className="max-w-7xl mx-auto px-4 md:px-8 pb-12">
+         
+         {/* Navigation Tabs Row */}
+         <div className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-white/10 mb-6 mt-0 gap-4 relative">
+           <nav className="flex items-center gap-6 overflow-x-auto pb-[-1px] scrollbar-hide relative z-10">
+-            <Link 
+-              href={`/${seller.handle}?tab=collection`}
+-              className={`pb-4 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${currentTab === 'collection' ? 'border-white text-white' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+-            >
+-              Collection
+-            </Link>
+-            <Link 
+-              href={`/${seller.handle}?tab=active-listings`}
+-              className={`pb-4 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${currentTab === 'active-listings' ? 'border-white text-white' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+-            >
+-              Active Listings
+-            </Link>
+-            <Link 
+-              href={`/${seller.handle}?tab=ratings`}
+-              className={`pb-4 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${currentTab === 'ratings' ? 'border-white text-white' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+-            >
+-              Ratings
+-            </Link>
+-            <Link 
+-              href={`/${seller.handle}?tab=blog`}
+-              className={`pb-4 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${currentTab === 'blog' ? 'border-white text-white' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+-            >
+-              Blog
+-            </Link>
++            {tabs.map((tab) => (
++              <Link 
++                key={tab.id}
++                href={`/${seller.handle}?tab=${tab.id}`}
++                className={`pb-4 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${currentTab === tab.id ? 'border-white text-white' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
++              >
++                {tab.label}
++              </Link>
++            ))}
+           </nav>
+           
+           {/* Center Dynamic Title (Visible on larger screens to prevent crowding) */}
+           <div className="absolute left-1/2 -translate-x-1/2 bottom-3 hidden lg:block pointer-events-none">
+             <h2 className="text-xl font-[family-name:var(--font-display)] font-light tracking-[0.1em] uppercase text-white">
+-              {currentTab === 'collection' ? `${possessiveName} Binder` : 
+-               currentTab === 'active-listings' ? `${possessiveName} Listings` :
+-               currentTab === 'ratings' ? `${possessiveName} Ratings` :
+-               `${possessiveName} Blog`}
++              {possessiveName} {currentTabInfo.possessive}
+             </h2>
+           </div>
+ 
+@@ -160,26 +203,57 @@ export default async function SellerStorePage(props: Props) {
+ 
+         {/* Tab Content Areas */}
+         <div className="min-h-[400px]">
+-          {currentTab === "collection" && (
++          {(currentTab === "collection" || (currentTab === "binder" && !seller.binderPrivate)) && (
+             <BinderGrid 
+               isOwner={isOwner}
+               sellerName={sellerName}
+-              listings={activeListings} 
+-              grailListingId={grailId}
++              cards={binderCards} 
++              activeListings={activeListings}
++              grailCardId={grailId}
+             />
+           )}
+ 
+-          {currentTab === "active-listings" && (
++          {currentTab === "binder" && seller.binderPrivate && !isOwner && (
++            <div className="text-center py-24 bg-zinc-950/50 rounded-xl border border-white/5">
++              <Lock className="w-8 h-8 text-zinc-500 mx-auto mb-4" />
++              <p className="text-lg text-zinc-400">{sellerName}'s binder is private.</p>
++            </div>
++          )}
++
++          {currentTab === "binder" && seller.binderPrivate && isOwner && (
++            <div className="mb-4 p-4 bg-violet-500/10 border border-violet-500/20 rounded-lg text-violet-200 text-sm flex items-center justify-center gap-2">
++              <Lock className="w-4 h-4" />
++              Your binder is currently private. Only you can see this tab.
++            </div>
++          )}
++
++          {currentTab === "binder" && seller.binderPrivate && isOwner && (
++            <BinderGrid 
++              isOwner={isOwner}
++              sellerName={sellerName}
++              cards={binderCards} 
++              activeListings={activeListings}
++              grailCardId={grailId}
++            />
++          )}
++
++          {(currentTab === "storefront" || currentTab === "active-listings") && activeListings.length > 0 && (
+             <ActiveListingsGrid 
+               isOwner={isOwner}
+-              grailListingId={grailId}
+               listings={activeListings} 
+             />
+           )}
+ 
++          {(currentTab === "storefront" || currentTab === "active-listings") && activeListings.length === 0 && (
++            <div className="text-center py-24 bg-zinc-950/50 rounded-xl border border-white/5 flex flex-col items-center">
++              <p className="text-lg text-zinc-500 mb-2">No active listings...yet 👀</p>
++              {!isSellerLayout && <p className="text-sm text-zinc-600">Want to sell on Trax? Upgrade to a Seller account.</p>}
++            </div>
++          )}
++
+           {currentTab === "ratings" && (
+             <div className="text-center py-24 bg-zinc-950/50 rounded-xl border border-white/5">
+-              <p className="text-lg text-zinc-500">Ratings coming soon.</p>
++              <p className="text-lg text-zinc-500">{isSellerLayout ? "No seller ratings yet." : "No buyer ratings."}</p>
+             </div>
+           )}
+ 
+
+commit 51bede03e01be08936eeffb64360eb6728924457
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Tue May 26 13:41:12 2026 -0500
+
+    style: condense profile layout for single-frame composition
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index 7a6091b9..c30c5977 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -107,10 +107,10 @@ export default async function SellerStorePage(props: Props) {
+         }))}
+       />
+ 
+-      <main className="max-w-7xl mx-auto px-4 md:px-8 pb-24">
++      <main className="max-w-7xl mx-auto px-4 md:px-8 pb-12">
+         
+         {/* Navigation Tabs Row */}
+-        <div className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-white/10 mb-8 mt-4 gap-4 relative">
++        <div className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-white/10 mb-6 mt-0 gap-4 relative">
+           <nav className="flex items-center gap-6 overflow-x-auto pb-[-1px] scrollbar-hide relative z-10">
+             <Link 
+               href={`/${seller.handle}?tab=collection`}
+
+commit 828f6ebc00449f871f9885d18db05f736fd55765
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Tue May 26 12:46:19 2026 -0500
+
+    feat: design polish and UI restructure
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index c115ff06..7a6091b9 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -5,11 +5,12 @@ import { sellers, listings } from "@/lib/db/schema";
+ import { eq, desc, and, sql } from "drizzle-orm";
+ import { Metadata } from "next";
+ import Link from "next/link";
+-import { ProfileHeader } from "@/components/shared/ProfileHeader";
+ import { SellerHero } from "@/components/shared/SellerHero";
+ import { ActiveListingsGrid } from "@/components/storefront/ActiveListingsGrid";
+ import { BinderGrid } from "@/components/shared/BinderGrid";
+ import { auth } from "@clerk/nextjs/server";
++import { getPossessiveName } from "@/lib/utils/formatters";
++import { Lock } from "lucide-react";
+ 
+ interface Props {
+   params: Promise<{ handle: string }>;
+@@ -80,19 +81,25 @@ export default async function SellerStorePage(props: Props) {
+     .orderBy(desc(listings.createdAt));
+ 
+   const isOwner = seller.userId === userId;
++  const sellerName = seller.displayName || seller.businessName;
++  const possessiveName = getPossessiveName(sellerName, isOwner);
+   const grailId = seller.grailListingId || (activeListings.length > 0 ? activeListings[0].id : null);
+ 
+   return (
+-    <div className="min-h-screen bg-black text-white selection:bg-[#7C3AED]/30">
+-      <ProfileHeader />
++    <div className="min-h-screen bg-black text-white selection:bg-[#7C3AED]/30 relative">
++      {/* Ambient background glow */}
++      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#7C3AED]/10 via-black to-black opacity-50 z-0" />
+       
+-      <SellerHero 
+-        name={seller.displayName || seller.businessName}
+-        handle={seller.handle || ''}
+-        bio={seller.bio}
+-        avatarUrl={seller.profilePhotoUrl}
+-        headerStyle={seller.headerStyle}
+-        bannerImageUrl={seller.bannerImageUrl}
++      <div className="relative z-10">
++        <SellerHero 
++          name={sellerName}
++          handle={seller.handle || ''}
++          bio={seller.bio}
++          avatarUrl={seller.profilePhotoUrl}
++          headerStyle={seller.headerStyle}
++          bannerImageUrl={seller.bannerImageUrl}
++          isOwner={isOwner}
++          sellerId={seller.userId}
+         // Passing the listings photos to the background shelf if they exist
+         heroCards={activeListings.slice(0, 8).map(l => ({ 
+           id: l.id.toString(), 
+@@ -103,8 +110,8 @@ export default async function SellerStorePage(props: Props) {
+       <main className="max-w-7xl mx-auto px-4 md:px-8 pb-24">
+         
+         {/* Navigation Tabs Row */}
+-        <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-white/10 mb-8 mt-4 gap-4">
+-          <nav className="flex items-center gap-6 overflow-x-auto pb-[-1px] scrollbar-hide">
++        <div className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-white/10 mb-8 mt-4 gap-4 relative">
++          <nav className="flex items-center gap-6 overflow-x-auto pb-[-1px] scrollbar-hide relative z-10">
+             <Link 
+               href={`/${seller.handle}?tab=collection`}
+               className={`pb-4 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${currentTab === 'collection' ? 'border-white text-white' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+@@ -131,10 +138,23 @@ export default async function SellerStorePage(props: Props) {
+             </Link>
+           </nav>
+           
+-          <div className="pb-4 flex items-center">
+-            <span className="text-xs md:text-sm font-medium text-zinc-400">
+-              Trusted by <span className="text-white">12,500+</span>
+-            </span>
++          {/* Center Dynamic Title (Visible on larger screens to prevent crowding) */}
++          <div className="absolute left-1/2 -translate-x-1/2 bottom-3 hidden lg:block pointer-events-none">
++            <h2 className="text-xl font-[family-name:var(--font-display)] font-light tracking-[0.1em] uppercase text-white">
++              {currentTab === 'collection' ? `${possessiveName} Binder` : 
++               currentTab === 'active-listings' ? `${possessiveName} Listings` :
++               currentTab === 'ratings' ? `${possessiveName} Ratings` :
++               `${possessiveName} Blog`}
++            </h2>
++          </div>
++
++          <div className="pb-4 flex items-center z-10">
++            <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 rounded-lg border border-white/5">
++              <Lock className="w-4 h-4 text-zinc-500" />
++              <span className="text-xs font-semibold text-zinc-400">
++                {isOwner ? `$${(2450000 / 100).toLocaleString()}` : "Private Value"}
++              </span>
++            </div>
+           </div>
+         </div>
+ 
+@@ -143,9 +163,9 @@ export default async function SellerStorePage(props: Props) {
+           {currentTab === "collection" && (
+             <BinderGrid 
+               isOwner={isOwner}
++              sellerName={sellerName}
+               listings={activeListings} 
+               grailListingId={grailId}
+-              collectionValueCents={isOwner ? 2450000 : 0} // Uses a hardcoded mock value for owner just for V1 prototype until tracker is integrated
+             />
+           )}
+ 
+@@ -170,6 +190,7 @@ export default async function SellerStorePage(props: Props) {
+           )}
+         </div>
+       </main>
++      </div>
+     </div>
+   );
+ }
+
+commit d524e0a4c9cb960d79a6639ca53f7ac5962beef3
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Tue May 26 10:40:32 2026 -0500
+
+    feat: Add photo banner header
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index bfb05972..c115ff06 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -91,6 +91,8 @@ export default async function SellerStorePage(props: Props) {
+         handle={seller.handle || ''}
+         bio={seller.bio}
+         avatarUrl={seller.profilePhotoUrl}
++        headerStyle={seller.headerStyle}
++        bannerImageUrl={seller.bannerImageUrl}
+         // Passing the listings photos to the background shelf if they exist
+         heroCards={activeListings.slice(0, 8).map(l => ({ 
+           id: l.id.toString(), 
+
+commit 57169921fcb4c6c27a97fb2b5a30d75d5f37af8a
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Mon May 25 19:08:30 2026 -0500
+
+    feat: V1 Profile Build and Settings Dashboard
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index ea1531cd..bfb05972 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -5,9 +5,15 @@ import { sellers, listings } from "@/lib/db/schema";
+ import { eq, desc, and, sql } from "drizzle-orm";
+ import { Metadata } from "next";
+ import Link from "next/link";
++import { ProfileHeader } from "@/components/shared/ProfileHeader";
++import { SellerHero } from "@/components/shared/SellerHero";
++import { ActiveListingsGrid } from "@/components/storefront/ActiveListingsGrid";
++import { BinderGrid } from "@/components/shared/BinderGrid";
++import { auth } from "@clerk/nextjs/server";
+ 
+ interface Props {
+   params: Promise<{ handle: string }>;
++  searchParams: Promise<{ tab?: string }>;
+ }
+ 
+ export async function generateMetadata(props: Props): Promise<Metadata> {
+@@ -39,8 +45,13 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
+ }
+ 
+ export default async function SellerStorePage(props: Props) {
++  const { userId } = await auth();
+   const params = await props.params;
++  const searchParams = await props.searchParams;
+   const handleLower = params.handle.toLowerCase();
++  
++  // Default to collection tab if none specified
++  const currentTab = searchParams.tab || "collection"; 
+ 
+   if (RESERVED_HANDLES.has(handleLower)) {
+     notFound();
+@@ -68,97 +79,95 @@ export default async function SellerStorePage(props: Props) {
+     ))
+     .orderBy(desc(listings.createdAt));
+ 
+-  const memberSince = seller.createdAt.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
++  const isOwner = seller.userId === userId;
++  const grailId = seller.grailListingId || (activeListings.length > 0 ? activeListings[0].id : null);
+ 
+   return (
+-    <div className="min-h-screen bg-background">
+-      {/* Profile Header Block */}
+-      <div className="border-b border-white/10 bg-card/30">
+-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-16 flex flex-col items-center text-center">
+-          {seller.profilePhotoUrl ? (
+-            <img src={seller.profilePhotoUrl} alt="Profile" className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover mb-6 border-4 border-background" />
+-          ) : (
+-            <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-violet-600 flex items-center justify-center text-5xl md:text-6xl font-bold mb-6 border-4 border-background">
+-              {(seller.displayName || seller.businessName).charAt(0).toUpperCase()}
+-            </div>
+-          )}
+-          
+-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">
+-            {seller.displayName || seller.businessName}
+-          </h1>
+-          <p className="text-lg text-muted-foreground mb-4">@{seller.handle}</p>
+-          
+-          {seller.bio && (
+-            <p className="max-w-xl text-foreground mb-6">{seller.bio}</p>
+-          )}
++    <div className="min-h-screen bg-black text-white selection:bg-[#7C3AED]/30">
++      <ProfileHeader />
++      
++      <SellerHero 
++        name={seller.displayName || seller.businessName}
++        handle={seller.handle || ''}
++        bio={seller.bio}
++        avatarUrl={seller.profilePhotoUrl}
++        // Passing the listings photos to the background shelf if they exist
++        heroCards={activeListings.slice(0, 8).map(l => ({ 
++          id: l.id.toString(), 
++          url: (l.photos && l.photos[0]) ? l.photos[0] : 'https://placehold.co/300x400/1a1a1a/333333?text=PSA+10' 
++        }))}
++      />
++
++      <main className="max-w-7xl mx-auto px-4 md:px-8 pb-24">
++        
++        {/* Navigation Tabs Row */}
++        <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-white/10 mb-8 mt-4 gap-4">
++          <nav className="flex items-center gap-6 overflow-x-auto pb-[-1px] scrollbar-hide">
++            <Link 
++              href={`/${seller.handle}?tab=collection`}
++              className={`pb-4 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${currentTab === 'collection' ? 'border-white text-white' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
++            >
++              Collection
++            </Link>
++            <Link 
++              href={`/${seller.handle}?tab=active-listings`}
++              className={`pb-4 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${currentTab === 'active-listings' ? 'border-white text-white' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
++            >
++              Active Listings
++            </Link>
++            <Link 
++              href={`/${seller.handle}?tab=ratings`}
++              className={`pb-4 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${currentTab === 'ratings' ? 'border-white text-white' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
++            >
++              Ratings
++            </Link>
++            <Link 
++              href={`/${seller.handle}?tab=blog`}
++              className={`pb-4 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${currentTab === 'blog' ? 'border-white text-white' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
++            >
++              Blog
++            </Link>
++          </nav>
+           
+-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+-            {seller.locationCity && (
+-              <span>{seller.locationCity}{seller.locationState ? `, ${seller.locationState}` : ''}</span>
+-            )}
+-            {seller.locationCity && <span>•</span>}
+-            <span>Member since {memberSince}</span>
++          <div className="pb-4 flex items-center">
++            <span className="text-xs md:text-sm font-medium text-zinc-400">
++              Trusted by <span className="text-white">12,500+</span>
++            </span>
+           </div>
+         </div>
+-      </div>
+-
+-      {/* Listings Grid */}
+-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-12">
+-        <div className="flex items-center justify-between mb-8">
+-          <h2 className="text-2xl font-bold tracking-tight">Active Listings</h2>
+-          <span className="bg-primary/20 text-primary py-1 px-3 rounded-full text-sm font-medium">
+-            {activeListings.length} {activeListings.length === 1 ? 'card' : 'cards'}
+-          </span>
+-        </div>
+ 
+-        {activeListings.length === 0 ? (
+-          <div className="text-center py-24 bg-card/30 rounded-xl border border-white/10">
+-            <p className="text-lg text-muted-foreground">No active listings right now. Check back soon.</p>
+-          </div>
+-        ) : (
+-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+-            {activeListings.map((listing) => {
+-              const photoUrl = (Array.isArray(listing.photos) && listing.photos.length > 0 && listing.photos[0] !== null) ? listing.photos[0] : 'https://placehold.co/400x550';
+-              
+-              return (
+-                <Link 
+-                  key={listing.id} 
+-                  href={`/listings/${listing.id}`} 
+-                  className="block"
+-                >
+-                  <div className="rounded-md overflow-hidden bg-card border border-border/50 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-150 cursor-pointer">
+-                    <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-neutral-900">
+-                      <img
+-                        src={photoUrl}
+-                        alt={listing.title}
+-                        className="absolute inset-0 h-full w-full object-cover"
+-                        loading="lazy"
+-                        draggable={false}
+-                        onError={(e) => {
+-                          (e.currentTarget as HTMLImageElement).style.visibility = "hidden";
+-                        }}
+-                      />
+-                    </div>
+-                    <div className="p-2 space-y-1">
+-                      <h3 className="text-sm font-medium line-clamp-1 text-foreground" title={listing.title}>
+-                        {listing.title}
+-                      </h3>
+-                      <div className="flex items-center justify-between">
+-                        <p className="text-base font-semibold text-foreground">
+-                          ${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+-                        </p>
+-                        <p className="text-xs text-muted-foreground truncate ml-2">
+-                          {listing.grade ? `${listing.gradingCompany} ${listing.grade}` : listing.condition}
+-                        </p>
+-                      </div>
+-                    </div>
+-                  </div>
+-                </Link>
+-              )
+-            })}
+-          </div>
+-        )}
+-      </div>
++        {/* Tab Content Areas */}
++        <div className="min-h-[400px]">
++          {currentTab === "collection" && (
++            <BinderGrid 
++              isOwner={isOwner}
++              listings={activeListings} 
++              grailListingId={grailId}
++              collectionValueCents={isOwner ? 2450000 : 0} // Uses a hardcoded mock value for owner just for V1 prototype until tracker is integrated
++            />
++          )}
++
++          {currentTab === "active-listings" && (
++            <ActiveListingsGrid 
++              isOwner={isOwner}
++              grailListingId={grailId}
++              listings={activeListings} 
++            />
++          )}
++
++          {currentTab === "ratings" && (
++            <div className="text-center py-24 bg-zinc-950/50 rounded-xl border border-white/5">
++              <p className="text-lg text-zinc-500">Ratings coming soon.</p>
++            </div>
++          )}
++
++          {currentTab === "blog" && (
++            <div className="text-center py-24 bg-zinc-950/50 rounded-xl border border-white/5">
++              <p className="text-lg text-zinc-500">Blog posts coming soon.</p>
++            </div>
++          )}
++        </div>
++      </main>
+     </div>
+   );
+ }
+
+commit cfa07653958eb2a322353e14f8fa6f9b75327ecc
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Tue Apr 28 10:41:41 2026 -0500
+
+    Phase 5a.1 — drop photos column, add listing_photos sync, approval gate on /sell/new
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+index 7a03a7c8..ea1531cd 100644
+--- a/src/app/[handle]/page.tsx
++++ b/src/app/[handle]/page.tsx
+@@ -52,7 +52,15 @@ export default async function SellerStorePage(props: Props) {
+     notFound();
+   }
+ 
+-  const activeListings = await db.select()
++  const activeListings = await db.select({
++      id: listings.id,
++      title: listings.title,
++      priceCents: listings.priceCents,
++      grade: listings.grade,
++      gradingCompany: listings.gradingCompany,
++      condition: listings.condition,
++      photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM listing_photos WHERE listing_id = ${listings.id}), '[]'::json)`,
++    })
+     .from(listings)
+     .where(and(
+       eq(listings.sellerId, seller.userId),
+@@ -110,7 +118,7 @@ export default async function SellerStorePage(props: Props) {
+         ) : (
+           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+             {activeListings.map((listing) => {
+-              const photoUrl = Array.isArray(listing.photos) ? listing.photos[0] : (listing.photos as any || 'https://placehold.co/400x550');
++              const photoUrl = (Array.isArray(listing.photos) && listing.photos.length > 0 && listing.photos[0] !== null) ? listing.photos[0] : 'https://placehold.co/400x550';
+               
+               return (
+                 <Link 
+
+commit a33b45821e9f75b7427d61adc4211c0c6d676709
+Author: jacksonrichardcastro <jacksoncastrosmacbook@gmail.com>
+Date:   Tue Apr 28 01:04:00 2026 -0500
+
+    feat: phases 2.6 through 4c — brand integration, auth pages, seller onboarding, admin queue
+
+diff --git a/src/app/[handle]/page.tsx b/src/app/[handle]/page.tsx
+new file mode 100644
+index 00000000..7a03a7c8
+--- /dev/null
++++ b/src/app/[handle]/page.tsx
+@@ -0,0 +1,156 @@
++import { notFound } from "next/navigation";
++import { RESERVED_HANDLES } from "@/lib/reserved-handles";
++import { db } from "@/lib/db";
++import { sellers, listings } from "@/lib/db/schema";
++import { eq, desc, and, sql } from "drizzle-orm";
++import { Metadata } from "next";
++import Link from "next/link";
++
++interface Props {
++  params: Promise<{ handle: string }>;
++}
++
++export async function generateMetadata(props: Props): Promise<Metadata> {
++  const params = await props.params;
++  const handleLower = params.handle.toLowerCase();
++  
++  if (RESERVED_HANDLES.has(handleLower)) {
++    return {};
++  }
++
++  const [seller] = await db.select().from(sellers).where(sql`lower(${sellers.handle}) = ${handleLower}`).limit(1);
++  
++  if (!seller || seller.approvalStatus !== "approved") {
++    return {};
++  }
++
++  const displayName = seller.displayName || seller.businessName;
++  const description = seller.bio ? seller.bio : `${displayName}'s card collection on Trax.`;
++
++  return {
++    title: `${displayName} (@${seller.handle}) — Trax`,
++    description,
++    openGraph: {
++      title: `${displayName} on Trax`,
++      description,
++      images: seller.profilePhotoUrl ? [seller.profilePhotoUrl] : [],
++    },
++  };
++}
++
++export default async function SellerStorePage(props: Props) {
++  const params = await props.params;
++  const handleLower = params.handle.toLowerCase();
++
++  if (RESERVED_HANDLES.has(handleLower)) {
++    notFound();
++  }
++
++  const [seller] = await db.select().from(sellers).where(sql`lower(${sellers.handle}) = ${handleLower}`).limit(1);
++
++  if (!seller || seller.approvalStatus !== "approved") {
++    notFound();
++  }
++
++  const activeListings = await db.select()
++    .from(listings)
++    .where(and(
++      eq(listings.sellerId, seller.userId),
++      eq(listings.status, "ACTIVE")
++    ))
++    .orderBy(desc(listings.createdAt));
++
++  const memberSince = seller.createdAt.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
++
++  return (
++    <div className="min-h-screen bg-background">
++      {/* Profile Header Block */}
++      <div className="border-b border-white/10 bg-card/30">
++        <div className="max-w-7xl mx-auto px-4 md:px-8 py-16 flex flex-col items-center text-center">
++          {seller.profilePhotoUrl ? (
++            <img src={seller.profilePhotoUrl} alt="Profile" className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover mb-6 border-4 border-background" />
++          ) : (
++            <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-violet-600 flex items-center justify-center text-5xl md:text-6xl font-bold mb-6 border-4 border-background">
++              {(seller.displayName || seller.businessName).charAt(0).toUpperCase()}
++            </div>
++          )}
++          
++          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">
++            {seller.displayName || seller.businessName}
++          </h1>
++          <p className="text-lg text-muted-foreground mb-4">@{seller.handle}</p>
++          
++          {seller.bio && (
++            <p className="max-w-xl text-foreground mb-6">{seller.bio}</p>
++          )}
++          
++          <div className="flex items-center gap-4 text-sm text-muted-foreground">
++            {seller.locationCity && (
++              <span>{seller.locationCity}{seller.locationState ? `, ${seller.locationState}` : ''}</span>
++            )}
++            {seller.locationCity && <span>•</span>}
++            <span>Member since {memberSince}</span>
++          </div>
++        </div>
++      </div>
++
++      {/* Listings Grid */}
++      <div className="max-w-7xl mx-auto px-4 md:px-8 py-12">
++        <div className="flex items-center justify-between mb-8">
++          <h2 className="text-2xl font-bold tracking-tight">Active Listings</h2>
++          <span className="bg-primary/20 text-primary py-1 px-3 rounded-full text-sm font-medium">
++            {activeListings.length} {activeListings.length === 1 ? 'card' : 'cards'}
++          </span>
++        </div>
++
++        {activeListings.length === 0 ? (
++          <div className="text-center py-24 bg-card/30 rounded-xl border border-white/10">
++            <p className="text-lg text-muted-foreground">No active listings right now. Check back soon.</p>
++          </div>
++        ) : (
++          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
++            {activeListings.map((listing) => {
++              const photoUrl = Array.isArray(listing.photos) ? listing.photos[0] : (listing.photos as any || 'https://placehold.co/400x550');
++              
++              return (
++                <Link 
++                  key={listing.id} 
++                  href={`/listings/${listing.id}`} 
++                  className="block"
++                >
++                  <div className="rounded-md overflow-hidden bg-card border border-border/50 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-150 cursor-pointer">
++                    <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-neutral-900">
++                      <img
++                        src={photoUrl}
++                        alt={listing.title}
++                        className="absolute inset-0 h-full w-full object-cover"
++                        loading="lazy"
++                        draggable={false}
++                        onError={(e) => {
++                          (e.currentTarget as HTMLImageElement).style.visibility = "hidden";
++                        }}
++                      />
++                    </div>
++                    <div className="p-2 space-y-1">
++                      <h3 className="text-sm font-medium line-clamp-1 text-foreground" title={listing.title}>
++                        {listing.title}
++                      </h3>
++                      <div className="flex items-center justify-between">
++                        <p className="text-base font-semibold text-foreground">
++                          ${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
++                        </p>
++                        <p className="text-xs text-muted-foreground truncate ml-2">
++                          {listing.grade ? `${listing.gradingCompany} ${listing.grade}` : listing.condition}
++                        </p>
++                      </div>
++                    </div>
++                  </div>
++                </Link>
++              )
++            })}
++          </div>
++        )}
++      </div>
++    </div>
++  );
++}

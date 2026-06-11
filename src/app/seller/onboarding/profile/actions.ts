@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { profiles, sellerApprovalQueue } from "@/lib/db/schema";
+import { profiles, sellerApprovalQueue, storefronts } from "@/lib/db/schema";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { RESERVED_HANDLES } from "@/lib/reserved-handles";
@@ -47,6 +47,19 @@ export async function saveProfile(data: { handle: string; displayName: string; b
         profileSetupCompleted: true,
       },
     });
+
+  // Bug C Fix: Provision a default storefront
+  await db.insert(storefronts)
+    .values({
+      userId,
+      handle: data.handle,
+      displayName: data.displayName || data.handle,
+      bio: data.bio || null,
+      isDefaultForUser: true,
+      theme: "trax-cosmos",
+      themeScope: "profile-wide",
+    })
+    .onConflictDoNothing();
 
   const clerkUser = await currentUser();
   const email = clerkUser?.emailAddresses[0]?.emailAddress?.toLowerCase();

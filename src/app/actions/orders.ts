@@ -167,7 +167,7 @@ export async function updateOrderState(
   });
 }
 
-export async function createCheckoutSessionAction(listingIds: number[]) {
+export async function createCheckoutSessionAction(items: { id: number, quantity: number }[]) {
   const { userId } = await auth();
   if (!userId) return { error: "Unauthorized" };
 
@@ -180,9 +180,12 @@ export async function createCheckoutSessionAction(listingIds: number[]) {
     return { error: "Rate limit exceeded" };
   }
 
-  if (!listingIds || listingIds.length === 0) {
+  if (!items || items.length === 0) {
     return { error: "Cart is empty" };
   }
+
+  const itemMap = new Map(items.map(i => [i.id, i.quantity]));
+  const listingIds = items.map(i => i.id);
 
   // We explicitly fetch over active bounds structurally natively
   const dbItems = await db
@@ -192,6 +195,7 @@ export async function createCheckoutSessionAction(listingIds: number[]) {
       priceCents: listings.priceCents,
       sellerStripeId: profiles.stripeConnectAccountId,
       sellerId: listings.sellerId,
+      availableQuantity: listings.quantity,
     })
     .from(listings)
     .innerJoin(profiles, eq(listings.sellerId, profiles.userId))
@@ -199,6 +203,13 @@ export async function createCheckoutSessionAction(listingIds: number[]) {
 
   if (dbItems.length !== listingIds.length) {
     return { error: "One or more items not found or unavailable." };
+  }
+
+  for (const dbItem of dbItems) {
+    const requestedQty = itemMap.get(dbItem.id) || 1;
+    if (requestedQty > (dbItem.availableQuantity || 1)) {
+      return { error: `Not enough inventory for ${dbItem.title}. Only ${dbItem.availableQuantity} available.` };
+    }
   }
 
   const transferGroupId = `group_${Date.now()}_${Math.random().toString(36).substring(7)}`;
@@ -214,7 +225,7 @@ export async function createCheckoutSessionAction(listingIds: number[]) {
       },
       unit_amount: item.priceCents as number,
     },
-    quantity: 1,
+    quantity: itemMap.get(item.id) || 1,
   }));
 
   lineItems.push({
@@ -242,6 +253,7 @@ export async function createCheckoutSessionAction(listingIds: number[]) {
         buyerId: userId,
         transferGroupId,
         listingIds: JSON.stringify(listingIds),
+        orderItems: JSON.stringify(items.map(i => [i.id, i.quantity])),
       }
     });
 

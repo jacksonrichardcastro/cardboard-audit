@@ -87,9 +87,10 @@ export async function getTrendingListings(params?: {
             createdAt: listings.createdAt,
             photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE card_id = ${listings.cardId}), '[]'::json)`,
             sellerName: storefronts.displayName,
+            quantity: listings.quantity,
           })
           .from(listings)
-          .innerJoin(storefronts, eq(listings.storefrontId, storefronts.id))
+          .leftJoin(storefronts, eq(listings.storefrontId, storefronts.id))
           .where(filters.length > 0 ? and(...filters) : undefined)
           .orderBy(desc(listings.createdAt))
           .limit(32);
@@ -136,9 +137,10 @@ export async function getListingById(id: number) {
         shippingEstimate: listings.shippingEstimate,
         shippingMethod: listings.shippingMethod,
         sellerCreatedAt: users.createdAt,
+        quantity: listings.quantity,
       })
       .from(listings)
-      .innerJoin(storefronts, eq(listings.storefrontId, storefronts.id))
+      .leftJoin(storefronts, eq(listings.storefrontId, storefronts.id))
       .innerJoin(profiles, eq(listings.sellerId, profiles.userId))
       .innerJoin(users, eq(profiles.userId, users.id))
       .where(eq(listings.id, id))

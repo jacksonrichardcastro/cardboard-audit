@@ -147,11 +147,19 @@ async function handleCheckoutCompleted(event: Stripe.Event) {
   const session = event.data.object as Stripe.Checkout.Session;
 
   let listingIds: number[];
+  let orderItems: { id: number, quantity: number }[] = [];
   try {
     listingIds = JSON.parse(session.metadata?.listingIds ?? "[]");
+    if (session.metadata?.orderItems) {
+      const parsed = JSON.parse(session.metadata.orderItems);
+      orderItems = parsed.map((p: any[]) => ({ id: p[0], quantity: p[1] }));
+    } else {
+      orderItems = listingIds.map(id => ({ id, quantity: 1 }));
+    }
   } catch {
-    throw new Error(`Invalid listingIds metadata on session ${session.id}`);
+    throw new Error(`Invalid listingIds/orderItems metadata on session ${session.id}`);
   }
+  const quantityMap = new Map(orderItems.map(i => [i.id, i.quantity]));
   const buyerId = session.metadata?.buyerId;
   const transferGroupId = session.metadata?.transferGroupId;
 
@@ -168,6 +176,7 @@ async function handleCheckoutCompleted(event: Stripe.Event) {
       sellerId: listings.sellerId,
       sellerStripeId: profiles.stripeConnectAccountId,
       feeTier: profiles.feeTier,
+      quantity: listings.quantity,
     })
     .from(listings)
     .innerJoin(profiles, eq(listings.sellerId, profiles.userId))
@@ -179,42 +188,59 @@ async function handleCheckoutCompleted(event: Stripe.Event) {
     );
   }
 
-  // Create every order + its genesis state-transition in a single system-
-  // scoped transaction so a failure rolls back partial state instead of
-  // leaving some orders orphaned.
   await withUserContext("system", async (tx) => {
+    const sellerShippingCharged = new Set<string>();
+
     for (const item of dbItems) {
-      // Fee: founding tier 3%, standard tier 5%. Integer math only — cents in,
-      // cents out. floor() avoids rounding up to the seller's detriment.
-      const feeBps = item.feeTier === "founding" ? 300 : 500;
-      const feeCents = Math.floor(((item.priceCents as number) * feeBps) / 10_000);
+      const purchasedQuantity = quantityMap.get(item.id) || 1;
+      const newQuantity = Math.max(0, (item.quantity as number) - purchasedQuantity);
 
-      const [newOrder] = await tx
-        .insert(orders)
-        .values({
-          buyerId,
-          sellerId: item.sellerId,
-          listingId: item.id,
-          currentState: "PAID",
-          priceCentsAtSale: item.priceCents,
-          taxCents: 0,
-          shippingCents: 500,
-          totalCents: (item.priceCents as number) + 500,
-          feeCents,
-          stripePaymentIntentId:
-            typeof session.payment_intent === "string"
-              ? session.payment_intent
-              : session.payment_intent?.id ?? null,
-          transferGroupId,
+      await tx.update(listings)
+        .set({ 
+          quantity: newQuantity,
+          status: newQuantity === 0 ? 'sold' : 'active'
         })
-        .returning({ id: orders.id });
+        .where(eq(listings.id, item.id));
 
-      await tx.insert(stateTransitions).values({
-        orderId: newOrder.id,
-        newState: "PAID",
-        actorId: "system",
-        notes: "Checkout completed — funds held in platform escrow.",
-      });
+      for (let i = 0; i < purchasedQuantity; i++) {
+        // Fee: founding tier 3%, standard tier 5%. Integer math only — cents in,
+        // cents out. floor() avoids rounding up to the seller's detriment.
+        const feeBps = item.feeTier === "founding" ? 300 : 500;
+        const feeCents = Math.floor(((item.priceCents as number) * feeBps) / 10_000);
+
+        let shippingCents = 0;
+        if (!sellerShippingCharged.has(item.sellerId)) {
+          shippingCents = 500;
+          sellerShippingCharged.add(item.sellerId);
+        }
+
+        const [newOrder] = await tx
+          .insert(orders)
+          .values({
+            buyerId,
+            sellerId: item.sellerId,
+            listingId: item.id,
+            currentState: "PAID",
+            priceCentsAtSale: item.priceCents,
+            taxCents: 0,
+            shippingCents,
+            totalCents: (item.priceCents as number) + shippingCents,
+            feeCents,
+            stripePaymentIntentId:
+              typeof session.payment_intent === "string"
+                ? session.payment_intent
+                : session.payment_intent?.id ?? null,
+            transferGroupId,
+          })
+          .returning({ id: orders.id });
+
+        await tx.insert(stateTransitions).values({
+          orderId: newOrder.id,
+          newState: "PAID",
+          actorId: "system",
+          notes: "Checkout completed — funds held in platform escrow.",
+        });
+      }
     }
   });
 }

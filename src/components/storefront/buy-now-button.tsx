@@ -27,6 +27,7 @@ interface BuyNowButtonProps {
 export function BuyNowButton({ listingId, price, title, photoUrl, shipsFrom, shippingEstimate, quantity }: BuyNowButtonProps) {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [selectedQuantity, setSelectedQuantity] = useState(1);
   const [error, setError] = useState<string | null>(null);
   
   const { isSignedIn } = useAuth();
@@ -46,7 +47,7 @@ export function BuyNowButton({ listingId, price, title, photoUrl, shipsFrom, shi
     setLoading(true);
     setError(null);
     try {
-      const res = await createCheckoutSessionAction([listingId]);
+      const res = await createCheckoutSessionAction([{ id: listingId, quantity: selectedQuantity }]);
 
       if (res.error) {
         setError(res.error);
@@ -73,9 +74,7 @@ export function BuyNowButton({ listingId, price, title, photoUrl, shipsFrom, shi
       >
         <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 shrink-0" /> 
         <span className="sm:hidden">Buy</span>
-        <span className="hidden sm:inline">
-          {quantity && quantity > 1 ? `Buy 1 of ${quantity}` : "Buy Now"}
-        </span>
+        <span className="hidden sm:inline">Buy Now</span>
       </Button>
 
       {/* Mobile Sticky CTA */}
@@ -85,7 +84,7 @@ export function BuyNowButton({ listingId, price, title, photoUrl, shipsFrom, shi
           size="lg"
           className="w-full text-lg h-12 font-semibold shadow-lg shadow-primary/20"
         >
-          {`${quantity && quantity > 1 ? `Buy 1 of ${quantity}` : "Buy"} • $${(price / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          {`Buy • $${(price / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
         </Button>
       </div>
 
@@ -109,6 +108,21 @@ export function BuyNowButton({ listingId, price, title, photoUrl, shipsFrom, shi
                 <p className="text-xl font-bold tracking-tight text-foreground">
                   ${(price / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
+                {quantity && quantity > 1 && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <label htmlFor="quantity" className="text-sm font-medium text-muted-foreground">Quantity:</label>
+                    <select 
+                      id="quantity"
+                      value={selectedQuantity}
+                      onChange={(e) => setSelectedQuantity(Number(e.target.value))}
+                      className="h-8 w-20 rounded-md border border-input bg-background px-2 py-1 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                    >
+                      {Array.from({ length: quantity }, (_, i) => i + 1).map(num => (
+                        <option key={num} value={num}>{num}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
             </div>
 
