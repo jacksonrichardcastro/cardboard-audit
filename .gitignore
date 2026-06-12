@@ -44,3 +44,7 @@ next-env.d.ts
 /.clerk/
 .venv_badges/
 .venv_rembg/
+dev*.log
+debug_*.html
+test.js
+*.local.log
