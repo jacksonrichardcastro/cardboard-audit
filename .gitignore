@@ -48,3 +48,5 @@ dev*.log
 debug_*.html
 test.js
 *.local.log
+*-queries.js
+directive*-stage*.js
