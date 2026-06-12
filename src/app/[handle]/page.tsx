@@ -209,6 +209,7 @@ export default async function SellerStorePage(props: Props) {
       condition: cards.condition,
       priceCents: listings.priceCents,
       listingId: listings.id,
+      quantity: listings.quantity,
       photos: sql<string[]>`COALESCE((SELECT json_agg(storage_path ORDER BY sort_order ASC) FROM item_photos WHERE item_photos.card_id = cards.id), '[]'::json)`,
     })
     .from(cards)

@@ -149,8 +149,13 @@ export function ListingFormFields({
                 type="number" 
                 min="1" 
                 max="99" 
-                value={formData.quantity || 1} 
-                onChange={e => handleChange("quantity", parseInt(e.target.value) || 1)} 
+                value={formData.quantity === "" ? "" : formData.quantity} 
+                onChange={e => handleChange("quantity", e.target.value === "" ? "" : parseInt(e.target.value) || "")} 
+                onBlur={e => {
+                  if (e.target.value === "" || parseInt(e.target.value) < 1) {
+                    handleChange("quantity", 1);
+                  }
+                }}
                 className="max-w-[150px]"
               />
             </div>

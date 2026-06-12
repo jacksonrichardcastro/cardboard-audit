@@ -55,6 +55,8 @@ export default async function EditListingPage({ params }: { params: Promise<{ id
     orderBy: (storefronts, { asc }) => [asc(storefronts.createdAt)]
   });
 
+  const autoManagedCatIds = userCategories.filter(c => c.isAutoManaged).map(c => c.id);
+
   return <EditListingClient 
     listing={listing} 
     card={listing.card} 
@@ -63,5 +65,6 @@ export default async function EditListingPage({ params }: { params: Promise<{ id
     storefrontLayout={user?.storefrontLayout || "grid"}
     cardMemberships={cardMemberships}
     storefronts={userStorefronts}
+    autoManagedCatIds={autoManagedCatIds}
   />;
 }

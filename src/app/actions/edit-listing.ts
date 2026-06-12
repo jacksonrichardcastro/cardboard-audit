@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { listings, cards, itemPhotos } from "@/lib/db/schema";
+import { listings, cards, itemPhotos, categories, auditEvents } from "@/lib/db/schema";
 import { eq, and, notInArray } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
@@ -75,6 +75,7 @@ export async function updateListing(listingId: number, data: any) {
       gradingCompany: data.gradingCompany || null,
       grade: data.grade || null,
       storefrontId: data.storefrontId || null,
+      quantity: data.quantity ? parseInt(data.quantity, 10) : 1,
     })
     .where(eq(listings.id, listingId));
 
@@ -131,20 +132,52 @@ export async function updateListing(listingId: number, data: any) {
 
   // Handle Category Assignment
   const { categoryMemberships } = await import("@/lib/db/schema");
+  
+  // Phase E1: Capture pre-state for audit
+  const currentMemberships = await db.select().from(categoryMemberships).where(eq(categoryMemberships.cardId, cardId));
+  const newCatId = (data.categoryId === "not_exist" || !data.categoryId) ? null : parseInt(data.categoryId, 10);
+  
+  await db.insert(auditEvents).values({
+    eventType: "listing.category_memberships_replaced",
+    subjectType: "listing",
+    subjectId: listingId.toString(),
+    actorId: userId,
+    actorType: "user",
+    payloadJson: {
+      listingId,
+      cardId,
+      actorUserId: userId,
+      preState: {
+        categoryMemberships: currentMemberships
+      },
+      newCategoryId: newCatId
+    },
+    createdAt: new Date()
+  });
+
+  // Phase C1: Preserve auto-managed categories
+  const autoManagedCats = await db.select({ id: categories.id }).from(categories).where(eq(categories.isAutoManaged, true));
+  const autoManagedCatIds = autoManagedCats.map(c => c.id);
+
   if (data.categoryId === "not_exist" || !data.categoryId) {
-    // If empty or doesn't exist, remove all category memberships for this card
-    await db.delete(categoryMemberships).where(eq(categoryMemberships.cardId, cardId));
+    if (autoManagedCatIds.length > 0) {
+      await db.delete(categoryMemberships).where(and(eq(categoryMemberships.cardId, cardId), notInArray(categoryMemberships.categoryId, autoManagedCatIds)));
+    } else {
+      await db.delete(categoryMemberships).where(eq(categoryMemberships.cardId, cardId));
+    }
   } else {
-    // Replace existing memberships with the selected category
     const catId = parseInt(data.categoryId, 10);
     if (!isNaN(catId)) {
-      // Clear existing
-      await db.delete(categoryMemberships).where(eq(categoryMemberships.cardId, cardId));
-      // Insert new
+      if (autoManagedCatIds.length > 0) {
+        await db.delete(categoryMemberships).where(and(eq(categoryMemberships.cardId, cardId), notInArray(categoryMemberships.categoryId, autoManagedCatIds)));
+      } else {
+        await db.delete(categoryMemberships).where(eq(categoryMemberships.cardId, cardId));
+      }
+      
       await db.insert(categoryMemberships).values({
         cardId,
         categoryId: catId,
-      });
+      }).onConflictDoNothing();
     }
   }
 

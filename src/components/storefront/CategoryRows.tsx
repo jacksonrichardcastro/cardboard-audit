@@ -9,6 +9,7 @@ import { useAuth } from "@clerk/nextjs";
 import { getPossessiveName } from "@/lib/utils/formatters";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { bulkAddCardsToCategory } from "@/app/actions/category-memberships";
+import { Badge } from "@/components/ui/badge";
 
 export interface CategoryRowsProps {
   categories: any[];
@@ -140,6 +141,11 @@ export function CategoryRows({ categories, cards, isOwner, sellerName, tab, them
                                     {listing.title}
                                   </h3>
                                   <div className="flex flex-col gap-1 mb-2 w-full items-center">
+                                    {((listing.quantity || 1) > 1) && (
+                                      <Badge variant="outline" className="border-indigo-500/30 text-indigo-400 bg-indigo-500/10 px-2 py-1 text-[10px] rounded-md font-medium">
+                                        {listing.quantity} Available
+                                      </Badge>
+                                    )}
                                     {listing.discountType && listing.discountAmount ? (
                                       <div className="flex items-center justify-center gap-1.5 w-full">
                                         <span className="text-[10px] md:text-[11px] text-zinc-500 line-through shrink-0">${(listing.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
