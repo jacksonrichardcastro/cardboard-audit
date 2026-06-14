@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, timestamp, json, varchar, boolean, index, unique, uuid, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, timestamp, json, varchar, boolean, index, unique, uuid, primaryKey, jsonb, date } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 
 export const users = pgTable("users", {
@@ -119,6 +119,7 @@ export const listings = pgTable("listings", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  catalogCardId: integer("catalog_card_id").references(() => catalogCards.id, { onDelete: 'set null' }),
 }, (table) => ({
   sellerIdx: index("seller_idx").on(table.sellerId),
   storefrontIdx: index("idx_listings_storefront_id").on(table.storefrontId),
@@ -492,4 +493,67 @@ export const handleHistory = pgTable('handle_history', {
     oldHandleIdx: index('idx_handle_history_old_handle').on(sql`LOWER(${table.oldHandle})`),
     userIdIdx: index('idx_handle_history_user_id').on(table.userId),
   };
+});
+
+export const cardSets = pgTable("card_sets", {
+  id: serial("id").primaryKey(),
+  slug: varchar("slug", { length: 255 }).unique().notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  brand: varchar("brand", { length: 100 }).notNull(),
+  category: varchar("category", { length: 50 }).notNull(),
+  yearLabel: varchar("year_label", { length: 50 }).notNull(),
+  releaseDate: date("release_date"),
+  description: text("description"),
+  status: varchar("status", { length: 20 }).notNull().default("draft"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const setSubsets = pgTable("set_subsets", {
+  id: serial("id").primaryKey(),
+  setId: integer("set_id").notNull().references(() => cardSets.id, { onDelete: 'cascade' }),
+  name: varchar("name", { length: 255 }).notNull(),
+  subsetType: varchar("subset_type", { length: 50 }).notNull(),
+  cardCount: integer("card_count"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const catalogCards = pgTable("catalog_cards", {
+  id: serial("id").primaryKey(),
+  setId: integer("set_id").notNull().references(() => cardSets.id, { onDelete: 'cascade' }),
+  subsetId: integer("subset_id").notNull().references(() => setSubsets.id, { onDelete: 'cascade' }),
+  cardNumber: varchar("card_number", { length: 50 }).notNull(),
+  subject: varchar("subject", { length: 255 }).notNull(),
+  team: varchar("team", { length: 255 }),
+  rcFlag: boolean("rc_flag").notNull().default(false),
+  slug: varchar("slug", { length: 255 }).notNull(),
+  attributesJson: jsonb("attributes_json"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  setSlugUnique: unique("catalog_cards_set_id_slug_unique").on(table.setId, table.slug),
+  setSubsetCardNumUnique: unique("catalog_cards_set_subset_card_num_unique").on(table.setId, table.subsetId, table.cardNumber)
+}));
+
+export const cardParallels = pgTable("card_parallels", {
+  id: serial("id").primaryKey(),
+  setId: integer("set_id").notNull().references(() => cardSets.id, { onDelete: 'cascade' }),
+  subsetId: integer("subset_id").references(() => setSubsets.id, { onDelete: 'cascade' }),
+  catalogCardId: integer("catalog_card_id").references(() => catalogCards.id, { onDelete: 'cascade' }),
+  name: varchar("name", { length: 255 }).notNull(),
+  printRun: integer("print_run"),
+  oddsText: varchar("odds_text", { length: 255 }),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const pullOdds = pgTable("pull_odds", {
+  id: serial("id").primaryKey(),
+  setId: integer("set_id").notNull().references(() => cardSets.id, { onDelete: 'cascade' }),
+  subsetId: integer("subset_id").references(() => setSubsets.id, { onDelete: 'cascade' }),
+  parallelId: integer("parallel_id").references(() => cardParallels.id, { onDelete: 'cascade' }),
+  packType: varchar("pack_type", { length: 50 }).notNull(),
+  oddsText: varchar("odds_text", { length: 255 }).notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });

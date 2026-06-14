@@ -1,0 +1,62 @@
+{
+  "set": {
+    "slug": "2025-galactic-heroes",
+    "name": "2025 Galactic Heroes",
+    "brand": "Topps",
+    "category": "non-sport",
+    "year_label": "2025",
+    "release_date": "2025-05-04"
+  },
+  "subsets": [
+    {
+      "name": "Base Set",
+      "subset_type": "base",
+      "sort_order": 0,
+      "cards": [
+        { "card_number": "1", "subject": "Luke Skywalker", "rc_flag": false, "attributes_json": {"hp": 100} },
+        { "card_number": "2", "subject": "Darth Vader", "rc_flag": false },
+        { "card_number": "3", "subject": "Han Solo", "rc_flag": false },
+        { "card_number": "4", "subject": "Princess Leia", "rc_flag": false },
+        { "card_number": "5", "subject": "Grogu", "rc_flag": true }
+      ]
+    },
+    {
+      "name": "Holographic Inserts",
+      "subset_type": "insert",
+      "sort_order": 1,
+      "cards": [
+        { "card_number": "HI-1", "subject": "Yoda", "rc_flag": false },
+        { "card_number": "HI-2", "subject": "Obi-Wan Kenobi", "rc_flag": false },
+        { "card_number": "HI-3", "subject": "Mandalorian", "rc_flag": false },
+        { "card_number": "HI-4", "subject": "Ahsoka Tano", "rc_flag": false },
+        { "card_number": "HI-5", "subject": "Boba Fett", "rc_flag": false }
+      ]
+    }
+  ],
+  "parallels": [
+    {
+      "subset_name": "Base Set",
+      "name": "Silver Refractor",
+      "print_run": null,
+      "odds_text": "1:12 packs"
+    },
+    {
+      "subset_name": "Base Set",
+      "name": "Gold Refractor",
+      "print_run": 50,
+      "odds_text": "1:250 packs"
+    }
+  ],
+  "odds": [
+    {
+      "subset_name": "Base Set",
+      "pack_type": "hobby",
+      "odds_text": "Silver 1:12, Gold 1:250"
+    },
+    {
+      "subset_name": "Holographic Inserts",
+      "pack_type": "retail",
+      "odds_text": "1:24 packs"
+    }
+  ]
+}
