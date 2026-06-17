@@ -231,17 +231,6 @@ export default async function SellerStorePage(props: Props) {
     }
   });
   const isOwner = seller.userId === userId;
-  
-  let userStorefronts: any[] = [];
-  if (isOwner) {
-    userStorefronts = await db.query.storefronts.findMany({
-      where: eq(storefronts.userId, userId),
-      with: {
-        categories: true
-      }
-    });
-  }
-
   const isPreview = searchParams.preview === "true";
   const displayAsOwner = isOwner && !isPreview;
   const displayName = (storefront.displayName ?? storefront.handle).trim();
@@ -521,8 +510,6 @@ export default async function SellerStorePage(props: Props) {
                 isOwner={displayAsOwner}
                 listings={activeListings as any} 
                 theme={theme}
-                userStorefronts={userStorefronts}
-                currentStorefrontId={storefront.id}
               />
             )
           )}

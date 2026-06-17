@@ -3,13 +3,11 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Star, Flame, Edit2 } from "lucide-react";
-import { useTransition, useState } from "react";
+import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { RunDiscountModal } from "./RunDiscountModal";
 import { Badge } from "@/components/ui/badge";
-import { BulkMoveListingsModal } from "./BulkMoveListingsModal";
-import { CheckSquare, Square } from "lucide-react";
 
 export interface ActiveListingsGridProps {
   isOwner?: boolean;
@@ -27,23 +25,12 @@ export interface ActiveListingsGridProps {
     photos: string[];
     quantity?: number;
   }[];
-  userStorefronts?: any[];
-  currentStorefrontId?: string;
 }
 
-export function ActiveListingsGrid({ isOwner, listings, theme, userStorefronts = [], currentStorefrontId = "" }: ActiveListingsGridProps) {
+export function ActiveListingsGrid({ isOwner, listings, theme }: ActiveListingsGridProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const { isSignedIn } = useAuth();
-  
-  const [selectedListingIds, setSelectedListingIds] = useState<number[]>([]);
-  const [isBulkMoveOpen, setIsBulkMoveOpen] = useState(false);
-
-  const toggleSelection = (e: React.MouseEvent, id: number) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setSelectedListingIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-  };
 
   const handleAction = (e: React.MouseEvent, listingId: number) => {
     e.preventDefault();
@@ -65,13 +52,6 @@ export function ActiveListingsGrid({ isOwner, listings, theme, userStorefronts =
   }
 
   return (
-    <>
-    {isOwner && userStorefronts.length > 1 && selectedListingIds.length > 0 && (
-      <div className="flex items-center justify-between mb-4 p-4 bg-zinc-900 rounded-lg border border-zinc-800">
-        <span className="text-sm font-medium">{selectedListingIds.length} listings selected</span>
-        <Button onClick={() => setIsBulkMoveOpen(true)} className="bg-violet-600 hover:bg-violet-700">Move to storefront</Button>
-      </div>
-    )}
     <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-3 md:gap-4">
       {listings.map((listing) => {
         const photoUrl = (Array.isArray(listing.photos) && listing.photos.length > 0 && listing.photos[0] !== null) 
@@ -88,18 +68,6 @@ export function ActiveListingsGrid({ isOwner, listings, theme, userStorefronts =
                 className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"
               />
-              {isOwner && (
-                <button 
-                  onClick={(e) => toggleSelection(e, listing.id)}
-                  className="absolute top-2 left-2 z-20 bg-black/50 p-1 rounded hover:bg-black/80 transition-colors"
-                >
-                  {selectedListingIds.includes(listing.id) ? (
-                    <CheckSquare className="w-5 h-5 text-violet-400" />
-                  ) : (
-                    <Square className="w-5 h-5 text-zinc-400" />
-                  )}
-                </button>
-              )}
             </div>
             
             <div className="relative flex flex-col w-full h-full">
@@ -162,17 +130,5 @@ export function ActiveListingsGrid({ isOwner, listings, theme, userStorefronts =
         )
       })}
     </div>
-    
-    {isOwner && (
-      <BulkMoveListingsModal 
-        isOpen={isBulkMoveOpen}
-        setIsOpen={setIsBulkMoveOpen}
-        selectedListingIds={selectedListingIds}
-        userStorefronts={userStorefronts}
-        currentStorefrontId={currentStorefrontId}
-        onSuccess={() => setSelectedListingIds([])}
-      />
-    )}
-    </>
   );
 }
