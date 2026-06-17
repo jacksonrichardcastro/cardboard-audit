@@ -424,6 +424,10 @@ export const categoriesRelations = relations(categories, ({ one, many }) => ({
     fields: [categories.userId],
     references: [users.id],
   }),
+  storefront: one(storefronts, {
+    fields: [categories.storefrontId],
+    references: [storefronts.id],
+  }),
   memberships: many(categoryMemberships),
 }));
 
