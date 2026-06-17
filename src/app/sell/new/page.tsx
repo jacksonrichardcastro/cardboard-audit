@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { db } from "@/lib/db";
 import { profiles, users, categories, cards, storefronts } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -54,5 +55,8 @@ export default async function NewListingServerPage({ searchParams }: { searchPar
     }
   }
 
-  return <ClientPage categories={userCategories} storefrontLayout={storefrontLayout} initialCard={initialCard} storefronts={userStorefronts} />;
+  const cookieStore = await cookies();
+  const activeStorefrontId = cookieStore.get("active_storefront_id")?.value;
+
+  return <ClientPage categories={userCategories} storefrontLayout={storefrontLayout} initialCard={initialCard} storefronts={userStorefronts} activeStorefrontId={activeStorefrontId} />;
 }

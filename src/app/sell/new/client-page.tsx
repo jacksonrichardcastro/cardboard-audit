@@ -12,7 +12,7 @@ import { createDraft, updateDraft, loadDraft, publishDraft } from "../actions";
 import { Loader2, ImagePlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export default function NewListingPage({ categories = [], storefrontLayout = "grid", initialCard = null, storefronts = [] }: { categories?: any[], storefrontLayout?: string, initialCard?: any, storefronts?: any[] }) {
+export default function NewListingPage({ categories = [], storefrontLayout = "grid", initialCard = null, storefronts = [], activeStorefrontId }: { categories?: any[], storefrontLayout?: string, initialCard?: any, storefronts?: any[], activeStorefrontId?: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const draftIdParam = searchParams.get("draftId");
@@ -51,7 +51,7 @@ export default function NewListingPage({ categories = [], storefrontLayout = "gr
     shippingMethod: "Standard (USPS Ground Advantage)",
     categoryId: "",
     mode: mode || "listing",
-    storefrontId: initialCard?.storefrontId || storefronts?.find(s => s.isDefault)?.id || storefronts?.[0]?.id || ""
+    storefrontId: initialCard?.storefrontId || activeStorefrontId || storefronts?.find(s => s.isDefault)?.id || storefronts?.[0]?.id || ""
   });
 
   useEffect(() => {
