@@ -50,3 +50,11 @@ test.js
 *.local.log
 *-queries.js
 directive*-stage*.js
+
+# Scratch scripts
+*-test*.js
+*-test*.ts
+find-*.js
+find-*.ts
+create-test-*.js
+create-test-*.ts
