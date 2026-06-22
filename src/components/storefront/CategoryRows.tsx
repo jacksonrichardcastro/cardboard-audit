@@ -3,13 +3,14 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Star, Flame, Edit2, Loader2, Check } from "lucide-react";
+import { Star, Flame, Edit2, Loader2, Check, CheckSquare, Square } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { getPossessiveName } from "@/lib/utils/formatters";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { bulkAddCardsToCategory } from "@/app/actions/category-memberships";
 import { Badge } from "@/components/ui/badge";
+import { useStorefrontSelection } from "./StorefrontSelectionContext";
 
 export interface CategoryRowsProps {
   categories: any[];
@@ -28,6 +29,11 @@ export function CategoryRows({ categories, cards, isOwner, sellerName, tab, them
   const [activePickerCategoryId, setActivePickerCategoryId] = useState<number | null>(null);
   const [selectedCardIds, setSelectedCardIds] = useState<number[]>([]);
   const [isPending, startTransition] = useTransition();
+
+  const selection = isOwner ? useStorefrontSelection() : null;
+  const isSelectMode = selection?.isSelectMode ?? false;
+  const selectedListingIds = selection?.selectedListingIds ?? [];
+  const toggleSelection = selection?.toggleSelection;
 
   const handleAction = (e: React.MouseEvent, listingId: number) => {
     e.preventDefault();
@@ -132,6 +138,18 @@ export function CategoryRows({ categories, cards, isOwner, sellerName, tab, them
                           <Link key={listing.id} href={`/listings/${listing.id}`} className="snap-start shrink-0 w-[160px] md:w-[180px] lg:w-[200px] block group relative rounded-xl overflow-hidden bg-[#111111] border border-white/5 hover:border-white/10 hover:-translate-y-1 transition-all duration-300">
                             <div className="relative aspect-[5/7] w-full overflow-hidden bg-black">
                               <img src={photoUrl} alt={listing.title} className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                              {isOwner && isSelectMode && toggleSelection && (
+                                <button 
+                                  onClick={(e) => toggleSelection(e, listing.id)}
+                                  className="absolute top-2 left-2 z-20 bg-black/50 p-1 rounded hover:bg-black/80 transition-colors"
+                                >
+                                  {selectedListingIds.includes(listing.id) ? (
+                                    <CheckSquare className="w-5 h-5 text-violet-400" />
+                                  ) : (
+                                    <Square className="w-5 h-5 text-zinc-400" />
+                                  )}
+                                </button>
+                              )}
                             </div>
                             
                             <div className="relative flex flex-col w-full h-full">

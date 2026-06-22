@@ -8,8 +8,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { RunDiscountModal } from "./RunDiscountModal";
 import { Badge } from "@/components/ui/badge";
-import { BulkMoveListingsModal } from "./BulkMoveListingsModal";
 import { CheckSquare, Square } from "lucide-react";
+import { useStorefrontSelection } from "./StorefrontSelectionContext";
 
 export interface ActiveListingsGridProps {
   isOwner?: boolean;
@@ -36,14 +36,10 @@ export function ActiveListingsGrid({ isOwner, listings, theme, userStorefronts =
   const [isPending, startTransition] = useTransition();
   const { isSignedIn } = useAuth();
   
-  const [selectedListingIds, setSelectedListingIds] = useState<number[]>([]);
-  const [isBulkMoveOpen, setIsBulkMoveOpen] = useState(false);
-
-  const toggleSelection = (e: React.MouseEvent, id: number) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setSelectedListingIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-  };
+  const selection = isOwner && userStorefronts.length > 1 ? useStorefrontSelection() : null;
+  const isSelectMode = selection?.isSelectMode ?? false;
+  const selectedListingIds = selection?.selectedListingIds ?? [];
+  const toggleSelection = selection?.toggleSelection;
 
   const handleAction = (e: React.MouseEvent, listingId: number) => {
     e.preventDefault();
@@ -66,12 +62,6 @@ export function ActiveListingsGrid({ isOwner, listings, theme, userStorefronts =
 
   return (
     <>
-    {isOwner && userStorefronts.length > 1 && selectedListingIds.length > 0 && (
-      <div className="flex items-center justify-between mb-4 p-4 bg-zinc-900 rounded-lg border border-zinc-800">
-        <span className="text-sm font-medium">{selectedListingIds.length} listings selected</span>
-        <Button onClick={() => setIsBulkMoveOpen(true)} className="bg-violet-600 hover:bg-violet-700">Move to storefront</Button>
-      </div>
-    )}
     <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-3 md:gap-4">
       {listings.map((listing) => {
         const photoUrl = (Array.isArray(listing.photos) && listing.photos.length > 0 && listing.photos[0] !== null) 
@@ -88,7 +78,7 @@ export function ActiveListingsGrid({ isOwner, listings, theme, userStorefronts =
                 className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"
               />
-              {isOwner && (
+              {isOwner && isSelectMode && toggleSelection && (
                 <button 
                   onClick={(e) => toggleSelection(e, listing.id)}
                   className="absolute top-2 left-2 z-20 bg-black/50 p-1 rounded hover:bg-black/80 transition-colors"
@@ -162,17 +152,6 @@ export function ActiveListingsGrid({ isOwner, listings, theme, userStorefronts =
         )
       })}
     </div>
-    
-    {isOwner && (
-      <BulkMoveListingsModal 
-        isOpen={isBulkMoveOpen}
-        setIsOpen={setIsBulkMoveOpen}
-        selectedListingIds={selectedListingIds}
-        userStorefronts={userStorefronts}
-        currentStorefrontId={currentStorefrontId}
-        onSuccess={() => setSelectedListingIds([])}
-      />
-    )}
     </>
   );
 }

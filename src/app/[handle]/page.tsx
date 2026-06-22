@@ -22,6 +22,8 @@ import { BinderValueToggle } from "@/components/shared/binder-value-toggle";
 import { FiltersDrawer } from "@/components/storefront/FiltersDrawer";
 import { ActiveFilterChips } from "@/components/storefront/ActiveFilterChips";
 import { CategoryRows } from "@/components/storefront/CategoryRows";
+import { StorefrontSelectionProvider } from "@/components/storefront/StorefrontSelectionContext";
+import { StorefrontSelectToggle } from "@/components/storefront/StorefrontSelectToggle";
 import { like, lte, gte, between } from "drizzle-orm";
 
 interface Props {
@@ -441,7 +443,12 @@ export default async function SellerStorePage(props: Props) {
 
           <div className="pb-4 flex items-center z-10 gap-2">
             {displayAsOwner && currentTab !== "blog" && currentTab !== "ratings" && (
-              <QuickUploadModal />
+              <>
+                <QuickUploadModal />
+                {(currentTab === "storefront" || currentTab === "active-listings") && userStorefronts.length > 1 && (
+                  <StorefrontSelectToggle />
+                )}
+              </>
             )}
             <FiltersDrawer />
             <BinderValueToggle isOwner={displayAsOwner} />
@@ -449,6 +456,7 @@ export default async function SellerStorePage(props: Props) {
         </div>
 
         {/* Tab Content Areas */}
+        <StorefrontSelectionProvider isOwner={displayAsOwner} userStorefronts={userStorefronts} currentStorefrontId={storefront.id}>
         <div className={`relative min-h-[400px] ${(theme === 'trax-cosmos' || theme === 'trax-wood') && themeScope === 'storefront-only' ? 'overflow-hidden' : ''}`}>
 
           {theme === "trax-wood" && themeScope === "storefront-only" && (
@@ -559,6 +567,7 @@ export default async function SellerStorePage(props: Props) {
           )}
           </div>
         </div>
+        </StorefrontSelectionProvider>
       </main>
       </div>
     </div>
