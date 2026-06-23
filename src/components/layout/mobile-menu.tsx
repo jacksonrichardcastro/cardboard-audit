@@ -107,11 +107,9 @@ export function MobileMenu({
                         <button
                           key={storefront.id}
                           onClick={async () => {
-                            if (!isActive) {
-                              const res = await switchActiveStorefrontAction(storefront.id);
-                              if (res.success) {
-                                window.location.href = `/${storefront.handle}`;
-                              }
+                            const res = await switchActiveStorefrontAction(storefront.id);
+                            if (res.success) {
+                              window.location.href = `/${storefront.handle}`;
                             }
                             handleLinkClick();
                           }}

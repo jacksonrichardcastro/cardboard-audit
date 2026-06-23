@@ -167,7 +167,7 @@ export default function NewListingPage({ categories = [], storefrontLayout = "gr
         setIsPublishing(false);
       } else {
         if (publishMode === "binder") {
-          router.push(`/`); // Could go to profile if we had handle, home is safe
+          router.push(`/me?tab=collection`);
         } else {
           router.push(`/listings/${id}?created=1`);
         }

@@ -80,11 +80,9 @@ export function NavAuthControls({
                   <DropdownMenuItem 
                     key={storefront.id} 
                     onClick={async () => {
-                      if (!isActive) {
-                        const res = await switchActiveStorefrontAction(storefront.id);
-                        if (res.success) {
-                          window.location.href = `/${storefront.handle}`;
-                        }
+                      const res = await switchActiveStorefrontAction(storefront.id);
+                      if (res.success) {
+                        window.location.href = `/${storefront.handle}`;
                       }
                     }} 
                     className="cursor-pointer flex items-center justify-between hover:bg-violet-50 hover:text-violet-900 dark:hover:bg-violet-900/50 dark:hover:text-violet-50 focus:bg-violet-50 focus:text-violet-900 dark:focus:bg-violet-900/50 dark:focus:text-violet-50 py-2"
