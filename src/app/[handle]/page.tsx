@@ -468,7 +468,7 @@ export default async function SellerStorePage(props: Props) {
           )}
 
           {(currentTab === "collection" || (currentTab === "binder" && !seller.binderPrivate)) && (
-            storefrontLayout === "categories" && userCategories.length > 0 ? (
+            storefrontLayout === "categories" && (userCategories.length > 0 || pendingCategoryCount > 0) ? (
               <CategoryRows 
                 categories={userCategories} 
                 cards={binderCards} 
@@ -514,7 +514,7 @@ export default async function SellerStorePage(props: Props) {
           )}
 
           {(currentTab === "storefront" || currentTab === "active-listings") && activeListings.length > 0 && (
-            storefrontLayout === "categories" && userCategories.length > 0 ? (
+            storefrontLayout === "categories" && (userCategories.length > 0 || pendingCategoryCount > 0) ? (
               <CategoryRows 
                 categories={userCategories} 
                 cards={activeListings as any[]} 
@@ -536,7 +536,7 @@ export default async function SellerStorePage(props: Props) {
           )}
 
           {(currentTab === "storefront" || currentTab === "active-listings") && activeListings.length === 0 && (
-            storefrontLayout === "categories" && userCategories.length > 0 ? (
+            storefrontLayout === "categories" && (userCategories.length > 0 || pendingCategoryCount > 0) ? (
               <CategoryRows 
                 categories={userCategories} 
                 cards={[]} 

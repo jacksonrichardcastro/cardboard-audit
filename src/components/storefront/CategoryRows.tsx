@@ -97,10 +97,27 @@ export function CategoryRows({ categories, cards, isOwner, sellerName, tab, them
     return 'https://placehold.co/400x550';
   };
 
+  const displayCategories = [...categories];
+  if (isOwner) {
+    const uncategorizedCards = cards.filter(card => {
+      const targetCardId = tab === "storefront" ? card.cardId : card.id;
+      return !categories.some(c => c.memberships?.some((m: any) => m.cardId === targetCardId));
+    });
+
+    if (uncategorizedCards.length > 0) {
+      displayCategories.push({
+        id: "uncategorized",
+        name: "Uncategorized Listings",
+        isUncategorized: true,
+        memberships: uncategorizedCards.map(c => ({ cardId: tab === "storefront" ? c.cardId : c.id }))
+      } as any);
+    }
+  }
+
   return (
     <>
       <div className="flex flex-col gap-12">
-        {categories.map(category => {
+        {displayCategories.map((category: any) => {
           const categoryCards = cards.filter(card => {
             const targetCardId = tab === "storefront" ? card.cardId : card.id;
             return category.memberships?.some((m: any) => m.cardId === targetCardId);
@@ -108,22 +125,44 @@ export function CategoryRows({ categories, cards, isOwner, sellerName, tab, them
 
           return (
             <div key={category.id} className="w-full space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl md:text-2xl font-bold tracking-tight text-white">{category.name}</h2>
-                {isOwner && (
-                  <Button variant="outline" size="sm" onClick={() => openPicker(category.id)} className="text-[#7C3AED] border-[#7C3AED]/30 hover:bg-[#7C3AED]/10 bg-transparent">
-                    Add Cards
-                  </Button>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between">
+                  <h2 className={`text-xl md:text-2xl font-bold tracking-tight ${category.isUncategorized ? "text-zinc-400" : "text-white"}`}>
+                    {category.name}
+                    {category.isUncategorized && <span className="ml-3 bg-[#7C3AED]/20 text-[#7C3AED] px-2 py-0.5 rounded text-xs font-bold align-middle">{categoryCards.length} waiting</span>}
+                  </h2>
+                  {isOwner && !category.isUncategorized && (
+                    <Button variant="outline" size="sm" onClick={() => openPicker(category.id)} className="text-[#7C3AED] border-[#7C3AED]/30 hover:bg-[#7C3AED]/10 bg-transparent">
+                      Add Cards
+                    </Button>
+                  )}
+                  {isOwner && category.isUncategorized && categories.length === 0 && (
+                    <Button 
+                      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
+                      variant="outline"
+                      size="sm"
+                      className="text-[#7C3AED] border-[#7C3AED]/30 hover:bg-[#7C3AED]/10 bg-transparent"
+                    >
+                      Manage Storefront
+                    </Button>
+                  )}
+                </div>
+                {category.isUncategorized && (
+                  <p className="text-sm text-zinc-500">
+                    {categories.length === 0 
+                      ? "You have no categories. Scroll up and click 'Manage Storefront' to create one."
+                      : "These items are not assigned to a category. Tap 'Add Cards' on a category above to assign them."}
+                  </p>
                 )}
               </div>
               
               {categoryCards.length === 0 ? (
                 <div 
-                  onClick={() => openPicker(category.id)}
-                  className={`w-full py-12 px-6 rounded-xl border border-dashed border-white/20 bg-zinc-950/30 flex flex-col items-center text-center transition-colors ${isOwner ? 'cursor-pointer hover:bg-zinc-900/50 hover:border-white/40' : ''}`}
+                  onClick={() => !category.isUncategorized && openPicker(category.id)}
+                  className={`w-full py-12 px-6 rounded-xl border border-dashed border-white/20 bg-zinc-950/30 flex flex-col items-center text-center transition-colors ${isOwner && !category.isUncategorized ? 'cursor-pointer hover:bg-zinc-900/50 hover:border-white/40' : ''}`}
                 >
                   <p className="text-zinc-500 mb-2">No cards in this category.</p>
-                  {isOwner && <p className="text-sm text-[#7C3AED] font-semibold">Tap here to add cards from your binder.</p>}
+                  {isOwner && !category.isUncategorized && <p className="text-sm text-[#7C3AED] font-semibold">Tap here to add cards from your binder.</p>}
                 </div>
               ) : (
                 <div className="w-full overflow-x-auto pb-4 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
