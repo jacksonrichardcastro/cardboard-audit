@@ -33,7 +33,7 @@ export function CreateStorefrontModal({
     setIsLoading(true);
     try {
       const res = await createStorefrontAction(handle, displayName || undefined);
-      if (res.error) {
+      if ("error" in res) {
         toast.error(res.error);
       } else {
         toast.success("Storefront created successfully!");

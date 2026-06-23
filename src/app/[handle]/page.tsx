@@ -420,6 +420,7 @@ export default async function SellerStorePage(props: Props) {
 
 
 
+        <StorefrontSelectionProvider isOwner={displayAsOwner} userStorefronts={userStorefronts} currentStorefrontId={storefront.id}>
         {/* Navigation Tabs Row */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-white/10 mb-6 mt-0 pt-6 md:pt-8 gap-4 relative">
           <nav className="flex items-center gap-6 overflow-x-auto pb-[-1px] scrollbar-hide relative z-10">
@@ -456,7 +457,6 @@ export default async function SellerStorePage(props: Props) {
         </div>
 
         {/* Tab Content Areas */}
-        <StorefrontSelectionProvider isOwner={displayAsOwner} userStorefronts={userStorefronts} currentStorefrontId={storefront.id}>
         <div className={`relative min-h-[400px] ${(theme === 'trax-cosmos' || theme === 'trax-wood') && themeScope === 'storefront-only' ? 'overflow-hidden' : ''}`}>
 
           {theme === "trax-wood" && themeScope === "storefront-only" && (

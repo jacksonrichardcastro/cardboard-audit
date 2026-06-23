@@ -29,7 +29,7 @@ export function StorefrontSelectionProvider({
   children: React.ReactNode;
   isOwner: boolean;
   userStorefronts?: any[];
-  currentStorefrontId?: string;
+  currentStorefrontId?: string | number;
 }) {
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedListingIds, setSelectedListingIds] = useState<number[]>([]);

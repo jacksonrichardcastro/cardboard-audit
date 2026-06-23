@@ -18,15 +18,15 @@ export function BulkMoveListingsModal({
   setIsOpen: (o: boolean) => void;
   selectedListingIds: number[];
   userStorefronts: any[];
-  currentStorefrontId: string;
+  currentStorefrontId: string | number;
   onSuccess: () => void;
 }) {
   const [targetStorefrontId, setTargetStorefrontId] = useState("");
   const [targetCategoryId, setTargetCategoryId] = useState("");
   const [isPending, startTransition] = useTransition();
 
-  const otherStorefronts = userStorefronts.filter(s => s.id !== currentStorefrontId);
-  const targetStorefront = otherStorefronts.find(s => s.id === targetStorefrontId);
+  const otherStorefronts = userStorefronts.filter(s => String(s.id) !== String(currentStorefrontId));
+  const targetStorefront = otherStorefronts.find(s => String(s.id) === targetStorefrontId);
   const targetCategories = targetStorefront?.categories || [];
 
   const handleMove = () => {
