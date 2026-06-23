@@ -53,6 +53,9 @@ export function BulkMoveListingsModal({
           <DialogTitle>Move {selectedListingIds.length} Listings</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
+          <p className="text-sm text-zinc-400">
+            These {selectedListingIds.length} cards will move off <strong>{userStorefronts.find(s => String(s.id) === String(currentStorefrontId))?.displayName || `@${userStorefronts.find(s => String(s.id) === String(currentStorefrontId))?.handle}` || "this storefront"}</strong> and onto <strong>{targetStorefront ? (targetStorefront.displayName || `@${targetStorefront.handle}`) : "the selected storefront"}</strong>.
+          </p>
           <div className="space-y-2">
             <label className="text-sm font-medium">Target Storefront</label>
             <select 

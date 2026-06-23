@@ -69,7 +69,17 @@ export function ActiveListingsGrid({ isOwner, listings, theme, userStorefronts =
           : 'https://placehold.co/400x550';
         
         return (
-          <Link key={listing.id} href={`/listings/${listing.id}`} className={`group relative rounded-xl overflow-hidden bg-[#111111] border border-white/5 hover:border-white/10 hover:-translate-y-1 transition-all duration-300 mx-auto w-full block`}>
+          <Link 
+            key={listing.id} 
+            href={`/listings/${listing.id}`} 
+            onClick={(e) => {
+              if (isOwner && isSelectMode && toggleSelection) {
+                e.preventDefault();
+                toggleSelection(e as any, listing.id);
+              }
+            }}
+            className={`group relative rounded-xl overflow-hidden bg-[#111111] border border-white/5 hover:border-white/10 hover:-translate-y-1 transition-all duration-300 mx-auto w-full block`}
+          >
 
             <div className="relative aspect-[5/7] w-full overflow-hidden bg-black">
               <img

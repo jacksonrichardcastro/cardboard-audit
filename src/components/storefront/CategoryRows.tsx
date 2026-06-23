@@ -135,7 +135,17 @@ export function CategoryRows({ categories, cards, isOwner, sellerName, tab, them
                         // Active Listings Card
                         const listing = item;
                         return (
-                          <Link key={listing.id} href={`/listings/${listing.id}`} className="snap-start shrink-0 w-[160px] md:w-[180px] lg:w-[200px] block group relative rounded-xl overflow-hidden bg-[#111111] border border-white/5 hover:border-white/10 hover:-translate-y-1 transition-all duration-300">
+                          <Link 
+                            key={listing.id} 
+                            href={`/listings/${listing.id}`} 
+                            onClick={(e) => {
+                              if (isOwner && isSelectMode && toggleSelection) {
+                                e.preventDefault();
+                                toggleSelection(e as any, listing.id);
+                              }
+                            }}
+                            className="snap-start shrink-0 w-[160px] md:w-[180px] lg:w-[200px] block group relative rounded-xl overflow-hidden bg-[#111111] border border-white/5 hover:border-white/10 hover:-translate-y-1 transition-all duration-300"
+                          >
                             <div className="relative aspect-[5/7] w-full overflow-hidden bg-black">
                               <img src={photoUrl} alt={listing.title} className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                               {isOwner && isSelectMode && toggleSelection && (
