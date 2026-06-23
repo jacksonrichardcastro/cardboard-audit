@@ -11,6 +11,7 @@ import { PhotoCapture, type CapturedPhoto } from "@/components/sell/photo-captur
 import { createDraft, updateDraft, loadDraft, publishDraft } from "../actions";
 import { Loader2, ImagePlus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 export default function NewListingPage({ categories = [], storefrontLayout = "grid", initialCard = null, storefronts = [], activeStorefrontId }: { categories?: any[], storefrontLayout?: string, initialCard?: any, storefronts?: any[], activeStorefrontId?: string }) {
   const router = useRouter();
@@ -483,50 +484,50 @@ export default function NewListingPage({ categories = [], storefrontLayout = "gr
               <Button variant="outline" onClick={() => setStep(3)}>Back</Button>
               {mode === 'binder' ? (
                 <div className="text-right">
-                  {storefrontLayout === "categories" ? (
-                    <Button onClick={() => setStep(5)}>Next: Category</Button>
-                  ) : (
-                    <Button 
-                      onClick={handlePublish}
-                      disabled={isPublishing || !draftId}
-                    >
-                      {isPublishing ? "Saving..." : "Save to Binder"}
-                    </Button>
-                  )}
+                  <Button onClick={() => setStep(5)}>Next: Category</Button>
                 </div>
               ) : (
                 <Button onClick={() => setStep(5)} disabled={!formData.price || parseFloat(formData.price) < 1}>
-                  {storefrontLayout === "categories" ? "Next: Category & Shipping" : "Next: Shipping"}
+                  Next: Category & Shipping
                 </Button>
               )}
             </div>
           </div>
         )}
 
-        {step === 5 && mode === 'binder' && storefrontLayout === 'categories' && (
+        {step === 5 && mode === 'binder' && (
           <div className="space-y-6">
             <h2 className="text-xl font-semibold border-b pb-2">Step 5: Category</h2>
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Storefront Category</Label>
-                <select 
-                  value={formData.categoryId || ''}
-                  onChange={e => {
-                    handleChange("categoryId", e.target.value);
-                  }}
-                  className="w-full h-10 px-3 bg-background border rounded-md"
-                >
-                  <option value="">No Category</option>
-                  {categories.map(c => (
-                    <option key={c.id} value={c.id.toString()}>{c.name}</option>
-                  ))}
-                  <option value="not_exist">Category doesn't exist</option>
-                </select>
-                {formData.categoryId === "not_exist" && (
-                  <p className="text-sm text-yellow-500 mt-2">
-                    Card will be saved to your binder. You can create the category later and add it.
-                  </p>
-                )}
+                {(() => {
+                  const storefrontCategories = categories.filter(c => c.storefrontId === formData.storefrontId);
+                  return storefrontCategories.length === 0 ? (
+                    <div className="text-sm text-muted-foreground p-3 border rounded-md bg-muted/10 mt-2">
+                      No categories yet for this storefront — <Link href="/seller/dashboard?tab=categories" className="text-[#7C3AED] hover:underline">create one from Manage Categories</Link>
+                    </div>
+                  ) : (
+                    <>
+                      <select 
+                        value={formData.categoryId || ''}
+                        onChange={e => handleChange("categoryId", e.target.value)}
+                        className="w-full h-10 px-3 mt-2 bg-background border rounded-md"
+                      >
+                        <option value="">No Category</option>
+                        {storefrontCategories.map(c => (
+                          <option key={c.id} value={c.id.toString()}>{c.name}</option>
+                        ))}
+                        <option value="not_exist">Category doesn't exist</option>
+                      </select>
+                      {formData.categoryId === "not_exist" && (
+                        <p className="text-sm text-yellow-500 mt-2">
+                          Card will be saved to your binder. You can create the category later and add it.
+                        </p>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             </div>
             <div className="flex justify-between pt-4">
@@ -545,31 +546,38 @@ export default function NewListingPage({ categories = [], storefrontLayout = "gr
 
         {step === 5 && mode !== 'binder' && (
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold border-b pb-2">Step 5: {storefrontLayout === "categories" ? "Category & Shipping" : "Shipping"}</h2>
+            <h2 className="text-xl font-semibold border-b pb-2">Step 5: Category & Shipping</h2>
             <div className="space-y-4">
-              {storefrontLayout === "categories" && (
-                <div className="space-y-2 mb-6 p-4 border rounded-lg bg-muted/10">
-                  <Label>Storefront Category</Label>
-                  <select 
-                    value={formData.categoryId || ''}
-                    onChange={e => {
-                      handleChange("categoryId", e.target.value);
-                    }}
-                    className="w-full h-10 px-3 mt-2 bg-background border rounded-md"
-                  >
-                    <option value="">No Category</option>
-                    {categories.map(c => (
-                      <option key={c.id} value={c.id.toString()}>{c.name}</option>
-                    ))}
-                    <option value="not_exist">Category doesn't exist</option>
-                  </select>
-                  {formData.categoryId === "not_exist" && (
-                    <p className="text-sm text-yellow-500 mt-2">
-                      Card will be saved to your binder instead of publishing to the marketplace. You can create the category later and list it.
-                    </p>
-                  )}
-                </div>
-              )}
+              <div className="space-y-2 mb-6 p-4 border rounded-lg bg-muted/10">
+                <Label>Storefront Category</Label>
+                {(() => {
+                  const storefrontCategories = categories.filter(c => c.storefrontId === formData.storefrontId);
+                  return storefrontCategories.length === 0 ? (
+                    <div className="text-sm text-muted-foreground p-3 border rounded-md bg-muted/10 mt-2">
+                      No categories yet for this storefront — <Link href="/seller/dashboard?tab=categories" className="text-[#7C3AED] hover:underline">create one from Manage Categories</Link>
+                    </div>
+                  ) : (
+                    <>
+                      <select 
+                        value={formData.categoryId || ''}
+                        onChange={e => handleChange("categoryId", e.target.value)}
+                        className="w-full h-10 px-3 mt-2 bg-background border rounded-md"
+                      >
+                        <option value="">No Category</option>
+                        {storefrontCategories.map(c => (
+                          <option key={c.id} value={c.id.toString()}>{c.name}</option>
+                        ))}
+                        <option value="not_exist">Category doesn't exist</option>
+                      </select>
+                      {formData.categoryId === "not_exist" && (
+                        <p className="text-sm text-yellow-500 mt-2">
+                          Card will be saved to your binder instead of publishing to the marketplace. You can create the category later and list it.
+                        </p>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
 
               <div className="space-y-2">
                 <Label>Shipping Method</Label>
