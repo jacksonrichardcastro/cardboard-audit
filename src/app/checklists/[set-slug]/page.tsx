@@ -22,8 +22,10 @@ export async function generateMetadata({ params }: { params: Promise<{ 'set-slug
   });
   if (!set) return {};
   return {
-    title: `${set.yearLabel} ${set.brand} ${set.name} Checklist — base, parallels, odds | Trax`,
-    description: set.description || `Complete checklist for ${set.yearLabel} ${set.brand} ${set.name}.`
+    title: `${set.name} Checklist — base, parallels, odds | Trax`,
+    description: set.description || `Complete checklist for ${set.name}. Base cards, parallels, and pack odds.`,
+    openGraph: { title: `${set.name} Checklist | Trax`, description: set.description || `Complete checklist for ${set.name}. Base cards, parallels, and pack odds.` },
+    twitter: { title: `${set.name} Checklist | Trax`, description: set.description || `Complete checklist for ${set.name}. Base cards, parallels, and pack odds.` }
   };
 }
 
@@ -111,11 +113,18 @@ export default async function SetPage({ params }: { params: Promise<{ 'set-slug'
                               <td className="px-6 py-3 text-white font-semibold">{card.subject}</td>
                               <td className="px-6 py-3 text-zinc-400">{card.team || '-'}</td>
                               <td className="px-6 py-3">
-                                {card.rcFlag && (
-                                  <span className="inline-flex items-center rounded-md bg-blue-500/10 px-2 py-1 text-xs font-bold text-blue-400 ring-1 ring-inset ring-blue-500/20">
-                                    RC
-                                  </span>
-                                )}
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  {card.rcFlag && (
+                                    <span className="inline-flex items-center rounded-md bg-blue-500/10 px-2 py-1 text-xs font-bold text-blue-400 ring-1 ring-inset ring-blue-500/20">
+                                      RC
+                                    </span>
+                                  )}
+                                  {card.attributesJson && typeof card.attributesJson === 'object' && (card.attributesJson as any).card_note && (
+                                    <span className="text-xs text-zinc-500 font-medium">
+                                      {(card.attributesJson as any).card_note}
+                                    </span>
+                                  )}
+                                </div>
                               </td>
                             </tr>
                           ))}
@@ -131,10 +140,16 @@ export default async function SetPage({ params }: { params: Promise<{ 'set-slug'
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                       {subsetParallels.map(p => (
                         <div key={p.id} className="bg-zinc-950/60 border border-white/5 p-4 rounded-lg">
-                          <div className="font-semibold text-[#7C3AED] mb-1">{p.name}</div>
-                          <div className="text-sm text-zinc-400 flex items-center justify-between">
-                            <span>{p.printRun ? `/${p.printRun}` : "Unnumbered"}</span>
-                            {p.oddsText && <span className="text-xs text-zinc-500">{p.oddsText}</span>}
+                          <div className="font-medium text-zinc-200">
+                            <span className="text-[#7C3AED] font-semibold">{p.name}</span>
+                            <span className="text-zinc-500 mx-2">&mdash;</span>
+                            <span className="text-zinc-300">{p.printRun ? `/${p.printRun}` : "Unnumbered"}</span>
+                            {p.oddsText && (
+                              <>
+                                <span className="text-zinc-500 mx-2">&middot;</span>
+                                <span className="text-zinc-400 text-sm">{p.oddsText.replace(/[()]/g, '').replace(/;/g, ',')}</span>
+                              </>
+                            )}
                           </div>
                         </div>
                       ))}

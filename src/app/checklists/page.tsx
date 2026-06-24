@@ -4,6 +4,21 @@ import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
 import { CosmosBackground } from "@/components/marketplace/CosmosBackground";
 
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Trading Card Checklists | Trax',
+  description: "Browse complete checklists for the hobby's most popular sets.",
+  openGraph: {
+    title: 'Trading Card Checklists | Trax',
+    description: "Browse complete checklists for the hobby's most popular sets.",
+  },
+  twitter: {
+    title: 'Trading Card Checklists | Trax',
+    description: "Browse complete checklists for the hobby's most popular sets.",
+  }
+};
+
 export const revalidate = 3600;
 
 export default async function ChecklistsHub() {

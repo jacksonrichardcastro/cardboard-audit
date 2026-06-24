@@ -1,0 +1,336 @@
+import fs from 'fs';
+import * as cheerio from 'cheerio';
+import path from 'path';
+
+function kebabCase(str: string) {
+  return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+async function main() {
+  const url = process.argv[2];
+  if (!url) {
+    console.error("Usage: npx tsx scripts/checklist-insider-to-ingest.ts <URL>");
+    process.exit(1);
+  }
+
+  console.log(`Fetching ${url}...`);
+  const response = await fetch(url);
+  const html = await response.text();
+  const $ = cheerio.load(html);
+
+  const titleText = $('h1').first().text().trim();
+  const cleanTitle = titleText.replace(/ Checklist.*$/i, '').trim();
+  
+  const titleMatch = cleanTitle.match(/^(\d{4})\s+(.+?)\s+(Baseball|Football|Basketball|Hockey|Soccer|UFC|Wrestling|Racing|Golf|Non-Sport|Multi-Sport|Other)$/i);
+  let yearLabel = "Unknown";
+  let brand = cleanTitle;
+  let category = "other";
+
+  if (titleMatch) {
+    yearLabel = titleMatch[1];
+    brand = titleMatch[2]; // e.g. "Topps Series 2"
+    if (brand.toLowerCase().startsWith('topps')) brand = 'Topps';
+    else if (brand.toLowerCase().startsWith('bowman')) brand = 'Bowman';
+    else if (brand.toLowerCase().startsWith('panini')) brand = 'Panini';
+    else if (brand.toLowerCase().startsWith('upper deck')) brand = 'Upper Deck';
+    else brand = brand.split(' ')[0]; // fallback
+    category = titleMatch[3].toLowerCase();
+  }
+
+  let releaseDate = null;
+  const releaseP = $('p:contains("Estimated Release Date")').text().trim();
+  const relMatch = releaseP.match(/Release Date:\s*(.+)/i);
+  if (relMatch) {
+    const d = new Date(relMatch[1]);
+    if (!isNaN(d.getTime())) {
+      releaseDate = d.toISOString().split('T')[0];
+    } else {
+      releaseDate = relMatch[1];
+    }
+  }
+
+  // Set Slug now includes the full set name as required for SEO
+  const slug = kebabCase(cleanTitle);
+
+  const setObj = {
+    slug,
+    name: cleanTitle,
+    brand,
+    category,
+    yearLabel,
+    releaseDate,
+    description: null
+  };
+
+  const subsets: any[] = [];
+  const parallels: any[] = [];
+  const odds: any[] = [];
+  const droppedEmptySubsets: string[] = [];
+
+  $('h2, h3, h4').each((_, el) => {
+    const headerText = $(el).text().trim();
+    if (!headerText.toLowerCase().includes('checklist') && !headerText.toLowerCase().includes('parallels list')) {
+      return;
+    }
+    if (headerText.toLowerCase().includes('team set list')) return;
+    if (headerText.toLowerCase().includes('pack odds')) return;
+    if (headerText.toLowerCase().includes('rundown')) return;
+    if (headerText.toLowerCase().includes('box break')) return;
+
+    let subsetName = headerText.replace(/ Checklist.*$/i, '').trim();
+    if (subsetName === 'Base') subsetName = 'Base Set';
+    
+    let subsetType = 'insert';
+    const lowerName = subsetName.toLowerCase();
+    if (lowerName.includes('auto') || lowerName.includes('autograph') || lowerName.includes('signature') || lowerName.includes('signatures') || lowerName.includes('penmanship')) {
+      subsetType = 'autograph';
+    } else if (lowerName.includes('relic') || lowerName.includes('material') || lowerName.includes('swatch') || lowerName.includes('patch') || lowerName.includes('lumber') || lowerName.includes('jersey') || lowerName.includes('memorabilia')) {
+      subsetType = 'relic';
+    } else if (lowerName.includes('variation') || lowerName.includes('variations')) {
+      subsetType = 'variation';
+    } else if (subsetName === 'Base Set' || subsetName === 'Base Rookies' || subsetName === 'Base Rookies Short Prints') {
+      subsetType = 'base';
+    }
+
+    let isParallelsSection = headerText.toLowerCase().includes('parallels list');
+
+    const cards: any[] = [];
+    
+    let nextEl = $(el).next();
+    let inParallelsBlock = isParallelsSection;
+
+    while (nextEl.length > 0 && !nextEl.is('h2, h3, h4')) {
+      if (nextEl.is('div') || nextEl.is('p')) {
+        const htmlContent = nextEl.html() || '';
+        const rawLines = htmlContent.split(/<br\s*\/?>/i);
+        
+        for (const rawLine of rawLines) {
+          const $temp = cheerio.load(rawLine);
+          $temp('a, img').remove();
+          let cleanLine = $temp.text().trim();
+          cleanLine = cleanLine.replace(/\s+/g, ' ');
+          
+          if (!cleanLine) continue;
+          if (cleanLine.match(/^\d+ cards\.$/i)) continue;
+          if (cleanLine.toLowerCase() === 'continuation.') continue;
+          if (cleanLine.split(' ').length > 15) continue;
+          
+          if (cleanLine.toLowerCase().includes('parallels:') || cleanLine.toLowerCase().includes('exclusive parallels:')) {
+             inParallelsBlock = true;
+             continue;
+          }
+
+          // Odds Extraction
+          const oddsMatch = cleanLine.match(/\((.*?1:.*?|.*?exclusive.*?)\)$/i);
+
+          if (inParallelsBlock || oddsMatch || cleanLine.match(/\/\d+|1\/1/)) {
+            let name = cleanLine;
+            let printRun: number | null = null;
+            let oddsText: string | null = null;
+
+            if (oddsMatch) {
+              oddsText = `(${oddsMatch[1]})`;
+              name = name.replace(oddsMatch[0], '').trim();
+            }
+
+            const prMatch = name.match(/\s*(?:\/(\d+)|(1\/1))(?:\s|$)/);
+            if (prMatch) {
+              if (prMatch[2] === '1/1') printRun = 1;
+              else if (prMatch[1]) printRun = parseInt(prMatch[1], 10);
+              name = name.replace(prMatch[0], '').trim();
+            }
+            
+            // Clean up any trailing slashes just in case the space was missing
+            name = name.replace(/\s*\/\d+$/, '').replace(/\s*1\/1$/, '').trim();
+
+            if (name && !name.match(/^[A-Z0-9-]+\s+.+ - .+/)) {
+               parallels.push({
+                 name: name,
+                 subset_name: subsetName,
+                 print_run: printRun,
+                 odds_text: oddsText
+               });
+
+               if (oddsText) {
+                 const strippedOdds = oddsText.replace(/^\(|\)$/g, '');
+                 const oddsParts = strippedOdds.split(';');
+                 for (const part of oddsParts) {
+                   const packMatch = part.match(/1:[\d,]+\s+(.+)/i);
+                   if (packMatch) {
+                     const packType = packMatch[1].trim();
+                     odds.push({
+                       pack_type: packType,
+                       odds_text: part.trim(),
+                       subset_name: subsetName
+                     });
+                   } else if (part.toLowerCase().includes('exclusive')) {
+                     odds.push({
+                       pack_type: part.trim(),
+                       odds_text: part.trim(),
+                       subset_name: subsetName
+                     });
+                   }
+                 }
+               }
+            } else if (name.match(/^[A-Z0-9-]+\s+.+ - .+/)) {
+               inParallelsBlock = false;
+            }
+          } 
+          
+          if (!inParallelsBlock) {
+            const cardRegex = /^([A-Z0-9-]+)\s+(.+?)(?:\s+-\s+(.+?))?$/i;
+            const match = cleanLine.match(cardRegex);
+            
+            if (match) {
+              const cardNumber = match[1];
+              let subjectAndRest = match[2].trim();
+              let teamAndRest = match[3] ? match[3].trim() : null;
+
+              const cleanField = (field: string) => {
+                if (!field) return { clean: '', notes: [], rc: false };
+                let clean = field;
+                let notes: string[] = [];
+                let rc = false;
+
+                if (clean.match(/\bRC\b/i)) rc = true;
+                if (clean.match(/\bSP\b/i)) notes.push('SP');
+
+                clean = clean.replace(/\bRC\s+SP\b/i, '').replace(/\bRC\b/i, '').replace(/\bSP\b/i, '');
+
+                const parens = [...clean.matchAll(/\s+\((.*?)\)/g)];
+                for (const m of parens) {
+                  if (m[1].toLowerCase() !== 'graded') notes.push(m[1].trim());
+                  clean = clean.replace(m[0], '');
+                }
+
+                const brackets = [...clean.matchAll(/\s+\[(.*?)\]/g)];
+                for (const m of brackets) {
+                  if (m[1].toLowerCase() !== 'rc') notes.push(m[1].trim());
+                  clean = clean.replace(m[0], '');
+                }
+
+                return { clean: clean.trim(), notes, rc };
+              };
+
+              const subjRes = cleanField(subjectAndRest);
+              const teamRes = cleanField(teamAndRest || '');
+
+              subjectAndRest = subjRes.clean;
+              teamAndRest = teamRes.clean || null;
+              
+              let rcFlag = subjRes.rc || teamRes.rc;
+              let allNotations = [...new Set([...subjRes.notes, ...teamRes.notes])];
+              let attributes_json: any = null;
+              
+              if (allNotations.length > 0) {
+                 attributes_json = { card_note: allNotations.join(', ') };
+              }
+              
+              if (cardNumber.match(/[0-9]/) && cardNumber.length <= 10 && subjectAndRest.length > 2 && !subjectAndRest.toLowerCase().includes('parallels') && !subjectAndRest.toLowerCase().includes('checklist')) {
+                let uniqueCardNumber = cardNumber;
+                let i = 2;
+                while (cards.some(c => c.card_number === uniqueCardNumber)) { uniqueCardNumber = `${cardNumber}-${i}`; i++; }
+                cards.push({
+                  card_number: uniqueCardNumber,
+                  subject: subjectAndRest,
+                  team: teamAndRest,
+                  rc_flag: rcFlag,
+                  ...(attributes_json ? { attributes_json } : {})
+                });
+              }
+            }
+          }
+        }
+      }
+      nextEl = nextEl.next();
+    }
+
+    if (cards.length > 0) {
+      subsets.push({
+        name: subsetName,
+        subset_type: subsetType,
+        sort_order: subsets.length + 1,
+        cards: cards
+      });
+    } else {
+      droppedEmptySubsets.push(subsetName);
+    }
+  });
+
+  // Dedupe strict base re-listings
+  const baseSet = subsets.find(s => s.name === 'Base Set');
+  let finalSubsets = subsets;
+  let droppedStrictSubsets: string[] = [];
+
+  if (baseSet) {
+    finalSubsets = subsets.filter(s => {
+      if (s.subset_type === 'base' && s.name !== 'Base Set') {
+        const isStrictSubset = s.cards.every((c: any) => 
+          baseSet.cards.some((bc: any) => bc.card_number === c.card_number && bc.subject === c.subject)
+        );
+        if (isStrictSubset) {
+          droppedStrictSubsets.push(s.name);
+          return false;
+        }
+      }
+      return true;
+    });
+  }
+
+  const validSubsetNames = new Set(finalSubsets.map(s => s.name));
+  const validParallels = parallels.filter(p => validSubsetNames.has(p.subset_name));
+  const validOdds = odds.filter(o => validSubsetNames.has(o.subset_name));
+
+  const finalJson = {
+    set: {
+      slug: setObj.slug,
+      name: setObj.name,
+      brand: setObj.brand,
+      category: setObj.category,
+      year_label: setObj.yearLabel,
+      release_date: setObj.releaseDate,
+      description: setObj.description
+    },
+    subsets: finalSubsets,
+    parallels: validParallels,
+    odds: validOdds
+  };
+
+  const outputDir = path.join(process.cwd(), 'scripts/data');
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
+
+  const outputPath = path.join(outputDir, `${slug}.json`);
+  fs.writeFileSync(outputPath, JSON.stringify(finalJson, null, 2));
+
+  console.log(`\n=== CONVERTER SUMMARY ===`);
+  console.log(`Set: ${setObj.name} (${setObj.yearLabel} ${setObj.brand})`);
+  console.log(`Subsets: ${finalSubsets.length}`);
+  const baseSubset = finalSubsets.find(s => s.subset_type === 'base');
+  console.log(`Base Cards: ${baseSubset ? baseSubset.cards.length : 0}`);
+  const totalCards = finalSubsets.reduce((acc, s) => acc + s.cards.length, 0);
+  console.log(`Total Cards: ${totalCards}`);
+  console.log(`Parallels: ${validParallels.length}`);
+  console.log(`Odds Entries: ${validOdds.length}`);
+  console.log(`Dropped 0-Card Subsets: ${droppedEmptySubsets.length}`);
+  if (droppedStrictSubsets.length > 0) {
+    console.log(`Dropped Strict Base-Duplicate Subsets: ${droppedStrictSubsets.length} (${droppedStrictSubsets.join(', ')})`);
+  }
+  
+  if (baseSubset && baseSubset.cards.length > 0) {
+    console.log(`\n=== SAMPLE BASE CARDS (first 10) ===`);
+    console.log(JSON.stringify(baseSubset.cards.slice(0, 10), null, 2));
+  }
+
+  if (validParallels.length > 0) {
+    console.log(`\n=== SAMPLE PARALLELS LIST ===`);
+    validParallels.slice(0, 10).forEach(p => {
+       console.log(`${p.name} | PR: ${p.print_run || 'Unnumbered'} | Odds: ${p.odds_text || 'None'} | Subset: ${p.subset_name}`);
+    });
+  }
+
+  console.log(`\nGenerated file: scripts/data/${slug}.json`);
+}
+
+main().catch(console.error);
