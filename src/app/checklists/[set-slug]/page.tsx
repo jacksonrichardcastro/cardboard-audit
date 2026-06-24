@@ -15,9 +15,10 @@ export async function generateStaticParams() {
   return sets.map((s) => ({ 'set-slug': s.slug }));
 }
 
-export async function generateMetadata({ params }: { params: { 'set-slug': string } }) {
+export async function generateMetadata({ params }: { params: Promise<{ 'set-slug': string }> }) {
+  const resolvedParams = await params;
   const set = await db.query.cardSets.findFirst({
-    where: and(eq(cardSets.slug, params['set-slug']), eq(cardSets.status, "published"))
+    where: and(eq(cardSets.slug, resolvedParams['set-slug']), eq(cardSets.status, "published"))
   });
   if (!set) return {};
   return {
@@ -26,9 +27,10 @@ export async function generateMetadata({ params }: { params: { 'set-slug': strin
   };
 }
 
-export default async function SetPage({ params }: { params: { 'set-slug': string } }) {
+export default async function SetPage({ params }: { params: Promise<{ 'set-slug': string }> }) {
+  const resolvedParams = await params;
   const setInfo = await db.query.cardSets.findFirst({
-    where: and(eq(cardSets.slug, params['set-slug']), eq(cardSets.status, "published"))
+    where: and(eq(cardSets.slug, resolvedParams['set-slug']), eq(cardSets.status, "published"))
   });
 
   if (!setInfo) {
