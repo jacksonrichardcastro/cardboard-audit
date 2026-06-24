@@ -124,6 +124,12 @@ async function main() {
     stats.sets.created++;
   }
 
+  // 1a. Pre-load all existing slugs for the set to avoid global unique constraint violations
+  const allExistingCards = setId !== -1 ? await db.query.catalogCards.findMany({
+    where: eq(catalogCards.setId, setId)
+  }) : [];
+  const cardSlugs = new Set(allExistingCards.map(c => c.slug));
+
   // 2. Process Subsets
   const subsetIdMap = new Map<string, number>();
   for (const subset of (data.subsets || [])) {
@@ -166,23 +172,26 @@ async function main() {
     subsetIdMap.set(subset.name, subsetId);
 
     // 3. Process Cards in Subset
-    const existingCards = setId !== -1 ? await db.query.catalogCards.findMany({
-      where: and(eq(catalogCards.setId, setId), eq(catalogCards.subsetId, subsetId))
-    }) : [];
-    const cardNumMap = new Map(existingCards.map(c => [c.cardNumber, c]));
-
-    const cardSlugs = new Set(existingCards.map(c => c.slug));
+    const existingSubsetCards = allExistingCards.filter(c => c.subsetId === subsetId);
+    const cardNumMap = new Map(existingSubsetCards.map(c => [c.cardNumber, c]));
 
     for (const card of (subset.cards || [])) {
       const existingCard = cardNumMap.get(card.card_number);
-      let targetSlug = kebabCase(`${card.card_number}-${card.subject}`);
+      let targetSlug = existingCard ? existingCard.slug : kebabCase(`${card.card_number}-${card.subject}`);
+      
       if (!existingCard && cardSlugs.has(targetSlug)) {
-        // Collision fallback
-        let i = 1;
-        while (cardSlugs.has(`${targetSlug}-${i}`)) i++;
-        targetSlug = `${targetSlug}-${i}`;
+        // Deterministic collision fallback: include subset name
+        targetSlug = kebabCase(`${subset.name}-${card.card_number}-${card.subject}`);
+        if (cardSlugs.has(targetSlug)) {
+          // Last resort fallback
+          let i = 1;
+          while (cardSlugs.has(`${targetSlug}-${i}`)) i++;
+          targetSlug = `${targetSlug}-${i}`;
+        }
       }
-      cardSlugs.add(targetSlug);
+      if (!existingCard) {
+        cardSlugs.add(targetSlug);
+      }
 
       if (existingCard) {
         const isChanged = existingCard.subject !== card.subject || 
