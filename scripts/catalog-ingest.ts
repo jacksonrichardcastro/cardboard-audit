@@ -14,13 +14,16 @@ function kebabCase(str: string) {
 
 async function main() {
   const args = process.argv.slice(2);
+  const replaceIndex = args.indexOf('--replace');
+  const isReplace = replaceIndex !== -1;
+  if (isReplace) args.splice(replaceIndex, 1);
   const dryRunIndex = args.indexOf('--dry-run');
   const isDryRun = dryRunIndex !== -1;
   if (isDryRun) args.splice(dryRunIndex, 1);
   
   const filePath = args[0];
   if (!filePath) {
-    console.error("Usage: npx tsx scripts/catalog-ingest.ts [--dry-run] <path-to-json>");
+    console.error("Usage: npx tsx scripts/catalog-ingest.ts [--dry-run] [--replace] <path-to-json>");
     process.exit(1);
   }
 
@@ -74,6 +77,9 @@ async function main() {
   if (isDryRun) {
     console.log(`\n=== DRY RUN MODE: Database will not be modified ===\n`);
   }
+  if (isReplace && !isDryRun) {
+    console.log(`\n=== REPLACE MODE: Existing catalog rows for this set will be PRUNED ===\n`);
+  }
 
   let stats = {
     sets: { created: 0, updated: 0, unchanged: 0 },
@@ -86,6 +92,16 @@ async function main() {
   // 1. Process Set
   let setId: number;
   const existingSet = await db.query.cardSets.findFirst({ where: eq(cardSets.slug, data.set.slug) });
+  
+  if (existingSet && isReplace && !isDryRun) {
+    console.log(`PRUNING existing set ${existingSet.id} (${existingSet.slug})...`);
+    await db.delete(pullOdds).where(eq(pullOdds.setId, existingSet.id));
+    await db.delete(cardParallels).where(eq(cardParallels.setId, existingSet.id));
+    await db.delete(catalogCards).where(eq(catalogCards.setId, existingSet.id));
+    await db.delete(setSubsets).where(eq(setSubsets.setId, existingSet.id));
+    console.log(`Pruning complete.`);
+  }
+
   if (existingSet) {
     setId = existingSet.id;
     // For simplicity, check if changed by comparing all fields.

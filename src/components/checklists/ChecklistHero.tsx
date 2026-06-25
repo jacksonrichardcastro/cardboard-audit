@@ -18,7 +18,7 @@ export function ChecklistHero({ name, brand, yearLabel, releaseDate, description
 
       <div className="relative w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center z-10">
         <div className="mb-4 inline-flex items-center rounded-full border border-[#7C3AED]/30 bg-[#7C3AED]/10 px-3 py-1 text-sm font-medium text-[#7C3AED]">
-          {yearLabel} {brand}
+          {brand}
         </div>
         <h1 className="text-4xl md:text-6xl font-black tracking-tight text-white mb-6">
           {name}
