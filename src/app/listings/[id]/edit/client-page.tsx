@@ -107,13 +107,33 @@ export default function EditListingClient({ listing, card, handle, categories = 
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
+    // Read files into ArrayBuffers IMMEDIATELY before any async state updates or fetches.
+    // iOS Safari aggressively releases File object references if not read synchronously or immediately.
+    const fileData: { type: string, buffer: ArrayBuffer }[] = [];
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const buffer = await file.arrayBuffer();
+        fileData.push({ type: file.type || "image/jpeg", buffer });
+      }
+    } catch (err: any) {
+      console.error("Failed to read file immediately:", err);
+      if (err.name === 'NotReadableError') {
+        alert("Could not read the selected photo. Please try selecting it again.");
+      } else {
+        alert("Error reading file: " + (err.message || "Unknown error"));
+      }
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
     setIsUploadingFiles(true);
     const newPhotos = [...formData.photos];
     let sortOrder = newPhotos.length;
 
     try {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
+      for (let i = 0; i < fileData.length; i++) {
+        const { type, buffer } = fileData[i];
         
         // Fetch upload URL (passing cardId as draftId so it stores cleanly)
         const res = await fetch("/api/storage/upload", {
@@ -127,8 +147,8 @@ export default function EditListingClient({ listing, card, handle, categories = 
         
         const uploadRes = await fetch(signedUrl, {
           method: "PUT",
-          body: await file.arrayBuffer(),
-          headers: { "Content-Type": file.type || "image/jpeg" }
+          body: buffer,
+          headers: { "Content-Type": type }
         });
         
         if (!uploadRes.ok) throw new Error("Failed to upload image");
