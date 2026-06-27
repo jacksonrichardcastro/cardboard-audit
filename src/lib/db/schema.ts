@@ -1,4 +1,11 @@
-import { pgTable, serial, text, integer, timestamp, json, varchar, boolean, index, unique, uuid, primaryKey, jsonb, date, check } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, timestamp, json, varchar, boolean, index, unique, uuid, primaryKey, jsonb, date, check, numeric, customType } from "drizzle-orm/pg-core";
+
+const vectorColumn = customType<{ data: number[]; driverData: string }>({
+  dataType() {
+    return 'vector';
+  }
+});
+
 import { relations, sql } from "drizzle-orm";
 
 export const users = pgTable("users", {
@@ -509,6 +516,11 @@ export const cardSets = pgTable("card_sets", {
   releaseDate: date("release_date"),
   description: text("description"),
   status: varchar("status", { length: 20 }).notNull().default("draft"),
+  setCode: varchar("set_code", { length: 100 }),
+  backCopyrightLine: text("back_copyright_line"),
+  setSymbolImageUrl: varchar("set_symbol_image_url", { length: 255 }),
+  cardDimensions: varchar("card_dimensions", { length: 50 }).default("standard"),
+  language: varchar("language", { length: 10 }).default("en"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -533,6 +545,13 @@ export const catalogCards = pgTable("catalog_cards", {
   rcFlag: boolean("rc_flag").notNull().default(false),
   slug: varchar("slug", { length: 255 }).notNull(),
   attributesJson: jsonb("attributes_json"),
+  printedCardNumber: varchar("printed_card_number", { length: 100 }),
+  language: varchar("language", { length: 10 }).default("en"),
+  nameNormalized: varchar("name_normalized", { length: 255 }),
+  verificationStatus: varchar("verification_status", { length: 50 }).default("unverified"),
+  sourceProvenance: varchar("source_provenance", { length: 100 }),
+  needsReview: boolean("needs_review").default(false),
+  gameplayIdentityId: integer("gameplay_identity_id"), // FK to card_gameplay_identities omitted from Drizzle relations for brevity, added in raw SQL
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (table) => ({
@@ -549,6 +568,14 @@ export const cardParallels = pgTable("card_parallels", {
   printRun: integer("print_run"),
   oddsText: varchar("odds_text", { length: 255 }),
   sortOrder: integer("sort_order").notNull().default(0),
+  finishType: varchar("finish_type", { length: 100 }),
+  borderColor: varchar("border_color", { length: 100 }),
+  dominantColors: jsonb("dominant_colors"),
+  pattern: varchar("pattern", { length: 100 }),
+  isSerialNumbered: boolean("is_serial_numbered").default(false),
+  serialLocation: varchar("serial_location", { length: 100 }),
+  referenceImageUrl: varchar("reference_image_url", { length: 255 }),
+  referenceEmbedding: vectorColumn("reference_embedding"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -572,3 +599,97 @@ export const referrals = pgTable("referrals", {
 }, (table) => ({
   preventSelfReferral: check("prevent_self_referral", sql`${table.referrerUserId} != ${table.referredUserId}`)
 }));
+
+export const cardGameplayIdentities = pgTable("card_gameplay_identities", {
+  id: serial("id").primaryKey(),
+  canonicalName: varchar("canonical_name", { length: 255 }).notNull(),
+  category: varchar("category", { length: 100 }),
+  attributesJson: jsonb("attributes_json"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const cardSubjects = pgTable("card_subjects", {
+  id: serial("id").primaryKey(),
+  catalogCardId: integer("catalog_card_id").notNull().references(() => catalogCards.id, { onDelete: 'cascade' }),
+  subject: varchar("subject", { length: 255 }).notNull(),
+  sortOrder: integer("sort_order").notNull().default(0),
+  isPrimary: boolean("is_primary").notNull().default(false),
+});
+
+export const cardFaces = pgTable("card_faces", {
+  id: serial("id").primaryKey(),
+  catalogCardId: integer("catalog_card_id").notNull().references(() => catalogCards.id, { onDelete: 'cascade' }),
+  faceIndex: integer("face_index").notNull(),
+  name: varchar("name", { length: 255 }),
+  imageUrl: varchar("image_url", { length: 255 }),
+  attributesJson: jsonb("attributes_json"),
+});
+
+export const cardImages = pgTable("card_images", {
+  id: serial("id").primaryKey(),
+  catalogCardId: integer("catalog_card_id").notNull().references(() => catalogCards.id, { onDelete: 'cascade' }),
+  parallelId: integer("parallel_id").references(() => cardParallels.id, { onDelete: 'cascade' }),
+  side: varchar("side", { length: 50 }).notNull(),
+  url: varchar("url", { length: 255 }).notNull(),
+  embedding: vectorColumn("embedding"),
+  source: varchar("source", { length: 50 }).notNull(),
+  sourceRef: varchar("source_ref", { length: 255 }),
+  qualityScore: numeric("quality_score"),
+  isVerified: boolean("is_verified").notNull().default(false),
+  isPrimary: boolean("is_primary").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const subjectAliases = pgTable("subject_aliases", {
+  id: serial("id").primaryKey(),
+  subject: varchar("subject", { length: 255 }).notNull(),
+  alias: varchar("alias", { length: 255 }).notNull(),
+  aliasType: varchar("alias_type", { length: 50 }),
+});
+
+export const setAliases = pgTable("set_aliases", {
+  id: serial("id").primaryKey(),
+  setId: integer("set_id").notNull().references(() => cardSets.id, { onDelete: 'cascade' }),
+  alias: varchar("alias", { length: 255 }).notNull(),
+});
+
+export const teamAliases = pgTable("team_aliases", {
+  id: serial("id").primaryKey(),
+  team: varchar("team", { length: 255 }).notNull(),
+  alias: varchar("alias", { length: 255 }).notNull(),
+});
+
+export const finishes = pgTable("finishes", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  category: varchar("category", { length: 100 }),
+  notes: text("notes"),
+});
+
+export const colors = pgTable("colors", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+});
+
+export const treatments = pgTable("treatments", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  category: varchar("category", { length: 100 }),
+});
+
+export const promoTypes = pgTable("promo_types", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+});
+
+export const insertPrograms = pgTable("insert_programs", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  setId: integer("set_id").references(() => cardSets.id, { onDelete: 'cascade' }),
+});
+
+export const cardNumberPrefixes = pgTable("card_number_prefixes", {
+  id: serial("id").primaryKey(),
+  prefix: varchar("prefix", { length: 50 }).notNull(),
+  meaning: varchar("meaning", { length: 255 }),
+});
