@@ -129,7 +129,7 @@ export default async function Home(props: Props) {
       
       <div className="relative z-10 pb-16">
         {/* Hero Banner */}
-        <div className="relative overflow-hidden bg-black/60 border-b border-white/5 pt-16 pb-8">
+        <div className="relative z-20 bg-black/60 border-b border-white/5 pt-16 pb-8">
           <div className="absolute inset-0 bg-[url('https://placehold.co/1920x400/000/111?text=+')] opacity-20 bg-cover bg-center -z-20" />
         <div className="max-w-7xl mx-auto px-4 md:px-8 text-center space-y-6">
           <Badge className="bg-primary/20 text-primary border-none hover:bg-primary/30 py-1 px-3 rounded-full text-sm">
