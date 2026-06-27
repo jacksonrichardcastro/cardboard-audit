@@ -11,6 +11,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { StorefrontUrlWidget } from "@/components/seller/StorefrontUrlWidget";
 import { ProfileBadgesManager } from "@/components/seller/ProfileBadgesManager";
+import { ReferralWidget } from "@/components/seller/ReferralWidget";
 
 export default async function SellerDashboardPage(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -112,6 +113,9 @@ export default async function SellerDashboardPage(props: {
               </div>
             )}
             {activeStorefront?.handle && <StorefrontUrlWidget handle={activeStorefront.handle} />}
+            <div className="my-8">
+              <ReferralWidget userId={seller.userId} handle={seller.handle} />
+            </div>
             <h2 className="text-xl font-semibold mb-6">Storefront Profile</h2>
             <EditProfileForm 
               initialData={{

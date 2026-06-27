@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, timestamp, json, varchar, boolean, index, unique, uuid, primaryKey, jsonb, date } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, timestamp, json, varchar, boolean, index, unique, uuid, primaryKey, jsonb, date, check } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 
 export const users = pgTable("users", {
@@ -561,3 +561,14 @@ export const pullOdds = pgTable("pull_odds", {
   oddsText: varchar("odds_text", { length: 255 }).notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
+
+export const referrals = pgTable("referrals", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  referrerUserId: varchar("referrer_user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  referredUserId: varchar("referred_user_id", { length: 255 }).notNull().unique().references(() => users.id, { onDelete: "cascade" }),
+  referralHandleOrCode: varchar("referral_handle_or_code", { length: 40 }).notNull(),
+  status: varchar("status", { length: 50 }).notNull().default("signed_up"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  preventSelfReferral: check("prevent_self_referral", sql`${table.referrerUserId} != ${table.referredUserId}`)
+}));

@@ -5,6 +5,9 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SiteHeader } from "@/components/layout/site-header";
 import { Toaster } from "@/components/ui/sonner";
+import { cookies } from "next/headers";
+import { auth } from "@clerk/nextjs/server";
+import { ReferralTracker } from "@/components/ReferralTracker";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -34,11 +37,15 @@ export const metadata: Metadata = {
   }
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { userId } = await auth();
+  const cookieStore = await cookies();
+  const hasReferralCookie = cookieStore.has("trax_ref");
+
   return (
     <ClerkProvider afterSignOutUrl="/">
       <html
@@ -50,11 +57,12 @@ export default function RootLayout({
           <ThemeProvider
             attribute="class"
             defaultTheme="dark"
-            enableSystem
+            enableSystem={false}
             disableTransitionOnChange
           >
+            {userId && hasReferralCookie && <ReferralTracker />}
             <SiteHeader />
-            <main className="flex-1">
+            <main className="flex-1 flex flex-col">
               {children}
             </main>
             <Toaster />

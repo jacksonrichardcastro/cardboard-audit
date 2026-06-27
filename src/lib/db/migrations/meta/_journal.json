@@ -134,6 +134,13 @@
       "when": 1781296773316,
       "tag": "0018_motionless_goliath",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1782517638059,
+      "tag": "0019_shocking_nighthawk",
+      "breakpoints": true
     }
   ]
 }
