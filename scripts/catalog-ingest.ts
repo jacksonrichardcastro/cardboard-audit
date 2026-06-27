@@ -217,6 +217,7 @@ async function main() {
           if (!isDryRun) {
             await db.update(catalogCards).set({
               subject: card.subject,
+              nameNormalized: card.name_normalized || card.subject?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") || "",
               team: card.team || null,
               rcFlag: card.rc_flag || false,
               attributesJson: card.attributes_json || null,
@@ -234,6 +235,7 @@ async function main() {
             subsetId,
             cardNumber: card.card_number,
             subject: card.subject,
+            nameNormalized: card.name_normalized || card.subject?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") || "",
             team: card.team || null,
             rcFlag: card.rc_flag || false,
             slug: targetSlug,

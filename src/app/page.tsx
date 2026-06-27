@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Award, Clock, ArrowRight, LayoutGrid, Tag, PackageSearch, Zap, Flame, Calendar, ChevronRight, ShieldCheck } from "lucide-react";
 import { TickerPill } from "@/components/shared/TickerPill";
-import { SearchBar } from "@/components/storefront/search-bar";
+import { CatalogSearchBar } from "@/components/search/catalog-search-bar";
 import { CosmosBackground } from "@/components/marketplace/CosmosBackground";
 import { CardRail } from "@/components/storefront/card-rail";
 import { getTrendingListings } from "@/lib/db/queries/listings";
@@ -142,7 +142,7 @@ export default async function Home(props: Props) {
             By the hobby. For the hobby. Shop highly vetted sellers with 100% transparency.
           </p>
           
-          <SearchBar />
+          <CatalogSearchBar />
         </div>
       </div>
 

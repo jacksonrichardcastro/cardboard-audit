@@ -3,6 +3,7 @@ import { cardSets } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
 import { CosmosBackground } from "@/components/marketplace/CosmosBackground";
+import { CatalogSearchBar } from "@/components/search/catalog-search-bar";
 
 import { Metadata } from 'next';
 
@@ -42,9 +43,12 @@ export default async function ChecklistsHub() {
         <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12 md:py-24">
           <div className="mb-12">
             <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-4">Checklists</h1>
-            <p className="text-lg text-zinc-400 max-w-2xl">
+            <p className="text-lg text-zinc-400 max-w-2xl mb-8">
               Browse complete checklists for the hobby's most popular sets.
             </p>
+            <div className="max-w-2xl">
+              <CatalogSearchBar />
+            </div>
           </div>
 
           {publishedSets.length === 0 ? (

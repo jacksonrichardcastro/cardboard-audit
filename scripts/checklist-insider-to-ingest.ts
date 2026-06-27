@@ -233,6 +233,7 @@ async function main() {
                 cards.push({
                   card_number: uniqueCardNumber,
                   subject: subjectAndRest,
+                  name_normalized: subjectAndRest ? subjectAndRest.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : "",
                   team: teamAndRest,
                   rc_flag: rcFlag,
                   ...(attributes_json ? { attributes_json } : {})
