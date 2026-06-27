@@ -40,19 +40,22 @@ export default async function MeRedirect(props: Props) {
     }
   }
 
-  // 2. Fallback to default profile handle
-  let [profile] = await db.select().from(profiles).where(eq(profiles.userId, userId)).limit(1);
+  // 2. Fallback to default storefront or first storefront
+  const fallbackStorefront = await db.query.storefronts.findFirst({
+    where: eq(storefronts.userId, userId),
+    orderBy: (storefronts, { desc }) => [desc(storefronts.isDefaultForUser)]
+  });
 
-  // 3. If no profile, force a sync which creates the user and profile
-  if (!profile?.handle) {
+  if (fallbackStorefront?.handle) {
+    redirect(`/${fallbackStorefront.handle}${search}`);
+  }
+
+  // 3. If they don't have a storefront at all, check if they need a profile sync
+  const [profile] = await db.select().from(profiles).where(eq(profiles.userId, userId)).limit(1);
+  if (!profile) {
     await syncUserFromClerk();
-    [profile] = await db.select().from(profiles).where(eq(profiles.userId, userId)).limit(1);
   }
 
-  // 4. Redirect to the handle if it exists, otherwise fallback to dashboard
-  if (profile?.handle) {
-    redirect(`/${profile.handle}${search}`);
-  }
-
-  redirect('/seller/dashboard');
+  // 4. Redirect to storefront creation since they have no public storefront
+  redirect('/seller/dashboard?tab=storefronts');
 }
